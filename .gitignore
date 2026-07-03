@@ -1,0 +1,18 @@
+# Reference clones — unlicensed/copyleft code, evaluation only, never committed
+reference/
+
+# Swift build artifacts
+.build/
+.derivedData/
+*.xcodeproj
+.swiftpm/
+
+# Benchmark audio samples (Brice's voice — keep local)
+bench/samples/*.wav
+
+# Model files (downloaded at setup time)
+Models/
+*.mlmodelc
+
+# macOS
+.DS_Store
