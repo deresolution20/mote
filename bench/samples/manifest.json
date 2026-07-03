@@ -1,0 +1,124 @@
+{
+ "samples": [
+  {
+   "file": "01.wav",
+   "id": "01",
+   "reference": "um, so I think we should ship it Friday"
+  },
+  {
+   "file": "02.wav",
+   "id": "02",
+   "reference": "yeah so basically the uh the dashboard is is broken again"
+  },
+  {
+   "file": "03.wav",
+   "id": "03",
+   "reference": "can you um, can you send me the link to that doc?"
+  },
+  {
+   "file": "04.wav",
+   "id": "04",
+   "reference": "so i was thinking maybe we uh we grab lunch after standup"
+  },
+  {
+   "file": "05.wav",
+   "id": "05",
+   "reference": "uh let's move the meeting to like three thirty instead"
+  },
+  {
+   "file": "07.wav",
+   "id": "07",
+   "reference": "i mean it's it's probably a caching issue you know"
+  },
+  {
+   "file": "08.wav",
+   "id": "08",
+   "reference": "so like the query takes uh forever when i add the group by"
+  },
+  {
+   "file": "09.wav",
+   "id": "09",
+   "reference": "um remind me to uh to follow up with sarah tomorrow morning"
+  },
+  {
+   "file": "10.wav",
+   "id": "10",
+   "reference": "yeah i'll uh i'll push the fix after i grab a coffee"
+  },
+  {
+   "file": "11.wav",
+   "id": "11",
+   "reference": "so the uh the memory usage spikes every night around midnight"
+  },
+  {
+   "file": "12.wav",
+   "id": "12",
+   "reference": "um can we like circle back on the pricing thing next week"
+  },
+  {
+   "file": "13.wav",
+   "id": "13",
+   "reference": "honestly i think the the second option is is way better"
+  },
+  {
+   "file": "14.wav",
+   "id": "14",
+   "reference": "uh my flight gets in at like seven so dinner at eight works"
+  },
+  {
+   "file": "15.wav",
+   "id": "15",
+   "reference": "so basically um zendesk tickets should route to the uh the triage queue"
+  },
+  {
+   "file": "16.wav",
+   "id": "16",
+   "reference": "i want to um to test this on the staging cluster first"
+  },
+  {
+   "file": "17.wav",
+   "id": "17",
+   "reference": "yeah the uh the new hire starts monday i think"
+  },
+  {
+   "file": "18.wav",
+   "id": "18",
+   "reference": "um let's just uh let's just revert it and investigate tomorrow"
+  },
+  {
+   "file": "19.wav",
+   "id": "19",
+   "reference": "so grafana needs uh needs the api key rotated before the demo"
+  },
+  {
+   "file": "20.wav",
+   "id": "20",
+   "reference": "okay um long story short we we missed the deadline by two days"
+  },
+  {
+   "file": "21.wav",
+   "id": "21",
+   "reference": "um so like i think we should uh ship it friday"
+  },
+  {
+   "file": "22.wav",
+   "id": "22",
+   "reference": "yeah so basically the uh the dashboard is is broken again"
+  },
+  {
+   "file": "23.wav",
+   "id": "23",
+   "reference": "can you um can you send me the the link to that doc"
+  },
+  {
+   "file": "25.wav",
+   "id": "25",
+   "reference": "uh let's move the meeting to like three thirty instead"
+  },
+  {
+   "file": "26.wav",
+   "id": "26",
+   "reference": "okay so um the customer said the alerts are uh firing twice"
+  }
+ ]
+}

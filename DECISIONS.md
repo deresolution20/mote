@@ -90,7 +90,33 @@ decision comes from Brice's recordings):
   If Parakeet matches turbo's WER on Brice's real voice, it wins outright
   (verbatim transcript + ~0.07 s per utterance + instant load).
 
-## 2026-07-03 — PROVISIONAL ASR choice: Parakeet v3 (pending real-voice confirmation)
+## 2026-07-03 — **FINAL ASR choice: FluidAudio Parakeet v3** (real-voice confirmed)
+
+Benchmark over **Brice's own 24 recorded utterances** (`bench/RESULTS.md`):
+
+| Engine | Load | Warmup | Median latency | p90 | Mean WER | Content WER |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Parakeet v3** | **0.14 s** | **0.10 s** | **0.072 s** | **0.075 s** | **13.6%** | 14.0% |
+| Apple SpeechTranscriber | 0.07 s | 0.17 s | 0.080 s | 0.097 s | 18.6% | 18.0% |
+| WhisperKit large-v3-turbo | 8.9 s | 1.6 s | 0.482 s | 0.504 s | 23.2% | 14.9% |
+| WhisperKit base.en | 4.6 s | 0.6 s | 0.084 s | 0.093 s | 29.9% | 23.2% |
+
+**Parakeet v3 wins accuracy AND latency on real voice**, consistent with the
+synthetic run. It stays behind the `ASREngine` protocol; WhisperKit turbo is
+the multilingual/alternate engine, Apple ST the zero-dependency fallback.
+
+Corrections & notes:
+- WhisperKit turbo's ~92 s warmup was **ANE cache population, not a permanent
+  per-launch cost** — it settled to ~8.9 s load + 1.6 s warmup. Still ~100×
+  slower to ready than Parakeet, and ~7× slower per utterance (0.48 s vs 0.07 s).
+- Absolute WERs are inflated by scripted-reference drift (takes where Brice's
+  actual words deviated from the suggestion he confirmed) and stutter collapse
+  ("the uh the" → "the uh") — these hit all engines against the same refs, so
+  the ranking stands.
+- Parakeet mis-transcribed "Grafana" ("Grafani's") and "new hire" ("new hour")
+  — exactly the Phase-3 personal-dictionary use case.
+
+## 2026-07-03 — (superseded) provisional pick from synthetic data
 
 Full 20-utterance **synthetic** benchmark (5 rotating `say` voices reading the
 filler-heavy set — see `bench/SYNTH_RESULTS.md`):
