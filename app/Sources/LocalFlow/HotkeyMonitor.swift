@@ -1,15 +1,17 @@
-import CoreGraphics
+import AppKit
 import Foundation
 
-/// Push-to-talk on the Fn (globe) key via a listen-only CGEvent tap.
-/// Fn arrives as .flagsChanged with .maskSecondaryFn — hold = down, release = up.
-/// Requires Input Monitoring. Caveat: set System Settings → Keyboard →
-/// "Press 🌐 key to" = "Do Nothing" so macOS doesn't also act on it.
+/// Push-to-talk on the Fn (globe) key via global NSEvent flagsChanged monitors.
+/// Modifier-flag events need only Accessibility — NOT Input Monitoring (that's
+/// for real keystroke content, which we never read). This matters on
+/// MDM-managed Macs where the Input Monitoring pane is profile-controlled.
+/// Caveat: set System Settings → Keyboard → "Press 🌐 key to" = "Do Nothing"
+/// so macOS doesn't also act on the key.
 final class HotkeyMonitor {
     private let onKeyDown: () -> Void
     private let onKeyUp: () -> Void
-    private var tap: CFMachPort?
-    private var runLoopSource: CFRunLoopSource?
+    private var globalMonitor: Any?
+    private var localMonitor: Any?
     private var fnIsDown = false
 
     init(onKeyDown: @escaping () -> Void, onKeyUp: @escaping () -> Void) {
@@ -18,45 +20,30 @@ final class HotkeyMonitor {
     }
 
     func start() -> Bool {
-        let mask = (1 << CGEventType.flagsChanged.rawValue)
-        let callback: CGEventTapCallBack = { _, type, event, userInfo in
-            guard let userInfo else { return Unmanaged.passUnretained(event) }
-            let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(userInfo).takeUnretainedValue()
-            monitor.handle(type: type, event: event)
-            return Unmanaged.passUnretained(event)
-        }
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .listenOnly,
-            eventsOfInterest: CGEventMask(mask),
-            callback: callback,
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else { return false }
+        // Global monitors deliver nothing without Accessibility trust.
+        guard Permissions.accessibility else { return false }
 
-        self.tap = tap
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        runLoopSource = source
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
-        return true
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.handle(event)
+        }
+        // Global monitors skip events while our own app is frontmost (e.g. the
+        // setup window) — the local monitor covers that case.
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.handle(event)
+            return event
+        }
+        return globalMonitor != nil
     }
 
     func stop() {
-        if let tap { CGEvent.tapEnable(tap: tap, enable: false) }
-        if let runLoopSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes) }
-        tap = nil
-        runLoopSource = nil
+        if let globalMonitor { NSEvent.removeMonitor(globalMonitor) }
+        if let localMonitor { NSEvent.removeMonitor(localMonitor) }
+        globalMonitor = nil
+        localMonitor = nil
     }
 
-    private func handle(type: CGEventType, event: CGEvent) {
-        // The system disables quiet taps; re-arm immediately.
-        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-            if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
-            return
-        }
-        guard type == .flagsChanged else { return }
-        let down = event.flags.contains(.maskSecondaryFn)
+    private func handle(_ event: NSEvent) {
+        let down = event.modifierFlags.contains(.function)
         guard down != fnIsDown else { return }
         fnIsDown = down
         let action = down ? onKeyDown : onKeyUp

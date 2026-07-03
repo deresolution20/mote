@@ -23,15 +23,6 @@ enum Permissions {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
-    // MARK: Input Monitoring (global Fn event tap)
-    static var inputMonitoring: Bool {
-        CGPreflightListenEventAccess()
-    }
-
-    static func requestInputMonitoring() {
-        _ = CGRequestListenEventAccess()
-    }
-
     // MARK: System Settings deep links
     static func openSettings(anchor: String) {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(anchor)")!
@@ -40,5 +31,4 @@ enum Permissions {
 
     static let microphoneAnchor = "Privacy_Microphone"
     static let accessibilityAnchor = "Privacy_Accessibility"
-    static let inputMonitoringAnchor = "Privacy_ListenEvent"
 }

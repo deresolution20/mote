@@ -6,7 +6,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Local Flow needs three permissions")
+            Text("Local Flow needs two permissions")
                 .font(.title2.bold())
             Text("Everything runs on this Mac — no audio or text ever leaves it.")
                 .foregroundStyle(.secondary)
@@ -24,17 +24,8 @@ struct OnboardingView: View {
             }
 
             PermissionRow(
-                title: "Input Monitoring",
-                detail: "To notice the Fn key anywhere (listen-only).",
-                granted: state.inputMonitoringGranted
-            ) {
-                Permissions.requestInputMonitoring()
-                Permissions.openSettings(anchor: Permissions.inputMonitoringAnchor)
-            }
-
-            PermissionRow(
                 title: "Accessibility",
-                detail: "To type the transcript at your cursor (synthesized ⌘V).",
+                detail: "To notice the Fn key and type the transcript at your cursor.",
                 granted: state.accessibilityGranted
             ) {
                 Permissions.promptAccessibility()
@@ -59,7 +50,7 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
-                    Text("Waiting for all three permissions…")
+                    Text("Waiting for both permissions…")
                         .foregroundStyle(.secondary)
                 }
             }

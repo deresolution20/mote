@@ -39,7 +39,6 @@ final class AppState: ObservableObject {
     @Published var status: Status = .needsPermissions
     @Published var micGranted = false
     @Published var accessibilityGranted = false
-    @Published var inputMonitoringGranted = false
     @Published var lastTranscript: String = ""
 
     private let capture = AudioCapture()
@@ -48,13 +47,12 @@ final class AppState: ObservableObject {
     private var pipelineStarted = false
 
     var allPermissionsGranted: Bool {
-        micGranted && accessibilityGranted && inputMonitoringGranted
+        micGranted && accessibilityGranted
     }
 
     func refreshPermissions() {
         micGranted = Permissions.microphone
         accessibilityGranted = Permissions.accessibility
-        inputMonitoringGranted = Permissions.inputMonitoring
         if !allPermissionsGranted, case .idle = status { status = .needsPermissions }
     }
 
@@ -99,7 +97,7 @@ final class AppState: ObservableObject {
             hotkey = monitor
             status = .idle
         } else {
-            status = .failed("could not install hotkey listener — check Input Monitoring permission")
+            status = .failed("could not install hotkey listener — check Accessibility permission")
             pipelineStarted = false
         }
     }
