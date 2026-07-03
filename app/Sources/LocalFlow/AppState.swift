@@ -11,6 +11,7 @@ final class AppState: ObservableObject {
         case idle
         case recording
         case transcribing
+        case cleaning
         case failed(String)
 
         var symbolName: String {
@@ -20,6 +21,7 @@ final class AppState: ObservableObject {
             case .idle: return "mic"
             case .recording: return "mic.fill"
             case .transcribing: return "waveform"
+            case .cleaning: return "sparkles"
             case .failed: return "exclamationmark.triangle"
             }
         }
@@ -31,6 +33,7 @@ final class AppState: ObservableObject {
             case .idle: return "Ready — hold Left ⌥ and speak"
             case .recording: return "Recording…"
             case .transcribing: return "Transcribing…"
+            case .cleaning: return "Cleaning up…"
             case .failed(let msg): return "Error: \(msg)"
             }
         }
@@ -39,12 +42,24 @@ final class AppState: ObservableObject {
     @Published var status: Status = .needsPermissions
     @Published var micGranted = false
     @Published var accessibilityGranted = false
+    /// Raw transcript of the last dictation — always kept, even when cleanup pasted.
     @Published var lastTranscript: String = ""
+    /// What cleanup produced for the last dictation (empty if off / fell back).
+    @Published var lastCleaned: String = ""
+    @Published var cleanupEnabled: Bool = UserDefaults.standard.object(forKey: "cleanupEnabled") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(cleanupEnabled, forKey: "cleanupEnabled")
+            if cleanupEnabled { Cleaner.warmUp() }
+        }
+    }
 
     private let capture = AudioCapture()
     private let transcriber = Transcriber()
     private var hotkey: HotkeyMonitor?
     private var pipelineStarted = false
+    private var recordingWatchdog: Task<Void, Never>?
+    /// Longest sensible push-to-talk hold; past this the release event was lost.
+    private let maxRecordingSeconds: UInt64 = 30
 
     var allPermissionsGranted: Bool {
         micGranted && accessibilityGranted
@@ -81,6 +96,7 @@ final class AppState: ObservableObject {
         guard !pipelineStarted else { return }
         pipelineStarted = true
         status = .loadingModel
+        if cleanupEnabled { Cleaner.warmUp() }
         do {
             try await transcriber.load()
         } catch {
@@ -105,22 +121,32 @@ final class AppState: ObservableObject {
     }
 
     private func hotkeyPressed() {
+        // A press always clears a lingering error state.
+        if case .failed = status { status = .idle }
         guard case .idle = status else { return }
         do {
             try capture.start()
             status = .recording
+            // Watchdog: if the release event is ever lost, don't record forever.
+            recordingWatchdog = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: (self?.maxRecordingSeconds ?? 30) * 1_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                if case .recording = self.status { self.hotkeyReleased() }
+            }
         } catch {
             status = .failed("mic capture failed: \(error.localizedDescription)")
         }
     }
 
     private func hotkeyCancelled() {
+        recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         _ = capture.stop()
         status = .idle
     }
 
     private func hotkeyReleased() {
+        recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         let samples = capture.stop()
         // Ignore accidental taps: < 0.3 s of audio.
@@ -131,11 +157,23 @@ final class AppState: ObservableObject {
         status = .transcribing
         Task {
             do {
-                let text = try await transcriber.transcribe(samples)
-                lastTranscript = text
-                if !text.isEmpty {
-                    TextInjector.paste(text)
+                let raw = try await transcriber.transcribe(samples)
+                lastTranscript = raw
+                lastCleaned = ""
+                guard !raw.isEmpty else {
+                    status = .idle
+                    return
                 }
+                var textToPaste = raw
+                if cleanupEnabled {
+                    status = .cleaning
+                    // Nil = Ollama down/slow/implausible output → paste raw.
+                    if let cleaned = await Cleaner.clean(raw) {
+                        lastCleaned = cleaned
+                        textToPaste = cleaned
+                    }
+                }
+                TextInjector.paste(textToPaste)
                 status = .idle
             } catch {
                 status = .failed("transcription failed: \(error.localizedDescription)")

@@ -6,8 +6,18 @@ struct MenuView: View {
     var body: some View {
         Text(state.status.label)
 
+        Toggle("Clean up with AI (\(Cleaner.model))", isOn: $state.cleanupEnabled)
+
         if !state.lastTranscript.isEmpty {
-            Text("Last: “\(String(state.lastTranscript.prefix(60)))\(state.lastTranscript.count > 60 ? "…" : "")”")
+            Divider()
+            Text("Raw: “\(truncated(state.lastTranscript))”")
+            if !state.lastCleaned.isEmpty {
+                Text("Cleaned: “\(truncated(state.lastCleaned))”")
+            }
+            Button("Copy Raw Transcript") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(state.lastTranscript, forType: .string)
+            }
         }
 
         Divider()
@@ -28,5 +38,9 @@ struct MenuView: View {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")
+    }
+
+    private func truncated(_ text: String) -> String {
+        text.count > 60 ? String(text.prefix(60)) + "…" : text
     }
 }

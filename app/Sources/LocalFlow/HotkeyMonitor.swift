@@ -78,6 +78,14 @@ final class HotkeyMonitor {
         case .fn:
             down = event.modifierFlags.contains(.function)
         case .leftOption:
+            // Release resilience: while held, ANY flags event without .option
+            // means the key was let go — even if the keycode-58 up event itself
+            // was swallowed (secure input fields, app switches).
+            if keyIsDown, !event.modifierFlags.contains(.option) {
+                keyIsDown = false
+                DispatchQueue.main.async(execute: onKeyUp)
+                return
+            }
             guard event.keyCode == Self.leftOptionKeyCode else { return }
             down = event.modifierFlags.contains(.option)
         }
