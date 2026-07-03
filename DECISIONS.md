@@ -34,6 +34,29 @@ MLX dependency, so this constraint doesn't touch our own code.
 - Never use the `:cloud`-tagged models in `ollama list` — they are cloud-routed
   and violate the offline guardrail.
 
+## 2026-07-03 — gemma3:4b cleanup: few-shot prompt is load-bearing
+
+Verified against local Ollama (warm model):
+
+- With a plain instruction-only prompt, gemma3:4b **drops hedges as filler** —
+  "um so like i think we should uh ship it friday" → "Ship it Friday."
+  (loses "I think we should": a meaning change, exactly plan.md §9 risk 2).
+- Adding two few-shot examples + an explicit "hedges like i think, maybe,
+  probably are meaning and must stay" rule fixed it on a held-out utterance
+  ("we should **probably** loop in the security team on Monday." — hedge kept).
+- Warm generation latency: ~140–530 ms per short utterance (t=0.1). Cold model
+  load adds ~2.1 s — the app must keep the model resident (Ollama `keep_alive`).
+
+The canonical prompt lives in `bench/Sources/bench/OllamaCleanup.swift` and is
+the starting point for Phase-2 tuning over the full 20-utterance set.
+
+## 2026-07-03 — CLT quirk: XCTest absent, Swift Testing needs manual paths
+
+CommandLineTools has no XCTest at all. Swift Testing (`import Testing`) works,
+but CLT ships `Testing.framework` outside SwiftPM's default search paths —
+`bench/test.sh` wires in the framework + `lib_TestingInterop.dylib` rpaths.
+Use `./test.sh`, not bare `swift test`.
+
 ## Open — ASR engine choice (Phase 0 exit criterion)
 
 To be decided from the benchmark over Brice's own filler-heavy dictation
