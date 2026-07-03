@@ -156,6 +156,24 @@ real-voice accuracy falls below WhisperKit turbo's.
   Phase-2 levers: shorter prompt/fewer shots, streaming, ~1.5–2B model, MLX,
   skip cleanup on very short utterances.
 
+## 2026-07-03 — field gotchas from Phase 1/2 live testing (Brice's machine)
+
+- **Jamf-managed Macs profile-control the Input Monitoring pane** → switched the
+  hotkey to NSEvent flagsChanged monitors, which need Accessibility only.
+  Two permissions instead of three.
+- **Fn as hotkey collides with macOS globe-key features** → default hotkey is
+  now Left ⌥ (keyCode 58), with chord-cancel and a lost-release fallback.
+- **Apple Voice Control was silently enabled** on the machine and typed
+  everything continuously — looked exactly like "our app is always on".
+  Diagnostic tell: System Settings → Keyboard → Dictation shows "Dictation is
+  not available while Voice Control is enabled". Phase-3 onboarding should
+  detect/warn about Voice Control + Apple Dictation.
+- **Ad-hoc signing invalidates the Accessibility grant on every rebuild**
+  (TCC keys on CDHash) → users must remove/re-add the app each build. Fix
+  queued: stable self-signed signing identity.
+
 ## Open — speak2 end-to-end observations
 
-(to fill in after the reference build runs)
+speak2 built (CLT-only), launched, and was pre-configured for external Ollama;
+full dictation demo waived by Brice at the Phase-0 review since every pipeline
+stage was proven independently with original code.
