@@ -28,7 +28,7 @@ final class AppState: ObservableObject {
             switch self {
             case .needsPermissions: return "Permissions needed — open Setup"
             case .loadingModel: return "Loading speech model…"
-            case .idle: return "Ready — hold Fn and speak"
+            case .idle: return "Ready — hold Left ⌥ and speak"
             case .recording: return "Recording…"
             case .transcribing: return "Transcribing…"
             case .failed(let msg): return "Error: \(msg)"
@@ -90,8 +90,10 @@ final class AppState: ObservableObject {
         }
 
         let monitor = HotkeyMonitor(
+            key: .leftOption,
             onKeyDown: { [weak self] in self?.hotkeyPressed() },
-            onKeyUp: { [weak self] in self?.hotkeyReleased() }
+            onKeyUp: { [weak self] in self?.hotkeyReleased() },
+            onCancel: { [weak self] in self?.hotkeyCancelled() }
         )
         if monitor.start() {
             hotkey = monitor
@@ -110,6 +112,12 @@ final class AppState: ObservableObject {
         } catch {
             status = .failed("mic capture failed: \(error.localizedDescription)")
         }
+    }
+
+    private func hotkeyCancelled() {
+        guard case .recording = status else { return }
+        _ = capture.stop()
+        status = .idle
     }
 
     private func hotkeyReleased() {

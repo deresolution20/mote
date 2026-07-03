@@ -25,7 +25,7 @@ struct OnboardingView: View {
 
             PermissionRow(
                 title: "Accessibility",
-                detail: "To notice the Fn key and type the transcript at your cursor.",
+                detail: "To notice the hotkey and type the transcript at your cursor.",
                 granted: state.accessibilityGranted
             ) {
                 Permissions.promptAccessibility()
@@ -36,7 +36,7 @@ struct OnboardingView: View {
 
             HStack {
                 Image(systemName: "lightbulb")
-                Text("Set System Settings → Keyboard → “Press 🌐 key to” = **Do Nothing**, so macOS doesn't also react to the hotkey.")
+                Text("Push-to-talk: **hold Left ⌥ (Option)**, speak, release. Quick taps and ⌥-shortcuts are ignored.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

@@ -1,22 +1,45 @@
 import AppKit
 import Foundation
 
-/// Push-to-talk on the Fn (globe) key via global NSEvent flagsChanged monitors.
+/// Push-to-talk on a modifier key via global NSEvent flagsChanged monitors.
 /// Modifier-flag events need only Accessibility — NOT Input Monitoring (that's
-/// for real keystroke content, which we never read). This matters on
-/// MDM-managed Macs where the Input Monitoring pane is profile-controlled.
-/// Caveat: set System Settings → Keyboard → "Press 🌐 key to" = "Do Nothing"
-/// so macOS doesn't also act on the key.
+/// for keystroke content, which we never read). This matters on MDM-managed
+/// Macs where the Input Monitoring pane is profile-controlled.
 final class HotkeyMonitor {
+    enum Key {
+        case leftOption
+        case fn
+
+        var label: String {
+            switch self {
+            case .leftOption: return "Left ⌥"
+            case .fn: return "Fn"
+            }
+        }
+    }
+
+    private let key: Key
     private let onKeyDown: () -> Void
     private let onKeyUp: () -> Void
+    /// Fired when another modifier joins mid-hold (e.g. ⌥⌘ shortcut) — the
+    /// press was a chord, not push-to-talk, so the recording should be discarded.
+    private let onCancel: () -> Void
     private var globalMonitor: Any?
     private var localMonitor: Any?
-    private var fnIsDown = false
+    private var keyIsDown = false
 
-    init(onKeyDown: @escaping () -> Void, onKeyUp: @escaping () -> Void) {
+    private static let leftOptionKeyCode: UInt16 = 58
+
+    init(
+        key: Key,
+        onKeyDown: @escaping () -> Void,
+        onKeyUp: @escaping () -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.key = key
         self.onKeyDown = onKeyDown
         self.onKeyUp = onKeyUp
+        self.onCancel = onCancel
     }
 
     func start() -> Bool {
@@ -43,10 +66,29 @@ final class HotkeyMonitor {
     }
 
     private func handle(_ event: NSEvent) {
-        let down = event.modifierFlags.contains(.function)
-        guard down != fnIsDown else { return }
-        fnIsDown = down
+        // A second modifier joining mid-hold means a keyboard shortcut, not dictation.
+        if keyIsDown, chordModifiers(in: event) {
+            keyIsDown = false
+            DispatchQueue.main.async(execute: onCancel)
+            return
+        }
+
+        let down: Bool
+        switch key {
+        case .fn:
+            down = event.modifierFlags.contains(.function)
+        case .leftOption:
+            guard event.keyCode == Self.leftOptionKeyCode else { return }
+            down = event.modifierFlags.contains(.option)
+        }
+        guard down != keyIsDown else { return }
+        keyIsDown = down
         let action = down ? onKeyDown : onKeyUp
         DispatchQueue.main.async(execute: action)
+    }
+
+    private func chordModifiers(in event: NSEvent) -> Bool {
+        let others: NSEvent.ModifierFlags = [.command, .shift, .control]
+        return !event.modifierFlags.intersection(others).isEmpty
     }
 }
