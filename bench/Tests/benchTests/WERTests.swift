@@ -40,6 +40,22 @@ import Testing
         #expect(wordErrorRate(reference: "it's fine", hypothesis: "its fine") == 0.5)
     }
 
+    @Test func contentWERIgnoresPureFillers() {
+        // Apple-style output: fillers stripped by the engine, content intact.
+        let reference = "um so i think we should uh ship it friday"
+        let hypothesis = "So I think we should ship it Friday."
+        #expect(wordErrorRate(reference: reference, hypothesis: hypothesis) > 0)
+        #expect(wordErrorRate(reference: reference, hypothesis: hypothesis, ignoringFillers: true) == 0)
+    }
+
+    @Test func contentWERStillCatchesRealErrors() {
+        #expect(wordErrorRate(
+            reference: "um ship it friday",
+            hypothesis: "ship it monday",
+            ignoringFillers: true
+        ) > 0)
+    }
+
     @Test func normalizer() {
         #expect(normalizedWords("Um, so — it's 3:30 already!") == ["um", "so", "it's", "3", "30", "already"])
     }

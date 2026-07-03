@@ -125,6 +125,7 @@ struct Run: AsyncParsableCommand {
         let id: String
         let latency: Double
         let wer: Double
+        let contentWER: Double
         let hypothesis: String
         let audioSeconds: Double
     }
@@ -167,11 +168,14 @@ struct Run: AsyncParsableCommand {
                     let hypothesis = try await engine.transcribe(url)
                     let latency = Date().timeIntervalSince(start)
                     let wer = wordErrorRate(reference: sample.reference, hypothesis: hypothesis)
+                    let contentWER = wordErrorRate(
+                        reference: sample.reference, hypothesis: hypothesis, ignoringFillers: true
+                    )
                     results.append(SampleResult(
-                        id: sample.id, latency: latency, wer: wer,
+                        id: sample.id, latency: latency, wer: wer, contentWER: contentWER,
                         hypothesis: hypothesis, audioSeconds: AudioIO.duration(url)
                     ))
-                    print("  [\(sample.id)] \(fmt(latency))  WER \(fmtPct(wer))  “\(hypothesis)”")
+                    print("  [\(sample.id)] \(fmt(latency))  WER \(fmtPct(wer))  content-WER \(fmtPct(contentWER))  “\(hypothesis)”")
                 }
                 reports.append(EngineReport(
                     name: engine.name, loadTime: loadTime, warmupTime: warmupTime,
@@ -198,29 +202,32 @@ struct Run: AsyncParsableCommand {
         - Latency = wall-clock batch transcription of the whole file, model pre-loaded and warmed
           (a proxy for end-of-speech latency; streaming behavior is evaluated separately in Phase 1)
         - WER = word-level Levenshtein vs verbatim reference (fillers included), case/punctuation-insensitive
+        - Content WER = same, with pure disfluencies (um/uh/…) stripped from both sides — the
+          fairness metric for Apple SpeechTranscriber, which removes fillers with no verbatim option
 
         ## Summary
 
-        | Engine | Load | Warmup (1st transcribe) | Median latency | p90 latency | Mean WER |
-        | --- | --- | --- | --- | --- | --- |
+        | Engine | Load | Warmup (1st transcribe) | Median latency | p90 latency | Mean WER | Mean content WER |
+        | --- | --- | --- | --- | --- | --- | --- |
 
         """
         for r in reports {
             if let failure = r.failure {
-                md += "| \(r.name) | — | — | — | — | FAILED: \(failure) |\n"
+                md += "| \(r.name) | — | — | — | — | — | FAILED: \(failure) |\n"
             } else {
                 let lat = r.results.map(\.latency)
                 let wer = r.results.map(\.wer)
-                md += "| \(r.name) | \(fmt(r.loadTime)) | \(fmt(r.warmupTime)) | \(fmt(lat.median)) | \(fmt(lat.p90)) | \(fmtPct(wer.mean)) |\n"
+                let contentWER = r.results.map(\.contentWER)
+                md += "| \(r.name) | \(fmt(r.loadTime)) | \(fmt(r.warmupTime)) | \(fmt(lat.median)) | \(fmt(lat.p90)) | \(fmtPct(wer.mean)) | \(fmtPct(contentWER.mean)) |\n"
             }
         }
 
         md += "\n## Per-sample details\n"
         for r in reports where r.failure == nil {
-            md += "\n### \(r.name)\n\n| id | audio | latency | WER | hypothesis |\n| --- | --- | --- | --- | --- |\n"
+            md += "\n### \(r.name)\n\n| id | audio | latency | WER | content WER | hypothesis |\n| --- | --- | --- | --- | --- | --- |\n"
             for s in r.results {
                 let hyp = s.hypothesis.replacingOccurrences(of: "|", with: "\\|")
-                md += "| \(s.id) | \(String(format: "%.1f s", s.audioSeconds)) | \(fmt(s.latency)) | \(fmtPct(s.wer)) | \(hyp) |\n"
+                md += "| \(s.id) | \(String(format: "%.1f s", s.audioSeconds)) | \(fmt(s.latency)) | \(fmtPct(s.wer)) | \(fmtPct(s.contentWER)) | \(hyp) |\n"
             }
         }
 

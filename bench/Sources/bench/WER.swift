@@ -10,11 +10,23 @@ func normalizedWords(_ text: String) -> [String] {
     return String(cleaned).split(separator: " ").map(String.init)
 }
 
+/// Unambiguous pure disfluencies. Apple SpeechTranscriber strips these with no
+/// verbatim option (SDK-verified: its only TranscriptionOption is
+/// etiquetteReplacements), so verbatim WER systematically penalizes it.
+/// "like"/"so"/"you know" stay — they can be content words.
+private let pureFillers: Set<String> = ["um", "uh", "erm", "uhm", "mhm", "hmm"]
+
 /// Word error rate: word-level Levenshtein distance / reference word count.
 /// Can exceed 1.0 when the hypothesis is much longer than the reference.
-func wordErrorRate(reference: String, hypothesis: String) -> Double {
-    let ref = normalizedWords(reference)
-    let hyp = normalizedWords(hypothesis)
+/// `ignoringFillers` drops pure disfluencies from BOTH sides first — the
+/// engine-fairness metric ("content WER").
+func wordErrorRate(reference: String, hypothesis: String, ignoringFillers: Bool = false) -> Double {
+    var ref = normalizedWords(reference)
+    var hyp = normalizedWords(hypothesis)
+    if ignoringFillers {
+        ref.removeAll { pureFillers.contains($0) }
+        hyp.removeAll { pureFillers.contains($0) }
+    }
     if ref.isEmpty { return hyp.isEmpty ? 0 : Double(hyp.count) }
     if hyp.isEmpty { return 1 }
 
