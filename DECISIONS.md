@@ -57,6 +57,39 @@ but CLT ships `Testing.framework` outside SwiftPM's default search paths —
 `bench/test.sh` wires in the framework + `lib_TestingInterop.dylib` rpaths.
 Use `./test.sh`, not bare `swift test`.
 
+## 2026-07-03 — smoke test: all 4 engines work end-to-end (CLT-only)
+
+Ran the harness over `say`-synthesized audio (2 clips — directional only, real
+decision comes from Brice's recordings):
+
+- **WhisperKit large-v3-turbo** and **Parakeet v3** both transcribed verbatim
+  (0% WER, fillers kept). Warm per-clip: turbo ~0.47 s, Parakeet ~0.07 s.
+- **Apple SpeechTranscriber strips fillers by design** — SDK-verified that its
+  only `TranscriptionOption` is `etiquetteReplacements`; there is **no verbatim
+  mode**. Consequences: (a) benchmark adds a filler-insensitive "content WER"
+  so Apple isn't unfairly penalized; (b) if Apple wins, the cleanup LLM receives
+  a non-verbatim transcript — raw-transcript recoverability then means "as
+  heard by Apple", not "as spoken".
+- **WhisperKit base.en** misheard "Um so" → "I'm so" even on clean synthetic
+  audio — speed reference only.
+- First-run load/warmup is dominated by download + Core ML/ANE compilation
+  (turbo warmup ~100 s, Parakeet load ~128 s first time).
+- **Steady-state (second process, models cached):**
+
+  | Engine | Load | Warmup | Per-clip |
+  | --- | --- | --- | --- |
+  | WhisperKit large-v3-turbo | 65.3 s | 99.0 s | ~0.47 s |
+  | WhisperKit base.en | 2.6 s | 0.7 s | ~0.08 s |
+  | Apple SpeechTranscriber | 0.05 s | 0.14 s | ~0.07 s |
+  | Parakeet v3 | 0.14 s | 0.10 s | ~0.07 s |
+
+  WhisperKit turbo's ANE compilation is NOT reused across processes on this
+  machine — ~2.7 min to first dictation per app launch is a serious strike
+  against it unless a fix exists (open question: WhisperKit prewarm/model-cache
+  settings). Parakeet and Apple ST are in a different latency class entirely.
+  If Parakeet matches turbo's WER on Brice's real voice, it wins outright
+  (verbatim transcript + ~0.07 s per utterance + instant load).
+
 ## Open — ASR engine choice (Phase 0 exit criterion)
 
 To be decided from the benchmark over Brice's own filler-heavy dictation
