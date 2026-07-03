@@ -90,11 +90,45 @@ decision comes from Brice's recordings):
   If Parakeet matches turbo's WER on Brice's real voice, it wins outright
   (verbatim transcript + ~0.07 s per utterance + instant load).
 
-## Open — ASR engine choice (Phase 0 exit criterion)
+## 2026-07-03 — PROVISIONAL ASR choice: Parakeet v3 (pending real-voice confirmation)
 
-To be decided from the benchmark over Brice's own filler-heavy dictation
-samples: WhisperKit `large-v3-turbo` vs Apple `SpeechTranscriber` vs FluidAudio
-Parakeet v3. Accuracy on this test set first, then latency.
+Full 20-utterance **synthetic** benchmark (5 rotating `say` voices reading the
+filler-heavy set — see `bench/SYNTH_RESULTS.md`):
+
+| Engine | Warmup | Median latency | Mean WER | Mean content WER |
+| --- | --- | --- | --- | --- |
+| **Parakeet v3** | **0.08 s** | **0.071 s** | **11.7%** | **10.5%** |
+| WhisperKit large-v3-turbo | 92 s (!) | 0.494 s | 13.8% | 12.0% |
+| Apple SpeechTranscriber | 0.09 s | 0.078 s | 19.2% | 16.0% |
+| WhisperKit base.en | 5.9 s | 0.082 s | 23.1% | 19.7% |
+
+**Parakeet v3 wins on BOTH accuracy and latency**, with instant warmup.
+WhisperKit turbo is second on accuracy but pays ~92 s ANE re-compilation every
+process launch plus ~0.5 s per utterance. Apple ST is the zero-dependency
+fallback (instant, but non-verbatim and mid accuracy).
+
+Caveats: TTS voices ≠ Brice's voice; engines may collapse scripted stutters
+("the the") differently, inflating absolute WER for all. **Final call requires
+`bench run` over Brice's real recordings** — it only overturns this if Parakeet's
+real-voice accuracy falls below WhisperKit turbo's.
+
+## 2026-07-03 — cleanup hop measured: gemma3:4b ≈ 0.65 s, 1/20 meaning change
+
+`bench cleanup` over the 20 reference transcripts (see `bench/SYNTH_CLEANUP.md`):
+
+- **gemma3:4b: median 0.648 s, p90 0.670 s** (warm). 19/20 outputs
+  meaning-preserving; sample 03 was a full rewrite ("can you send me the link
+  to that doc" → "I think you can find that document here"). Phase 2 must get
+  this to 0/20 — prompt hardening (e.g. "if unsure, return input verbatim"),
+  smaller/other models, or an output-similarity guard.
+- **gemma4:26b: median 6.8 s** — disqualified for the live loop, as plan.md
+  predicted. Quirk: it returns EMPTY responses with the few-shot system prompt
+  (works with a short one) — don't use it even for the quality-ceiling
+  comparison without reworking the prompt format.
+- **Provisional end-to-end budget:** ASR 0.07 s + cleanup 0.65 s ≈ **0.72 s**
+  vs the 0.5 s target — the LLM hop is the bottleneck (plan.md §8 called it).
+  Phase-2 levers: shorter prompt/fewer shots, streaming, ~1.5–2B model, MLX,
+  skip cleanup on very short utterances.
 
 ## Open — speak2 end-to-end observations
 
