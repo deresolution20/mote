@@ -141,6 +141,12 @@ struct Cleaner {
         for marker in protectedMarkers {
             if rawJoined.contains(marker), !cleanedJoined.contains(marker) { return false }
         }
+        // Personal-dictionary terms must survive cleanup verbatim — if the
+        // corrected transcript had one and cleanup dropped it, reject.
+        for term in PersonalDictionary.shared.terms {
+            let t = term.lowercased()
+            if rawJoined.contains(t), !cleanedJoined.contains(t) { return false }
+        }
         return true
     }
 

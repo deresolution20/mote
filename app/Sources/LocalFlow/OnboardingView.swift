@@ -59,6 +59,10 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Divider()
+
+            PersonalDictionarySection()
+
             HStack {
                 Spacer()
                 if state.allPermissionsGranted {
@@ -101,5 +105,56 @@ private struct PermissionRow: View {
                 Button("Grant…", action: action)
             }
         }
+    }
+}
+
+private struct PersonalDictionarySection: View {
+    @EnvironmentObject var state: AppState
+    @State private var newTerm = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Personal dictionary").font(.headline)
+            Text("Words the transcriber tends to mishear — proper nouns, product names, jargon. Spoken tokens that sound like these get corrected automatically (e.g. “Grafana”, “Zendesk”, “Prometheus”).")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                TextField("Add a term…", text: $newTerm)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(addTerm)
+                Button("Add", action: addTerm)
+                    .disabled(newTerm.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+
+            if state.dictionaryTerms.isEmpty {
+                Text("No terms yet.").font(.caption).foregroundStyle(.tertiary)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(state.dictionaryTerms, id: \.self) { term in
+                            HStack {
+                                Text(term)
+                                Spacer()
+                                Button {
+                                    state.removeDictionaryTerm(term)
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.vertical, 1)
+                        }
+                    }
+                }
+                .frame(maxHeight: 110)
+            }
+        }
+    }
+
+    private func addTerm() {
+        state.addDictionaryTerm(newTerm)
+        newTerm = ""
     }
 }

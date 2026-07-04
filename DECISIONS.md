@@ -26,9 +26,17 @@ Post-MVP work, all verified live by Brice:
 - **User-settable Ollama keep-alive**, default 10 min (was hard-coded 60m):
   menu presets + free numeric field in setup window. 0 = unload immediately.
 
-Remaining Phase-3 ideas (not started): personal dictionary (fixes
-"Grafana"→"Grafani's", Brice's top real-world miss), per-app context modes,
-style presets, streaming ASR partials in the HUD.
+- **Personal dictionary** (shipped): custom-vocabulary correction pass on the
+  raw transcript before cleanup. Phonetic match = Soundex key equality + tight
+  Levenshtein (shared initial required) to avoid rewriting ordinary words.
+  Fixes Brice's top miss ("Grafani's"→"Grafana"), also enforces canonical
+  casing ("kubernetes"→"Kubernetes"). Terms managed in the setup window and
+  protected through cleanup. Verified on the real benchmark misses + negative
+  cases (coffee/meeting untouched). Multi-word terms and possessive edge
+  ("Grafana's"→"Grafana") are known v1 limitations.
+
+Remaining Phase-3 ideas (not started): per-app context modes, style presets,
+streaming ASR partials in the HUD.
 
 ## 2026-07-03 — **MVP ACCEPTED (Phase 2 complete)**
 

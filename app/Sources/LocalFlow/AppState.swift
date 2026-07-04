@@ -69,6 +69,19 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Custom vocabulary terms, mirrored for SwiftUI binding.
+    @Published var dictionaryTerms: [String] = PersonalDictionary.shared.terms
+
+    func addDictionaryTerm(_ term: String) {
+        PersonalDictionary.shared.add(term)
+        dictionaryTerms = PersonalDictionary.shared.terms
+    }
+
+    func removeDictionaryTerm(_ term: String) {
+        PersonalDictionary.shared.remove(term)
+        dictionaryTerms = PersonalDictionary.shared.terms
+    }
+
     private let capture = AudioCapture()
     private let transcriber = Transcriber()
     private var hotkey: HotkeyMonitor?
@@ -177,7 +190,9 @@ final class AppState: ObservableObject {
         HUDController.shared.show(.transcribing)
         Task {
             do {
-                let raw = try await transcriber.transcribe(samples)
+                let heard = try await transcriber.transcribe(samples)
+                // Personal-dictionary correction on the raw ASR output, before cleanup.
+                let raw = PersonalDictionary.shared.correct(heard)
                 lastTranscript = raw
                 lastCleaned = ""
                 guard !raw.isEmpty else {

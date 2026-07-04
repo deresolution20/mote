@@ -145,7 +145,7 @@ samples and reproduce the numbers.
 - [x] **Phase 1** — hotkey → capture → ASR → paste raw text
 - [x] **Phase 2 (MVP)** — local LLM cleanup with raw⇄cleaned toggle
 - [x] **Phase 3 (in progress)** — animated waveform HUD
-- [ ] Personal dictionary (custom vocabulary / proper nouns)
+- [x] Personal dictionary (custom vocabulary / proper nouns)
 - [ ] Streaming partial transcripts in the overlay
 - [ ] Per-app context modes and style presets
 
