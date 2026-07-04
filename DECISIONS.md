@@ -1,5 +1,22 @@
 # Local Flow — decision log
 
+## 2026-07-03 — **MVP ACCEPTED (Phase 2 complete)**
+
+Brice verified live: "um so like i think we should uh ship it friday" →
+"I think we should ship it Friday." and "are you there" → "Are you there?"
+pasted at the cursor, fully offline. Formal acceptance over his 24 recorded
+utterances: 21 cleaned, 3 guarded raw fallbacks, **zero meaning changes**
+(`bench/ACCEPTANCE.md`).
+
+Final stack: Left ⌥ push-to-talk (NSEvent, Accessibility-only) →
+AVAudioEngine 16 kHz → **Parakeet v3** (~0.07 s) → **gemma3:4b** cleanup
+(~0.74 s median, v3 few-shot prompt + protected-phrase guard, raw always
+recoverable) → clipboard+⌘V injection.
+
+Honest gap vs plan: end-to-end ≈0.8 s after release vs the inferred 0.5 s
+target — felt acceptable in live use. Phase-3 levers if it starts to grate:
+streaming cleanup, ~1.5–2B model, MLX hop, skip-cleanup-on-short-utterances.
+
 ## 2026-07-03 — speak2 is reference-only (no license)
 
 speak2 has **no license** in any tag (v1.0.0–v1.8.1), no README grant, and GitHub
