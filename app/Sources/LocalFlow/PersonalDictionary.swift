@@ -52,24 +52,42 @@ final class PersonalDictionary {
         return output
     }
 
+    /// Common words that must never be fuzzy-corrected — our own filler words
+    /// plus frequent short words that collide with proper nouns (e.g. "like"
+    /// shares Soundex L200 with "Loki"). Exact matches still apply casing.
+    private static let commonWords: Set<String> = [
+        "um", "uh", "erm", "like", "so", "yeah", "okay", "the", "this", "that",
+        "these", "those", "then", "than", "them", "they", "there", "their",
+        "dash", "does", "done", "make", "take", "time", "work", "look", "from",
+        "with", "have", "been", "were", "will", "well", "what", "when", "some",
+        "here", "your", "our", "out", "about", "just", "know", "need", "want",
+        "think", "thing", "good", "back", "down", "only", "very", "much", "many",
+        "week", "next", "last", "into", "over", "also", "right", "more", "most",
+    ]
+
     /// Returns the canonical spelling if `word` matches a term, else nil.
     private func canonical(for word: String) -> String? {
         let w = normalize(word)
-        guard w.count >= 3 else { return nil } // don't touch tiny words
+        guard w.count >= 4 else { return nil } // don't touch tiny words
+
+        // Exact (case-insensitive) match → enforce canonical casing, even for
+        // common words the user explicitly added (kubernetes → Kubernetes).
+        for term in terms where w == normalize(term) {
+            return word == term ? nil : term
+        }
+
+        // Never fuzzy-correct ordinary/filler words to a look-alike term.
+        if Self.commonWords.contains(w) { return nil }
 
         for term in terms {
             let t = normalize(term)
-            if w == t {
-                // Right word — enforce the term's canonical casing (kubernetes → Kubernetes),
-                // but don't rewrite if it already matches exactly.
-                return word == term ? nil : term
-            }
             guard w.first == t.first else { continue } // proper nouns keep their initial
             let distance = levenshtein(w, t)
             let ratio = Double(distance) / Double(max(w.count, t.count))
-            // Tight thresholds + shared initial + matching phonetic key keeps
-            // this from rewriting ordinary words that merely rhyme.
-            if (distance <= 2 || ratio <= 0.34), soundex(w) == soundex(t) {
+            // Ratio-only (no absolute-distance escape) + shared initial +
+            // matching phonetic key. Short terms then need near-exact matches,
+            // which stops "like"→"Loki" while still catching "grafani's"→"Grafana".
+            if ratio <= 0.25, soundex(w) == soundex(t) {
                 return term
             }
         }
