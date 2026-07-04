@@ -1,5 +1,15 @@
 # Local Flow — decision log
 
+## 2026-07-04 — published as a public MIT repo
+
+Repo: https://github.com/deresolution20/local-flow (public, MIT, owner
+deresolution20). Explicitly confirmed public with Brice per org policy.
+Before publishing: scanned for secrets (clean); rewrote all commit history to
+author `deresolution20 <deresolution20@users.noreply.github.com>` (work email
+kept off the public record, Brice's choice); purged `GOAL.md` (internal agent
+scaffolding) from the entire history and gitignored it. Added a showpiece
+README + MIT LICENSE. `bench/samples/*.wav` remain gitignored.
+
 ## 2026-07-04 — Phase 3 started: waveform HUD shipped + polish
 
 Post-MVP work, all verified live by Brice:
