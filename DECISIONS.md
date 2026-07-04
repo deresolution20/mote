@@ -1,5 +1,25 @@
 # Local Flow — decision log
 
+## 2026-07-04 — Phase 3 started: waveform HUD shipped + polish
+
+Post-MVP work, all verified live by Brice:
+
+- **Waveform HUD** (accepted): floating bottom-center pill, non-activating
+  panel (never steals paste focus), decorative animated bars while recording →
+  transcribing → cleaning → done → fade. Auto light/dark. Menu toggle. Chosen
+  over mic-reactive to keep it simple; revisit if amplitude reactivity wanted.
+- **Stable code-signing identity** ("LocalFlow Dev" self-signed cert, created
+  via CLI + `security add-trusted-cert` + `set-key-partition-list` so codesign
+  runs non-interactively). `bundle.sh` auto-uses it. Ends the
+  remove/re-add-Accessibility-every-rebuild treadmill (TCC now keys on the
+  cert, not the ad-hoc CDHash).
+- **User-settable Ollama keep-alive**, default 10 min (was hard-coded 60m):
+  menu presets + free numeric field in setup window. 0 = unload immediately.
+
+Remaining Phase-3 ideas (not started): personal dictionary (fixes
+"Grafana"→"Grafani's", Brice's top real-world miss), per-app context modes,
+style presets, streaming ASR partials in the HUD.
+
 ## 2026-07-03 — **MVP ACCEPTED (Phase 2 complete)**
 
 Brice verified live: "um so like i think we should uh ship it friday" →
