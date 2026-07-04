@@ -10,6 +10,8 @@ struct MenuView: View {
 
         Toggle("Show waveform overlay", isOn: $state.hudEnabled)
 
+        Toggle("Insert by typing (skip clipboard)", isOn: $state.injectByTyping)
+
         Menu("Keep model loaded: \(keepAliveLabel)") {
             ForEach([0, 5, 10, 30, 60], id: \.self) { minutes in
                 Button {

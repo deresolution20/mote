@@ -41,6 +41,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <true/>
     <key>NSMicrophoneUsageDescription</key>
     <string>Local Flow listens while you hold the dictation hotkey. Audio never leaves this Mac.</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <!-- The only network call is to the local Ollama server on localhost.
+             Allow local networking; do NOT allow arbitrary cleartext loads. -->
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
 </dict>
 </plist>
 PLIST

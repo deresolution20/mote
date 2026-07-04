@@ -58,6 +58,11 @@ final class AppState: ObservableObject {
             if !hudEnabled { HUDController.shared.hide() }
         }
     }
+    /// Insert by typing (no clipboard) by default — safer on managed machines
+    /// where clipboard managers / DLP tools may capture pasted content.
+    @Published var injectByTyping: Bool = UserDefaults.standard.object(forKey: "injectByTyping") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(injectByTyping, forKey: "injectByTyping") }
+    }
     /// Minutes Ollama keeps the cleanup model resident after use (0 = unload now).
     @Published var keepAliveMinutes: Int = Cleaner.keepAliveMinutes {
         didSet {
@@ -210,7 +215,7 @@ final class AppState: ObservableObject {
                         textToPaste = cleaned
                     }
                 }
-                TextInjector.paste(textToPaste)
+                TextInjector.insert(textToPaste, method: injectByTyping ? .type : .clipboard)
                 status = .idle
                 HUDController.shared.finishAndHide()
             } catch {
