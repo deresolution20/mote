@@ -45,9 +45,16 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-# Ad-hoc signature is enough for local use; a stable identity keeps TCC grants
-# sticky across rebuilds.
-codesign --force --sign - "$APP"
+# Prefer the stable "LocalFlow Dev" self-signed identity if it exists — it keeps
+# the Accessibility grant valid across rebuilds. Ad-hoc otherwise (TCC then
+# requires remove/re-add in Accessibility after every rebuild).
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "LocalFlow Dev"; then
+  echo "signing with LocalFlow Dev identity"
+  codesign --force --sign "LocalFlow Dev" "$APP"
+else
+  echo "signing ad-hoc (create a 'LocalFlow Dev' cert in Keychain Access to stop TCC re-grants)"
+  codesign --force --sign - "$APP"
+fi
 
 echo "Built $PWD/$APP"
 echo "Run:   open $PWD/$APP"
