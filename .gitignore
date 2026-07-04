@@ -16,3 +16,6 @@ Models/
 
 # macOS
 .DS_Store
+
+# Internal agent scaffolding — not part of the public project
+GOAL.md
