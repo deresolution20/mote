@@ -8,6 +8,22 @@ struct MenuView: View {
 
         Toggle("Clean up with AI (\(Cleaner.model))", isOn: $state.cleanupEnabled)
 
+        Menu("Keep model loaded: \(keepAliveLabel)") {
+            ForEach([0, 5, 10, 30, 60], id: \.self) { minutes in
+                Button {
+                    state.keepAliveMinutes = minutes
+                } label: {
+                    Label(
+                        minutes == 0 ? "Unload immediately" : "\(minutes) min",
+                        systemImage: state.keepAliveMinutes == minutes ? "checkmark" : ""
+                    )
+                }
+            }
+            Divider()
+            Text("Custom values in Setup & Permissions…")
+        }
+        .disabled(!state.cleanupEnabled)
+
         if !state.lastTranscript.isEmpty {
             Divider()
             Text("Raw: “\(truncated(state.lastTranscript))”")
@@ -42,5 +58,9 @@ struct MenuView: View {
 
     private func truncated(_ text: String) -> String {
         text.count > 60 ? String(text.prefix(60)) + "…" : text
+    }
+
+    private var keepAliveLabel: String {
+        state.keepAliveMinutes <= 0 ? "off" : "\(state.keepAliveMinutes) min"
     }
 }

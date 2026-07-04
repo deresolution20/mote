@@ -6,10 +6,24 @@ import Foundation
 struct Cleaner {
     static let model = "gemma3:4b"
     private static let baseURL = URL(string: "http://localhost:11434")!
-    /// Keep the model resident between dictations — cold load costs ~2 s.
-    private static let keepAlive = "60m"
     /// Past this, pasting raw beats making the user wait.
     private static let timeout: TimeInterval = 6
+
+    static let keepAliveDefaultMinutes = 10
+    private static let keepAliveKey = "modelKeepAliveMinutes"
+
+    /// How long Ollama keeps the cleanup model resident after a request.
+    /// User-settable (menu / setup window). 0 = unload immediately.
+    static var keepAliveMinutes: Int {
+        get { UserDefaults.standard.object(forKey: keepAliveKey) as? Int ?? keepAliveDefaultMinutes }
+        set { UserDefaults.standard.set(max(0, newValue), forKey: keepAliveKey) }
+    }
+
+    /// Ollama `keep_alive` wire value: minutes as "<n>m", or "0" to unload now.
+    private static var keepAlive: String {
+        let m = keepAliveMinutes
+        return m <= 0 ? "0" : "\(m)m"
+    }
 
     /// Few-shot examples are load-bearing: without them gemma3:4b drops hedges
     /// ("i think", "probably") as if they were filler — a meaning change.
@@ -138,8 +152,10 @@ struct Cleaner {
     }
 
     /// Fire-and-forget warm-up so the first dictation doesn't pay the ~2 s
-    /// model load. keep_alive then holds it resident.
+    /// model load. keep_alive then holds it resident. Pointless when the user
+    /// set keep-alive to 0 (the model would unload right after warming).
     static func warmUp() {
+        guard keepAliveMinutes > 0 else { return }
         Task.detached(priority: .utility) {
             _ = await clean("warm up")
         }

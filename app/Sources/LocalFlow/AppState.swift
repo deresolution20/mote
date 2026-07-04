@@ -52,6 +52,16 @@ final class AppState: ObservableObject {
             if cleanupEnabled { Cleaner.warmUp() }
         }
     }
+    /// Minutes Ollama keeps the cleanup model resident after use (0 = unload now).
+    @Published var keepAliveMinutes: Int = Cleaner.keepAliveMinutes {
+        didSet {
+            let clamped = max(0, keepAliveMinutes)
+            if clamped != keepAliveMinutes { keepAliveMinutes = clamped; return }
+            Cleaner.keepAliveMinutes = clamped
+            // Re-warm so the new residency window starts from a loaded model.
+            if cleanupEnabled { Cleaner.warmUp() }
+        }
+    }
 
     private let capture = AudioCapture()
     private let transcriber = Transcriber()

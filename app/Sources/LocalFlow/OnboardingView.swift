@@ -41,6 +41,24 @@ struct OnboardingView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Divider()
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("Keep cleanup model loaded for")
+                    TextField("", value: $state.keepAliveMinutes, format: .number)
+                        .frame(width: 52)
+                        .textFieldStyle(.roundedBorder)
+                        .multilineTextAlignment(.trailing)
+                    Stepper("minutes", value: $state.keepAliveMinutes, in: 0...1440)
+                        .labelsHidden()
+                    Text("minutes")
+                }
+                Text("Higher = faster first dictation (model stays warm); lower = frees ~4 GB sooner. 0 unloads it immediately after each use.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             HStack {
                 Spacer()
                 if state.allPermissionsGranted {
