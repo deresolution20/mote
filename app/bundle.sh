@@ -50,11 +50,13 @@ PLIST
 # requires remove/re-add in Accessibility after every rebuild).
 if security find-identity -v -p codesigning 2>/dev/null | grep -q "LocalFlow Dev"; then
   echo "signing with LocalFlow Dev identity"
-  codesign --force --sign "LocalFlow Dev" "$APP"
+  codesign --force --sign "LocalFlow Dev" --identifier "dev.brice.localflow" "$APP"
 else
   echo "signing ad-hoc (create a 'LocalFlow Dev' cert in Keychain Access to stop TCC re-grants)"
   codesign --force --sign - "$APP"
 fi
+
+codesign -dvv "$APP" 2>&1 | grep -E "Identifier=|Authority=" || true
 
 echo "Built $PWD/$APP"
 echo "Run:   open $PWD/$APP"
