@@ -8,6 +8,8 @@ struct MenuView: View {
 
         Toggle("Clean up with AI (\(Cleaner.model))", isOn: $state.cleanupEnabled)
 
+        Toggle("Show waveform overlay", isOn: $state.hudEnabled)
+
         Menu("Keep model loaded: \(keepAliveLabel)") {
             ForEach([0, 5, 10, 30, 60], id: \.self) { minutes in
                 Button {

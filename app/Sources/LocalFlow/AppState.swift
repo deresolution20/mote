@@ -52,6 +52,12 @@ final class AppState: ObservableObject {
             if cleanupEnabled { Cleaner.warmUp() }
         }
     }
+    @Published var hudEnabled: Bool = UserDefaults.standard.object(forKey: "hudEnabled") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(hudEnabled, forKey: "hudEnabled")
+            if !hudEnabled { HUDController.shared.hide() }
+        }
+    }
     /// Minutes Ollama keeps the cleanup model resident after use (0 = unload now).
     @Published var keepAliveMinutes: Int = Cleaner.keepAliveMinutes {
         didSet {
@@ -137,6 +143,7 @@ final class AppState: ObservableObject {
         do {
             try capture.start()
             status = .recording
+            HUDController.shared.show(.recording)
             // Watchdog: if the release event is ever lost, don't record forever.
             recordingWatchdog = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: (self?.maxRecordingSeconds ?? 30) * 1_000_000_000)
@@ -153,6 +160,7 @@ final class AppState: ObservableObject {
         guard case .recording = status else { return }
         _ = capture.stop()
         status = .idle
+        HUDController.shared.hide()
     }
 
     private func hotkeyReleased() {
@@ -162,9 +170,11 @@ final class AppState: ObservableObject {
         // Ignore accidental taps: < 0.3 s of audio.
         guard samples.count > 4800 else {
             status = .idle
+            HUDController.shared.hide()
             return
         }
         status = .transcribing
+        HUDController.shared.show(.transcribing)
         Task {
             do {
                 let raw = try await transcriber.transcribe(samples)
@@ -172,11 +182,13 @@ final class AppState: ObservableObject {
                 lastCleaned = ""
                 guard !raw.isEmpty else {
                     status = .idle
+                    HUDController.shared.hide()
                     return
                 }
                 var textToPaste = raw
                 if cleanupEnabled {
                     status = .cleaning
+                    HUDController.shared.show(.cleaning)
                     // Nil = Ollama down/slow/implausible output → paste raw.
                     if let cleaned = await Cleaner.clean(raw) {
                         lastCleaned = cleaned
@@ -185,8 +197,10 @@ final class AppState: ObservableObject {
                 }
                 TextInjector.paste(textToPaste)
                 status = .idle
+                HUDController.shared.finishAndHide()
             } catch {
                 status = .failed("transcription failed: \(error.localizedDescription)")
+                HUDController.shared.hide()
                 // Recover to idle after a beat so the next attempt works.
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 if case .failed = status { status = .idle }
