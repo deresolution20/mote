@@ -1,0 +1,591 @@
+{
+  "benchmarkSeconds" : 18.261103987693787,
+  "createdAt" : "2026-07-06T21:09:43Z",
+  "manifestPath" : "\/Users\/brice\/Claude Code work\/fable5_projects\/local-flow\/bench\/samples\/manifest.json",
+  "notes" : [
+    "This measures the production cleanup chain after one warmup call in the same process.",
+    "For MLX selection, the measured chain is MLX first, then Ollama fallback, then raw transcript fallback.",
+    "Automated safety gates reject implausible model outputs; human review is still required before changing the default provider."
+  ],
+  "providerChain" : [
+    {
+      "displayName" : "MLX",
+      "id" : "mlx",
+      "modelName" : "mlx-community\/Qwen2.5-1.5B-Instruct-4bit"
+    },
+    {
+      "displayName" : "Ollama",
+      "id" : "ollama",
+      "modelName" : "gemma3:4b"
+    }
+  ],
+  "sampleCount" : 24,
+  "samples" : [
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "I think we should ship it Friday.",
+          "latencySeconds" : 0.24431204795837402,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "I think we should ship it Friday.",
+          "sanitizedCandidate" : "I think we should ship it Friday."
+        }
+      ],
+      "cleanedText" : "I think we should ship it Friday.",
+      "file" : "01.wav",
+      "id" : "01",
+      "latencySeconds" : 0.2443300485610962,
+      "path" : "mlx",
+      "reference" : "um, so I think we should ship it Friday",
+      "textToPaste" : "I think we should ship it Friday."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Yeah, basically the dashboard is broken again.",
+          "latencySeconds" : 0.24857211112976074,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Yeah, basically the dashboard is broken again.",
+          "sanitizedCandidate" : "Yeah, basically the dashboard is broken again."
+        }
+      ],
+      "cleanedText" : "Yeah, basically the dashboard is broken again.",
+      "file" : "02.wav",
+      "id" : "02",
+      "latencySeconds" : 0.248587965965271,
+      "path" : "mlx",
+      "reference" : "yeah so basically the uh the dashboard is is broken again",
+      "textToPaste" : "Yeah, basically the dashboard is broken again."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Can you send me the link to that doc?",
+          "latencySeconds" : 0.28705406188964844,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Can you send me the link to that doc?",
+          "sanitizedCandidate" : "Can you send me the link to that doc?"
+        }
+      ],
+      "cleanedText" : "Can you send me the link to that doc?",
+      "file" : "03.wav",
+      "id" : "03",
+      "latencySeconds" : 0.28706908226013184,
+      "path" : "mlx",
+      "reference" : "can you um, can you send me the link to that doc?",
+      "textToPaste" : "Can you send me the link to that doc?"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "So I was thinking maybe we grab lunch after standup.",
+          "latencySeconds" : 0.3005809783935547,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "So I was thinking maybe we grab lunch after standup.",
+          "sanitizedCandidate" : "So I was thinking maybe we grab lunch after standup."
+        }
+      ],
+      "cleanedText" : "So I was thinking maybe we grab lunch after standup.",
+      "file" : "04.wav",
+      "id" : "04",
+      "latencySeconds" : 0.30059707164764404,
+      "path" : "mlx",
+      "reference" : "so i was thinking maybe we uh we grab lunch after standup",
+      "textToPaste" : "So I was thinking maybe we grab lunch after standup."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Let's move the meeting to three thirty instead.",
+          "latencySeconds" : 0.25610899925231934,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Let's move the meeting to three thirty instead.",
+          "sanitizedCandidate" : "Let's move the meeting to three thirty instead."
+        }
+      ],
+      "cleanedText" : "Let's move the meeting to three thirty instead.",
+      "file" : "05.wav",
+      "id" : "05",
+      "latencySeconds" : 0.25612199306488037,
+      "path" : "mlx",
+      "reference" : "uh let's move the meeting to like three thirty instead",
+      "textToPaste" : "Let's move the meeting to three thirty instead."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "I mean, it's probably a caching issue.",
+          "latencySeconds" : 0.26753199100494385,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "I mean, it's probably a caching issue.",
+          "sanitizedCandidate" : "I mean, it's probably a caching issue."
+        }
+      ],
+      "cleanedText" : "I mean, it's probably a caching issue.",
+      "file" : "07.wav",
+      "id" : "07",
+      "latencySeconds" : 0.2675529718399048,
+      "path" : "mlx",
+      "reference" : "i mean it's it's probably a caching issue you know",
+      "textToPaste" : "I mean, it's probably a caching issue."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "so like the query takes forever when i add the group by",
+          "latencySeconds" : 0.2941629886627197,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "so like the query takes forever when i add the group by",
+          "sanitizedCandidate" : "so like the query takes forever when i add the group by"
+        }
+      ],
+      "cleanedText" : "so like the query takes forever when i add the group by",
+      "file" : "08.wav",
+      "id" : "08",
+      "latencySeconds" : 0.2941819429397583,
+      "path" : "mlx",
+      "reference" : "so like the query takes uh forever when i add the group by",
+      "textToPaste" : "so like the query takes forever when i add the group by"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Remind me to follow up with Sarah tomorrow morning.",
+          "latencySeconds" : 0.2954440116882324,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Remind me to follow up with Sarah tomorrow morning.",
+          "sanitizedCandidate" : "Remind me to follow up with Sarah tomorrow morning."
+        }
+      ],
+      "cleanedText" : "Remind me to follow up with Sarah tomorrow morning.",
+      "file" : "09.wav",
+      "id" : "09",
+      "latencySeconds" : 0.29545700550079346,
+      "path" : "mlx",
+      "reference" : "um remind me to uh to follow up with sarah tomorrow morning",
+      "textToPaste" : "Remind me to follow up with Sarah tomorrow morning."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Yeah, I'll push the fix after I grab a coffee.",
+          "latencySeconds" : 0.3218480348587036,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Yeah, I'll push the fix after I grab a coffee.",
+          "sanitizedCandidate" : "Yeah, I'll push the fix after I grab a coffee."
+        }
+      ],
+      "cleanedText" : "Yeah, I'll push the fix after I grab a coffee.",
+      "file" : "10.wav",
+      "id" : "10",
+      "latencySeconds" : 0.3218650817871094,
+      "path" : "mlx",
+      "reference" : "yeah i'll uh i'll push the fix after i grab a coffee",
+      "textToPaste" : "Yeah, I'll push the fix after I grab a coffee."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "So, the memory usage spikes every night around midnight.",
+          "latencySeconds" : 0.2601670026779175,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "So, the memory usage spikes every night around midnight.",
+          "sanitizedCandidate" : "So, the memory usage spikes every night around midnight."
+        }
+      ],
+      "cleanedText" : "So, the memory usage spikes every night around midnight.",
+      "file" : "11.wav",
+      "id" : "11",
+      "latencySeconds" : 0.26018595695495605,
+      "path" : "mlx",
+      "reference" : "so the uh the memory usage spikes every night around midnight",
+      "textToPaste" : "So, the memory usage spikes every night around midnight."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Can we circle back on the pricing thing next week?",
+          "latencySeconds" : 0.28859996795654297,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Can we circle back on the pricing thing next week?",
+          "sanitizedCandidate" : "Can we circle back on the pricing thing next week?"
+        }
+      ],
+      "cleanedText" : "Can we circle back on the pricing thing next week?",
+      "file" : "12.wav",
+      "id" : "12",
+      "latencySeconds" : 0.2886160612106323,
+      "path" : "mlx",
+      "reference" : "um can we like circle back on the pricing thing next week",
+      "textToPaste" : "Can we circle back on the pricing thing next week?"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Honestly, I think the second option is way better.",
+          "latencySeconds" : 0.28169500827789307,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Honestly, I think the second option is way better.",
+          "sanitizedCandidate" : "Honestly, I think the second option is way better."
+        }
+      ],
+      "cleanedText" : "Honestly, I think the second option is way better.",
+      "file" : "13.wav",
+      "id" : "13",
+      "latencySeconds" : 0.2817119359970093,
+      "path" : "mlx",
+      "reference" : "honestly i think the the second option is is way better",
+      "textToPaste" : "Honestly, I think the second option is way better."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "My flight gets in at like seven so dinner at eight works.",
+          "latencySeconds" : 0.325531005859375,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "My flight gets in at like seven so dinner at eight works.",
+          "sanitizedCandidate" : "My flight gets in at like seven so dinner at eight works."
+        }
+      ],
+      "cleanedText" : "My flight gets in at like seven so dinner at eight works.",
+      "file" : "14.wav",
+      "id" : "14",
+      "latencySeconds" : 0.3255540132522583,
+      "path" : "mlx",
+      "reference" : "uh my flight gets in at like seven so dinner at eight works",
+      "textToPaste" : "My flight gets in at like seven so dinner at eight works."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "so basically zendesk tickets should route to the the triage queue",
+          "latencySeconds" : 0.35107100009918213,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "so basically zendesk tickets should route to the the triage queue",
+          "sanitizedCandidate" : "so basically zendesk tickets should route to the the triage queue"
+        }
+      ],
+      "cleanedText" : "so basically zendesk tickets should route to the the triage queue",
+      "file" : "15.wav",
+      "id" : "15",
+      "latencySeconds" : 0.35110604763031006,
+      "path" : "mlx",
+      "reference" : "so basically um zendesk tickets should route to the uh the triage queue",
+      "textToPaste" : "so basically zendesk tickets should route to the the triage queue"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "I want to test this on the staging cluster first.",
+          "latencySeconds" : 0.2887389659881592,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "I want to test this on the staging cluster first.",
+          "sanitizedCandidate" : "I want to test this on the staging cluster first."
+        }
+      ],
+      "cleanedText" : "I want to test this on the staging cluster first.",
+      "file" : "16.wav",
+      "id" : "16",
+      "latencySeconds" : 0.288754940032959,
+      "path" : "mlx",
+      "reference" : "i want to um to test this on the staging cluster first",
+      "textToPaste" : "I want to test this on the staging cluster first."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx",
+        "ollama"
+      ],
+      "attempts" : [
+        {
+          "latencySeconds" : 0.2590440511703491,
+          "outcome" : "rejected",
+          "provider" : "mlx",
+          "rawCandidate" : "Yeah, the new hire starts next Monday.",
+          "rejectDetail" : "i think",
+          "rejectReason" : "protectedMarkerLoss",
+          "sanitizedCandidate" : "Yeah, the new hire starts next Monday."
+        },
+        {
+          "latencySeconds" : 6.012274980545044,
+          "outcome" : "timeout",
+          "provider" : "ollama",
+          "rejectDetail" : "6.0s",
+          "rejectReason" : "requestTimedOut"
+        }
+      ],
+      "file" : "17.wav",
+      "id" : "17",
+      "latencySeconds" : 6.27134108543396,
+      "path" : "raw_fallback",
+      "reference" : "yeah the uh the new hire starts monday i think",
+      "textToPaste" : "yeah the uh the new hire starts monday i think"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Let's just revert it and investigate tomorrow.",
+          "latencySeconds" : 0.21805691719055176,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Let's just revert it and investigate tomorrow.",
+          "sanitizedCandidate" : "Let's just revert it and investigate tomorrow."
+        }
+      ],
+      "cleanedText" : "Let's just revert it and investigate tomorrow.",
+      "file" : "18.wav",
+      "id" : "18",
+      "latencySeconds" : 0.2180849313735962,
+      "path" : "mlx",
+      "reference" : "um let's just uh let's just revert it and investigate tomorrow",
+      "textToPaste" : "Let's just revert it and investigate tomorrow."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "so grafana needs the api key rotated before the demo",
+          "latencySeconds" : 0.21522700786590576,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "so grafana needs the api key rotated before the demo",
+          "sanitizedCandidate" : "so grafana needs the api key rotated before the demo"
+        }
+      ],
+      "cleanedText" : "so grafana needs the api key rotated before the demo",
+      "file" : "19.wav",
+      "id" : "19",
+      "latencySeconds" : 0.2152400016784668,
+      "path" : "mlx",
+      "reference" : "so grafana needs uh needs the api key rotated before the demo",
+      "textToPaste" : "so grafana needs the api key rotated before the demo"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx",
+        "ollama"
+      ],
+      "attempts" : [
+        {
+          "latencySeconds" : 0.25924205780029297,
+          "outcome" : "rejected",
+          "provider" : "mlx",
+          "rawCandidate" : "Okay, uh, long story short, we missed the deadline by two days.",
+          "rejectDetail" : "uh",
+          "rejectReason" : "addedMeaningToken",
+          "sanitizedCandidate" : "Okay, uh, long story short, we missed the deadline by two days."
+        },
+        {
+          "latencySeconds" : 6.004464030265808,
+          "outcome" : "timeout",
+          "provider" : "ollama",
+          "rejectDetail" : "6.0s",
+          "rejectReason" : "requestTimedOut"
+        }
+      ],
+      "file" : "20.wav",
+      "id" : "20",
+      "latencySeconds" : 6.2637330293655396,
+      "path" : "raw_fallback",
+      "reference" : "okay um long story short we we missed the deadline by two days",
+      "textToPaste" : "okay um long story short we we missed the deadline by two days"
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "I think we should ship it Friday.",
+          "latencySeconds" : 0.20878899097442627,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "I think we should ship it Friday.",
+          "sanitizedCandidate" : "I think we should ship it Friday."
+        }
+      ],
+      "cleanedText" : "I think we should ship it Friday.",
+      "file" : "21.wav",
+      "id" : "21",
+      "latencySeconds" : 0.20881199836730957,
+      "path" : "mlx",
+      "reference" : "um so like i think we should uh ship it friday",
+      "textToPaste" : "I think we should ship it Friday."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Yeah, basically the dashboard is broken again.",
+          "latencySeconds" : 0.17821693420410156,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Yeah, basically the dashboard is broken again.",
+          "sanitizedCandidate" : "Yeah, basically the dashboard is broken again."
+        }
+      ],
+      "cleanedText" : "Yeah, basically the dashboard is broken again.",
+      "file" : "22.wav",
+      "id" : "22",
+      "latencySeconds" : 0.17823398113250732,
+      "path" : "mlx",
+      "reference" : "yeah so basically the uh the dashboard is is broken again",
+      "textToPaste" : "Yeah, basically the dashboard is broken again."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Can you send me the link to that doc.",
+          "latencySeconds" : 0.20199108123779297,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Can you send me the link to that doc.",
+          "sanitizedCandidate" : "Can you send me the link to that doc."
+        }
+      ],
+      "cleanedText" : "Can you send me the link to that doc.",
+      "file" : "23.wav",
+      "id" : "23",
+      "latencySeconds" : 0.20200800895690918,
+      "path" : "mlx",
+      "reference" : "can you um can you send me the the link to that doc",
+      "textToPaste" : "Can you send me the link to that doc."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "Let's move the meeting to three thirty instead.",
+          "latencySeconds" : 0.1823190450668335,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "Let's move the meeting to three thirty instead.",
+          "sanitizedCandidate" : "Let's move the meeting to three thirty instead."
+        }
+      ],
+      "cleanedText" : "Let's move the meeting to three thirty instead.",
+      "file" : "25.wav",
+      "id" : "25",
+      "latencySeconds" : 0.18233203887939453,
+      "path" : "mlx",
+      "reference" : "uh let's move the meeting to like three thirty instead",
+      "textToPaste" : "Let's move the meeting to three thirty instead."
+    },
+    {
+      "attemptedProviders" : [
+        "mlx"
+      ],
+      "attempts" : [
+        {
+          "cleanedText" : "okay so the customer said the alerts are firing twice.",
+          "latencySeconds" : 0.20940101146697998,
+          "outcome" : "accepted",
+          "provider" : "mlx",
+          "rawCandidate" : "okay so the customer said the alerts are firing twice.",
+          "sanitizedCandidate" : "okay so the customer said the alerts are firing twice."
+        }
+      ],
+      "cleanedText" : "okay so the customer said the alerts are firing twice.",
+      "file" : "26.wav",
+      "id" : "26",
+      "latencySeconds" : 0.20941400527954102,
+      "path" : "mlx",
+      "reference" : "okay so um the customer said the alerts are uh firing twice",
+      "textToPaste" : "okay so the customer said the alerts are firing twice."
+    }
+  ],
+  "selectedProvider" : "mlx",
+  "status" : "completed",
+  "summary" : {
+    "automatedDecision" : "hold_for_raw_fallback_review",
+    "errorAttemptCount" : 0,
+    "maxSeconds" : 6.27134108543396,
+    "meanSeconds" : 0.7608704666296641,
+    "medianSeconds" : 0.27463245391845703,
+    "minSeconds" : 0.17823398113250732,
+    "mlxCount" : 22,
+    "ollamaCount" : 0,
+    "p90Seconds" : 0.3434404373168945,
+    "p95Seconds" : 5.376838982105243,
+    "rawFallbackCount" : 2,
+    "rejectedAttemptCount" : 2,
+    "requiresManualReview" : true,
+    "sampleCount" : 24,
+    "timeoutAttemptCount" : 2
+  },
+  "task" : "post-safety-production-cleanup-acceptance-benchmark",
+  "warmupPath" : "mlx",
+  "warmupSeconds" : 1.3135379552841187
+}

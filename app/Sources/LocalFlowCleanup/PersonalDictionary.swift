@@ -4,11 +4,11 @@ import Foundation
 /// Applied as a correction pass on the raw transcript before cleanup: each
 /// spoken token is fuzzy-matched against the terms and, when close enough,
 /// replaced with the canonical spelling — e.g. "Grafani's" → "Grafana".
-final class PersonalDictionary {
-    static let shared = PersonalDictionary()
+public final class PersonalDictionary {
+    public static let shared = PersonalDictionary()
     private static let key = "personalDictionary"
 
-    private(set) var terms: [String] {
+    public private(set) var terms: [String] {
         didSet { UserDefaults.standard.set(terms, forKey: Self.key) }
     }
 
@@ -16,19 +16,19 @@ final class PersonalDictionary {
         terms = UserDefaults.standard.stringArray(forKey: Self.key) ?? []
     }
 
-    func add(_ term: String) {
+    public func add(_ term: String) {
         let t = term.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty, !terms.contains(where: { $0.caseInsensitiveCompare(t) == .orderedSame }) else { return }
         terms.append(t)
     }
 
-    func remove(_ term: String) {
+    public func remove(_ term: String) {
         terms.removeAll { $0 == term }
     }
 
     /// Rewrites tokens in `text` that phonetically resemble a dictionary term.
     /// Whitespace and punctuation are preserved; only word cores are replaced.
-    func correct(_ text: String) -> String {
+    public func correct(_ text: String) -> String {
         guard !terms.isEmpty else { return text }
         var output = ""
         var word = ""

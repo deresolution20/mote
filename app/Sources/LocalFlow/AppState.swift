@@ -1,4 +1,5 @@
 import AppKit
+import LocalFlowCleanup
 import SwiftUI
 
 @MainActor

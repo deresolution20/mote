@@ -1,0 +1,236 @@
+{
+  "benchmark_seconds" : 3.413,
+  "blockers" : [
+
+  ],
+  "created_at" : "2026-07-06T18:13:57Z",
+  "load_seconds" : 0.95,
+  "machine_context" : {
+    "architecture" : "arm64",
+    "operating_system" : "Version 26.5.2 (Build 25F84)",
+    "physical_memory_bytes" : "34359738368",
+    "processor_count" : "10"
+  },
+  "manifest_path" : "/Users/brice/Claude Code work/fable5_projects/local-flow/bench/samples/manifest.json",
+  "max_tokens" : 80,
+  "mlx_swift_lm_package" : "3.31.4",
+  "mlx_swift_package" : "0.31.6",
+  "model_id" : "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+  "model_load_path" : "LLMRegistry.qwen2_5_1_5b via MLX Swift LM",
+  "model_source" : "hugging_face",
+  "notes" : [
+    "Native Swift package path; no oMLX app, Ollama server, or Python helper.",
+    "Target model is the approved 4-bit MLX Hugging Face artifact.",
+    "Benchmark loads the model once, performs one warmup, then runs repeated cleanup calls in one process.",
+    "Summary latency excludes one-time model load and one warmup generation.",
+    "Each sample latency includes prompt preparation plus generation for one cleanup call."
+  ],
+  "samples" : [
+    {
+      "cleaned_output_candidate" : "So, I think we should ship it on Friday.",
+      "id" : "01",
+      "latency_seconds" : 0.139,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um, so I think we should ship it Friday",
+      "raw_output" : "So, I think we should ship it on Friday.",
+      "reference" : "um, so I think we should ship it Friday"
+    },
+    {
+      "cleaned_output_candidate" : "Yeah, so basically the dashboard is broken again.",
+      "id" : "02",
+      "latency_seconds" : 0.133,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: yeah so basically the uh the dashboard is is broken again",
+      "raw_output" : "Yeah, so basically the dashboard is broken again.",
+      "reference" : "yeah so basically the uh the dashboard is is broken again"
+    },
+    {
+      "cleaned_output_candidate" : "Can you send me the link to that doc?",
+      "id" : "03",
+      "latency_seconds" : 0.133,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: can you um, can you send me the link to that doc?",
+      "raw_output" : "Can you send me the link to that doc?",
+      "reference" : "can you um, can you send me the link to that doc?"
+    },
+    {
+      "cleaned_output_candidate" : "So I was thinking maybe we grab lunch after standup.",
+      "id" : "04",
+      "latency_seconds" : 0.151,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: so i was thinking maybe we uh we grab lunch after standup",
+      "raw_output" : "So I was thinking maybe we grab lunch after standup.",
+      "reference" : "so i was thinking maybe we uh we grab lunch after standup"
+    },
+    {
+      "cleaned_output_candidate" : "Let's move the meeting to three thirty instead.",
+      "id" : "05",
+      "latency_seconds" : 0.134,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: uh let's move the meeting to like three thirty instead",
+      "raw_output" : "Let's move the meeting to three thirty instead.",
+      "reference" : "uh let's move the meeting to like three thirty instead"
+    },
+    {
+      "cleaned_output_candidate" : "It's probably a caching issue.",
+      "id" : "07",
+      "latency_seconds" : 0.113,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: i mean it's it's probably a caching issue you know",
+      "raw_output" : "It's probably a caching issue.",
+      "reference" : "i mean it's it's probably a caching issue you know"
+    },
+    {
+      "cleaned_output_candidate" : "The query takes a long time to execute when I add the `GROUP BY` clause.",
+      "id" : "08",
+      "latency_seconds" : 0.199,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: so like the query takes uh forever when i add the group by",
+      "raw_output" : "The query takes a long time to execute when I add the `GROUP BY` clause.",
+      "reference" : "so like the query takes uh forever when i add the group by"
+    },
+    {
+      "cleaned_output_candidate" : "Remember to follow up with Sarah tomorrow morning.",
+      "id" : "09",
+      "latency_seconds" : 0.126,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um remind me to uh to follow up with sarah tomorrow morning",
+      "raw_output" : "Remember to follow up with Sarah tomorrow morning.",
+      "reference" : "um remind me to uh to follow up with sarah tomorrow morning"
+    },
+    {
+      "cleaned_output_candidate" : "Yeah, I'll push the fix after I grab a coffee.",
+      "id" : "10",
+      "latency_seconds" : 0.157,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: yeah i'll uh i'll push the fix after i grab a coffee",
+      "raw_output" : "Yeah, I'll push the fix after I grab a coffee.",
+      "reference" : "yeah i'll uh i'll push the fix after i grab a coffee"
+    },
+    {
+      "cleaned_output_candidate" : "The memory usage spikes every night around midnight.",
+      "id" : "11",
+      "latency_seconds" : 0.124,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: so the uh the memory usage spikes every night around midnight",
+      "raw_output" : "The memory usage spikes every night around midnight.",
+      "reference" : "so the uh the memory usage spikes every night around midnight"
+    },
+    {
+      "cleaned_output_candidate" : "Can we circle back on the pricing thing next week?",
+      "id" : "12",
+      "latency_seconds" : 0.142,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um can we like circle back on the pricing thing next week",
+      "raw_output" : "Can we circle back on the pricing thing next week?",
+      "reference" : "um can we like circle back on the pricing thing next week"
+    },
+    {
+      "cleaned_output_candidate" : "Honestly, I think the second option is much better.",
+      "id" : "13",
+      "latency_seconds" : 0.139,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: honestly i think the the second option is is way better",
+      "raw_output" : "Honestly, I think the second option is much better.",
+      "reference" : "honestly i think the the second option is is way better"
+    },
+    {
+      "cleaned_output_candidate" : "My flight gets in at seven, so dinner at eight works.",
+      "id" : "14",
+      "latency_seconds" : 0.157,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: uh my flight gets in at like seven so dinner at eight works",
+      "raw_output" : "My flight gets in at seven, so dinner at eight works.",
+      "reference" : "uh my flight gets in at like seven so dinner at eight works"
+    },
+    {
+      "cleaned_output_candidate" : "So basically, Zendesk tickets should route to the triage queue.",
+      "id" : "15",
+      "latency_seconds" : 0.166,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: so basically um zendesk tickets should route to the uh the triage queue",
+      "raw_output" : "So basically, Zendesk tickets should route to the triage queue.",
+      "reference" : "so basically um zendesk tickets should route to the uh the triage queue"
+    },
+    {
+      "cleaned_output_candidate" : "I want to test this on the staging cluster first.",
+      "id" : "16",
+      "latency_seconds" : 0.141,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: i want to um to test this on the staging cluster first",
+      "raw_output" : "I want to test this on the staging cluster first.",
+      "reference" : "i want to um to test this on the staging cluster first"
+    },
+    {
+      "cleaned_output_candidate" : "The new hire starts Monday, I think.",
+      "id" : "17",
+      "latency_seconds" : 0.125,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: yeah the uh the new hire starts monday i think",
+      "raw_output" : "The new hire starts Monday, I think.",
+      "reference" : "yeah the uh the new hire starts monday i think"
+    },
+    {
+      "cleaned_output_candidate" : "Let's just revert it and investigate tomorrow.",
+      "id" : "18",
+      "latency_seconds" : 0.127,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um let's just uh let's just revert it and investigate tomorrow",
+      "raw_output" : "Let's just revert it and investigate tomorrow.",
+      "reference" : "um let's just uh let's just revert it and investigate tomorrow"
+    },
+    {
+      "cleaned_output_candidate" : "Grafana needs to rotate the API key before the demo.",
+      "id" : "19",
+      "latency_seconds" : 0.156,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: so grafana needs uh needs the api key rotated before the demo",
+      "raw_output" : "Grafana needs to rotate the API key before the demo.",
+      "reference" : "so grafana needs uh needs the api key rotated before the demo"
+    },
+    {
+      "cleaned_output_candidate" : "Okay, long story short, we missed the deadline by two days.",
+      "id" : "20",
+      "latency_seconds" : 0.164,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: okay um long story short we we missed the deadline by two days",
+      "raw_output" : "Okay, long story short, we missed the deadline by two days.",
+      "reference" : "okay um long story short we we missed the deadline by two days"
+    },
+    {
+      "cleaned_output_candidate" : "So, I think we should ship it on Friday.",
+      "id" : "21",
+      "latency_seconds" : 0.141,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um so like i think we should uh ship it friday",
+      "raw_output" : "So, I think we should ship it on Friday.",
+      "reference" : "um so like i think we should uh ship it friday"
+    },
+    {
+      "cleaned_output_candidate" : "Yeah, so basically the dashboard is broken again.",
+      "id" : "22",
+      "latency_seconds" : 0.132,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: yeah so basically the uh the dashboard is is broken again",
+      "raw_output" : "Yeah, so basically the dashboard is broken again.",
+      "reference" : "yeah so basically the uh the dashboard is is broken again"
+    },
+    {
+      "cleaned_output_candidate" : "Can you send me the link to that doc?",
+      "id" : "23",
+      "latency_seconds" : 0.133,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: can you um can you send me the the link to that doc",
+      "raw_output" : "Can you send me the link to that doc?",
+      "reference" : "can you um can you send me the the link to that doc"
+    },
+    {
+      "cleaned_output_candidate" : "Let's move the meeting to three thirty instead.",
+      "id" : "25",
+      "latency_seconds" : 0.132,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: uh let's move the meeting to like three thirty instead",
+      "raw_output" : "Let's move the meeting to three thirty instead.",
+      "reference" : "uh let's move the meeting to like three thirty instead"
+    },
+    {
+      "cleaned_output_candidate" : "Okay, so the customer said the alerts are firing twice.",
+      "id" : "26",
+      "latency_seconds" : 0.148,
+      "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: okay so um the customer said the alerts are uh firing twice",
+      "raw_output" : "Okay, so the customer said the alerts are firing twice.",
+      "reference" : "okay so um the customer said the alerts are uh firing twice"
+    }
+  ],
+  "status" : "completed",
+  "summary" : {
+    "max_seconds" : 0.199,
+    "mean_seconds" : 0.142,
+    "median_seconds" : 0.139,
+    "min_seconds" : 0.113,
+    "p50_seconds" : 0.139,
+    "p90_seconds" : 0.164,
+    "p95_seconds" : 0.166,
+    "sample_count" : 24
+  },
+  "swift_toolchain" : "swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0",
+  "task" : "swift-native-mlx-steady-state-cleanup-benchmark",
+  "warmup_seconds" : 0.069
+}

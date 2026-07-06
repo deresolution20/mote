@@ -1,0 +1,18 @@
+{
+  "run_label": "initial-mlx-vs-ollama",
+  "created_at": "2026-07-06T16:52:03.480197+00:00",
+  "samples_manifest": "bench/samples/manifest.json",
+  "sample_count": 24,
+  "machine_context": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.14.6"
+  },
+  "ollama_runtime": "localhost Ollama /api/generate",
+  "mlx_runtime": "Python mlx-lm proof output, Swift-native MLX target",
+  "notes": [
+    "Task 1 formalizes the first MLX vs. Ollama cleanup benchmark report.",
+    "Python mlx-lm is proof tooling, not the Local Flow app runtime target."
+  ]
+}

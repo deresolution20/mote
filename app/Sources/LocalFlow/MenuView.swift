@@ -1,3 +1,4 @@
+import LocalFlowCleanup
 import SwiftUI
 
 struct MenuView: View {
@@ -6,7 +7,7 @@ struct MenuView: View {
     var body: some View {
         Text(state.status.label)
 
-        Toggle("Clean up with AI (\(Cleaner.model))", isOn: $state.cleanupEnabled)
+        Toggle("Clean up with AI (\(Cleaner.displayName): \(Cleaner.model))", isOn: $state.cleanupEnabled)
 
         Toggle("Show waveform overlay", isOn: $state.hudEnabled)
 

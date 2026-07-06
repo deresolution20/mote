@@ -1,0 +1,35 @@
+{
+  "blockers" : [
+
+  ],
+  "cleaned_output_candidate" : "So, I think we should ship it on Friday.",
+  "created_at" : "2026-07-06T17:43:04Z",
+  "generation_seconds" : 0.141,
+  "load_seconds" : 1.017,
+  "machine_context" : {
+    "architecture" : "arm64",
+    "operating_system" : "Version 26.5.2 (Build 25F84)",
+    "physical_memory_bytes" : "34359738368",
+    "processor_count" : "10"
+  },
+  "mlx_swift_lm_package" : "3.31.4",
+  "mlx_swift_package" : "0.31.6",
+  "model_id" : "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+  "model_load_path" : "LLMRegistry.qwen2_5_1_5b via MLX Swift LM",
+  "model_source" : "hugging_face",
+  "notes" : [
+    "Native Swift package path; no oMLX app, Ollama server, or Python helper.",
+    "Target model is the approved 4-bit MLX Hugging Face artifact.",
+    "Loaded with LLMRegistry.qwen2_5_1_5b.",
+    "Tokenizer and quantized weights loaded through MLXHuggingFace."
+  ],
+  "prompt" : "Clean this dictated text. Preserve meaning. Remove only obvious filler, false starts, and stutter repetitions. Fix punctuation and capitalization. Return only the cleaned text.\n\nInput: um so like i think we should uh ship it friday",
+  "quantized_weights_load_succeeded" : true,
+  "raw_output" : "So, I think we should ship it on Friday.",
+  "status" : "loaded_and_generated",
+  "swift_toolchain" : "swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0",
+  "task" : "swift-native-mlx-provider-spike",
+  "tokenizer_load_succeeded" : true,
+  "total_seconds" : 2.492,
+  "warmup_seconds" : 1.334
+}

@@ -14,6 +14,27 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp .build/release/LocalFlow "$APP/Contents/MacOS/LocalFlow"
 
+METALLIB=""
+for candidate in \
+  ".build/arm64-apple-macosx/release/mlx.metallib" \
+  ".build/release/mlx.metallib" \
+  "../bench/.build/arm64-apple-macosx/debug/mlx.metallib" \
+  "../bench/.build/debug/mlx.metallib"
+do
+  if [[ -f "$candidate" ]]; then
+    METALLIB="$candidate"
+    break
+  fi
+done
+
+if [[ -n "$METALLIB" ]]; then
+  cp "$METALLIB" "$APP/Contents/Resources/mlx.metallib"
+  ln -s ../Resources "$APP/Contents/MacOS/Resources"
+  echo "copied MLX metallib from $METALLIB"
+else
+  echo "MLX metallib not found; Ollama remains default and MLX cleanup will fall back to raw text"
+fi
+
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

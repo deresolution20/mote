@@ -1,0 +1,569 @@
+{
+  "run_label": "task-2-formal-cleanup-benchmark",
+  "samples": [
+    {
+      "id": "01",
+      "reference": "um, so I think we should ship it Friday"
+    },
+    {
+      "id": "02",
+      "reference": "yeah so basically the uh the dashboard is is broken again"
+    },
+    {
+      "id": "03",
+      "reference": "can you um, can you send me the link to that doc?"
+    },
+    {
+      "id": "04",
+      "reference": "so i was thinking maybe we uh we grab lunch after standup"
+    },
+    {
+      "id": "05",
+      "reference": "uh let's move the meeting to like three thirty instead"
+    },
+    {
+      "id": "07",
+      "reference": "i mean it's it's probably a caching issue you know"
+    },
+    {
+      "id": "08",
+      "reference": "so like the query takes uh forever when i add the group by"
+    },
+    {
+      "id": "09",
+      "reference": "um remind me to uh to follow up with sarah tomorrow morning"
+    },
+    {
+      "id": "10",
+      "reference": "yeah i'll uh i'll push the fix after i grab a coffee"
+    },
+    {
+      "id": "11",
+      "reference": "so the uh the memory usage spikes every night around midnight"
+    },
+    {
+      "id": "12",
+      "reference": "um can we like circle back on the pricing thing next week"
+    },
+    {
+      "id": "13",
+      "reference": "honestly i think the the second option is is way better"
+    },
+    {
+      "id": "14",
+      "reference": "uh my flight gets in at like seven so dinner at eight works"
+    },
+    {
+      "id": "15",
+      "reference": "so basically um zendesk tickets should route to the uh the triage queue"
+    },
+    {
+      "id": "16",
+      "reference": "i want to um to test this on the staging cluster first"
+    },
+    {
+      "id": "17",
+      "reference": "yeah the uh the new hire starts monday i think"
+    },
+    {
+      "id": "18",
+      "reference": "um let's just uh let's just revert it and investigate tomorrow"
+    },
+    {
+      "id": "19",
+      "reference": "so grafana needs uh needs the api key rotated before the demo"
+    },
+    {
+      "id": "20",
+      "reference": "okay um long story short we we missed the deadline by two days"
+    },
+    {
+      "id": "21",
+      "reference": "um so like i think we should uh ship it friday"
+    },
+    {
+      "id": "22",
+      "reference": "yeah so basically the uh the dashboard is is broken again"
+    },
+    {
+      "id": "23",
+      "reference": "can you um can you send me the the link to that doc"
+    },
+    {
+      "id": "25",
+      "reference": "uh let's move the meeting to like three thirty instead"
+    },
+    {
+      "id": "26",
+      "reference": "okay so um the customer said the alerts are uh firing twice"
+    }
+  ],
+  "providers": [
+    {
+      "provider_id": "ollama",
+      "model": "gemma3:4b",
+      "model_footprint": "3.3 GB",
+      "load_seconds": null,
+      "warmup_seconds": null,
+      "first_call_seconds": 12.07,
+      "median_seconds": 0.914,
+      "p90_seconds": 1.485,
+      "per_sample": [
+        {
+          "id": "01",
+          "reference": "",
+          "latency_seconds": 12.07,
+          "cleaned_output": "I think we should ship it Friday.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "02",
+          "reference": "",
+          "latency_seconds": 0.929,
+          "cleaned_output": "Yeah, basically the dashboard is broken again.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "03",
+          "reference": "",
+          "latency_seconds": 1.666,
+          "cleaned_output": "I think you can find that document here: [https://github.com/openai/tiktoken](https://github.com/openai/tiktoken)",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "04",
+          "reference": "",
+          "latency_seconds": 0.908,
+          "cleaned_output": "I was thinking maybe we grab lunch after standup.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "05",
+          "reference": "",
+          "latency_seconds": 0.899,
+          "cleaned_output": "Let\u2019s move the meeting to three thirty instead.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "07",
+          "reference": "",
+          "latency_seconds": 0.897,
+          "cleaned_output": "It\u2019s probably a caching issue, you know.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "08",
+          "reference": "",
+          "latency_seconds": 0.913,
+          "cleaned_output": "The query takes forever when I add the GROUP BY.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "09",
+          "reference": "",
+          "latency_seconds": 0.894,
+          "cleaned_output": "Remind me to follow up with Sarah tomorrow morning.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "10",
+          "reference": "",
+          "latency_seconds": 0.928,
+          "cleaned_output": "I\u2019ll push the fix after I grab a coffee.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "11",
+          "reference": "",
+          "latency_seconds": 0.846,
+          "cleaned_output": "The memory usage spikes every night around midnight.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "12",
+          "reference": "",
+          "latency_seconds": 0.916,
+          "cleaned_output": "Can we circle back on the pricing thing next week?",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "13",
+          "reference": "",
+          "latency_seconds": 1.485,
+          "cleaned_output": "I honestly think the second option is way better.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "14",
+          "reference": "",
+          "latency_seconds": 0.918,
+          "cleaned_output": "My flight gets in at seven so dinner at eight works.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "15",
+          "reference": "",
+          "latency_seconds": 0.916,
+          "cleaned_output": "Zendesk tickets should route to the triage queue.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "16",
+          "reference": "",
+          "latency_seconds": 0.916,
+          "cleaned_output": "I want to test this on the staging cluster first.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "17",
+          "reference": "",
+          "latency_seconds": 0.841,
+          "cleaned_output": "The new hire starts Monday, I think.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "18",
+          "reference": "",
+          "latency_seconds": 0.892,
+          "cleaned_output": "Let\u2019s just revert it and investigate tomorrow.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "19",
+          "reference": "",
+          "latency_seconds": 1.223,
+          "cleaned_output": "Grafana needs the API key rotated before the demo.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "20",
+          "reference": "",
+          "latency_seconds": 0.919,
+          "cleaned_output": "Long story short, we missed the deadline by two days.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "21",
+          "reference": "",
+          "latency_seconds": 0.814,
+          "cleaned_output": "I think we should ship it Friday.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "22",
+          "reference": "",
+          "latency_seconds": 0.895,
+          "cleaned_output": "Yeah, basically the dashboard is broken again.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "23",
+          "reference": "",
+          "latency_seconds": 0.85,
+          "cleaned_output": "I think you can find that doc here.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "25",
+          "reference": "",
+          "latency_seconds": 1.004,
+          "cleaned_output": "Let\u2019s move the meeting to three thirty instead.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "26",
+          "reference": "",
+          "latency_seconds": 0.81,
+          "cleaned_output": "The customer said the alerts are firing twice.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        }
+      ]
+    },
+    {
+      "provider_id": "mlx",
+      "model": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+      "model_footprint": "0.88 GB",
+      "load_seconds": 0.489,
+      "warmup_seconds": 0.18,
+      "first_call_seconds": null,
+      "median_seconds": 0.24,
+      "p90_seconds": 0.264,
+      "per_sample": [
+        {
+          "id": "01",
+          "reference": "um, so I think we should ship it Friday",
+          "latency_seconds": 0.217,
+          "cleaned_output": "I think we should ship it Friday.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "02",
+          "reference": "yeah so basically the uh the dashboard is is broken again",
+          "latency_seconds": 0.238,
+          "cleaned_output": "Yeah, so basically the dashboard is broken again.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "03",
+          "reference": "can you um, can you send me the link to that doc?",
+          "latency_seconds": 0.247,
+          "cleaned_output": "Can you send me the link to that doc?",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "04",
+          "reference": "so i was thinking maybe we uh we grab lunch after standup",
+          "latency_seconds": 0.265,
+          "cleaned_output": "So, I was thinking maybe we grab lunch after the Standup.",
+          "quality_flags": [
+            "added_content_risk"
+          ]
+        },
+        {
+          "id": "05",
+          "reference": "uh let's move the meeting to like three thirty instead",
+          "latency_seconds": 0.23,
+          "cleaned_output": "Let's move the meeting to three thirty instead.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "07",
+          "reference": "i mean it's it's probably a caching issue you know",
+          "latency_seconds": 0.223,
+          "cleaned_output": "i mean it's probably a caching issue.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "08",
+          "reference": "so like the query takes uh forever when i add the group by",
+          "latency_seconds": 0.263,
+          "cleaned_output": "So, the query takes forever when I add the `GROUP BY`.",
+          "quality_flags": [
+            "markdown_artifact"
+          ]
+        },
+        {
+          "id": "09",
+          "reference": "um remind me to uh to follow up with sarah tomorrow morning",
+          "latency_seconds": 0.239,
+          "cleaned_output": "Remind me to follow up with Sarah tomorrow morning.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "10",
+          "reference": "yeah i'll uh i'll push the fix after i grab a coffee",
+          "latency_seconds": 0.256,
+          "cleaned_output": "Yeah, I'll push the fix after I grab a coffee.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "11",
+          "reference": "so the uh the memory usage spikes every night around midnight",
+          "latency_seconds": 0.24,
+          "cleaned_output": "So, the memory usage spikes every night around midnight.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "12",
+          "reference": "um can we like circle back on the pricing thing next week",
+          "latency_seconds": 0.239,
+          "cleaned_output": "Can we circle back on the pricing thing next week?",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "13",
+          "reference": "honestly i think the the second option is is way better",
+          "latency_seconds": 0.249,
+          "cleaned_output": "Honestly, I think the second option is way better.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "14",
+          "reference": "uh my flight gets in at like seven so dinner at eight works",
+          "latency_seconds": 0.253,
+          "cleaned_output": "My flight gets in at seven, so dinner at eight works.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "15",
+          "reference": "so basically um zendesk tickets should route to the uh the triage queue",
+          "latency_seconds": 0.265,
+          "cleaned_output": "So basically, Zendesk tickets should route to the triage queue.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "16",
+          "reference": "i want to um to test this on the staging cluster first",
+          "latency_seconds": 0.24,
+          "cleaned_output": "I want to test this on the staging cluster first.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "17",
+          "reference": "yeah the uh the new hire starts monday i think",
+          "latency_seconds": 0.24,
+          "cleaned_output": "Yeah, the new hire starts Monday, I think.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "18",
+          "reference": "um let's just uh let's just revert it and investigate tomorrow",
+          "latency_seconds": 0.222,
+          "cleaned_output": "Let's just revert it and investigate tomorrow.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "19",
+          "reference": "so grafana needs uh needs the api key rotated before the demo",
+          "latency_seconds": 0.259,
+          "cleaned_output": "So, Grafana needs the API key rotated before the demo.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "20",
+          "reference": "okay um long story short we we missed the deadline by two days",
+          "latency_seconds": 0.264,
+          "cleaned_output": "Okay, long story short, we missed the deadline by two days.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "21",
+          "reference": "um so like i think we should uh ship it friday",
+          "latency_seconds": 0.218,
+          "cleaned_output": "I think we should ship it Friday.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "22",
+          "reference": "yeah so basically the uh the dashboard is is broken again",
+          "latency_seconds": 0.233,
+          "cleaned_output": "Yeah, so basically the dashboard is broken again.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "23",
+          "reference": "can you um can you send me the the link to that doc",
+          "latency_seconds": 0.237,
+          "cleaned_output": "Can you send me the link to that doc?",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "25",
+          "reference": "uh let's move the meeting to like three thirty instead",
+          "latency_seconds": 0.257,
+          "cleaned_output": "Let's move the meeting to three thirty instead.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        },
+        {
+          "id": "26",
+          "reference": "okay so um the customer said the alerts are uh firing twice",
+          "latency_seconds": 0.226,
+          "cleaned_output": "The customer said the alerts are firing twice.",
+          "quality_flags": [
+            "meaning_review_required"
+          ]
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "decision": "fail",
+    "reason": "Latency target passed, but MLX output still needs sanitizer and meaning-preservation guards before it can become the default provider.",
+    "required_next_controls": [
+      "Strip Markdown/code formatting.",
+      "Reject added words or added content.",
+      "Preserve protected markers and personal dictionary terms.",
+      "Fall back to raw transcript when output is unsafe."
+    ]
+  }
+}
