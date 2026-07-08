@@ -6,7 +6,67 @@ struct SettingsView: View {
     @State private var timer = Timer.publish(every: 1.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
+        TabView {
+            GeneralSettingsPane()
+                .environmentObject(state)
+                .tabItem { Label("General", systemImage: "gearshape") }
+
+            DictationSettingsPane()
+                .environmentObject(state)
+                .tabItem { Label("Dictation", systemImage: "waveform") }
+
+            InsertionSettingsPane()
+                .environmentObject(state)
+                .tabItem { Label("Insertion", systemImage: "keyboard") }
+
+            DictionarySettingsPane()
+                .environmentObject(state)
+                .tabItem { Label("Dictionary", systemImage: "book.closed") }
+
+            DiagnosticsSettingsPane(snapshot: diagnosticsSnapshot)
+                .tabItem { Label("Diagnostics", systemImage: "stethoscope") }
+        }
+        .frame(width: 660)
+        .frame(minHeight: 560)
+        .onReceive(timer) { _ in
+            state.refreshPermissions()
+        }
+    }
+
+    private var diagnosticsSnapshot: SettingsDiagnosticsSnapshot {
+        SettingsDiagnosticsSnapshot(
+            status: state.status.label,
+            cleanupDisplayName: Cleaner.displayName,
+            cleanupModel: Cleaner.model,
+            usesDirectTyping: state.injectByTyping,
+            lastRawTranscript: state.lastTranscript,
+            lastCleanedText: state.lastCleaned
+        )
+    }
+}
+
+private struct SettingsPane<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
         Form {
+            content
+        }
+        .formStyle(.grouped)
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+private struct GeneralSettingsPane: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Permissions") {
                 PermissionRow(
                     title: "Microphone",
@@ -30,6 +90,18 @@ struct SettingsView: View {
                 }
             }
 
+            Section("General") {
+                Toggle("Show waveform overlay", isOn: $state.hudEnabled)
+            }
+        }
+    }
+}
+
+private struct DictationSettingsPane: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Dictation") {
                 Toggle("Clean up dictated text", isOn: $state.cleanupEnabled)
                 LabeledContent("Cleanup model") {
@@ -37,9 +109,16 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
-                Toggle("Show waveform overlay", isOn: $state.hudEnabled)
             }
+        }
+    }
+}
 
+private struct InsertionSettingsPane: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Insertion") {
                 Picker("Insert text by", selection: $state.injectByTyping) {
                     Text("Direct typing").tag(true)
@@ -51,17 +130,50 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+}
 
+private struct DictionarySettingsPane: View {
+    var body: some View {
+        SettingsPane {
             Section("Personal Dictionary") {
                 PersonalDictionarySection()
             }
         }
-        .formStyle(.grouped)
-        .padding(20)
-        .frame(width: 560)
-        .frame(minHeight: 560)
-        .onReceive(timer) { _ in
-            state.refreshPermissions()
+    }
+}
+
+private struct DiagnosticsSettingsPane: View {
+    let snapshot: SettingsDiagnosticsSnapshot
+
+    var body: some View {
+        SettingsPane {
+            Section("Runtime") {
+                DiagnosticRow(title: "Status", value: snapshot.status)
+                DiagnosticRow(title: "Cleanup model", value: snapshot.cleanupModelLabel)
+                DiagnosticRow(title: "Insertion mode", value: snapshot.insertionModeLabel)
+            }
+
+            Section("Last Dictation") {
+                DiagnosticRow(title: "Raw transcript", value: snapshot.rawTranscriptDisplay)
+                DiagnosticRow(title: "Cleaned text", value: snapshot.cleanedTextDisplay)
+            }
+        }
+    }
+}
+
+private struct DiagnosticRow: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        LabeledContent(title) {
+            Text(value)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(3)
+                .textSelection(.enabled)
         }
     }
 }
