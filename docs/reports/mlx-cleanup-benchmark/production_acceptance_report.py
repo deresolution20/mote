@@ -43,8 +43,8 @@ def build_markdown_report(run_dir: Path, run_label: str, result: dict[str, Any])
         "",
         (
             "This run measures the actual production cleanup chain after one warmup "
-            "inside a single process: MLX first, Ollama fallback second, and raw "
-            "transcript fallback last. The benchmark records latency, chosen path, "
+            f"inside a single process: {chain_description(result)}. "
+            "The benchmark records latency, chosen path, "
             "attempted providers, and final text for every reference sample."
         ),
         "",
@@ -56,7 +56,7 @@ def build_markdown_report(run_dir: Path, run_label: str, result: dict[str, Any])
         f"- Warmup: `{result['warmupSeconds']:.3f}s` via `{result['warmupPath']}`.",
         f"- Median production-chain latency: `{summary['medianSeconds']:.3f}s`.",
         f"- p90: `{summary['p90Seconds']:.3f}s`; p95: `{summary['p95Seconds']:.3f}s`; max: `{summary['maxSeconds']:.3f}s`.",
-        f"- Path counts: `MLX {summary['mlxCount']}`, `Ollama fallback {summary['ollamaCount']}`, `raw fallback {summary['rawFallbackCount']}`.",
+        f"- Path counts: {path_counts_text(summary)}.",
         f"- Automated decision: `{summary['automatedDecision']}`.",
         "- Manual review: `required` for accepted-output quality and raw fallback review.",
         "",
@@ -65,7 +65,7 @@ def build_markdown_report(run_dir: Path, run_label: str, result: dict[str, Any])
         "- Native Swift MLX / MLX Swift LM.",
         "- No oMLX app.",
         "- No Python runtime helper in the measured cleanup path.",
-        "- Ollama is used only as the production fallback when MLX is selected.",
+        "- MLX is the only cleanup provider in the measured app path.",
         "- Raw transcript fallback remains the terminal safety behavior.",
         "",
         "## Sample Results",
@@ -139,7 +139,7 @@ def save_latency_chart(run_dir: Path, result: dict[str, Any], deps: dict[str, An
     img = PILImage.new("RGB", (1400, 760), "white")
     draw = ImageDraw.Draw(img)
     draw.text((70, 42), "Production cleanup chain latency", font=generate_report.font(deps, 34, True), fill=generate_report.rgb(generate_report.INK))
-    draw.text((70, 88), "MLX first, Ollama fallback second, raw transcript fallback last. Warmup is excluded.", font=generate_report.font(deps, 20), fill=generate_report.rgb(generate_report.MUTED))
+    draw.text((70, 88), f"{chain_description(result)}. Warmup is excluded.", font=generate_report.font(deps, 20), fill=generate_report.rgb(generate_report.MUTED))
     left, top, right, bottom = 120, 170, 1320, 625
     generate_report.draw_axis(deps, draw, left, top, right, bottom, max_value)
 
@@ -165,10 +165,13 @@ def save_latency_chart(run_dir: Path, result: dict[str, Any], deps: dict[str, An
     draw.text((930, 72), f"p95 {summary['p95Seconds']:.3f}s", font=generate_report.font(deps, 21, True), fill=generate_report.rgb(generate_report.INK))
     draw.rectangle((930, 108, 954, 132), fill=path_color("mlx"))
     draw.text((964, 104), "MLX accepted", font=generate_report.font(deps, 17), fill=generate_report.rgb(generate_report.INK))
-    draw.rectangle((930, 140, 954, 164), fill=path_color("ollama"))
-    draw.text((964, 136), "Ollama fallback", font=generate_report.font(deps, 17), fill=generate_report.rgb(generate_report.INK))
-    draw.rectangle((930, 172, 954, 196), fill=path_color("raw_fallback"))
-    draw.text((964, 168), "Raw fallback", font=generate_report.font(deps, 17), fill=generate_report.rgb(generate_report.INK))
+    legend_y = 140
+    if includes_ollama(result):
+        draw.rectangle((930, legend_y, 954, legend_y + 24), fill=path_color("ollama"))
+        draw.text((964, legend_y - 4), "Ollama fallback", font=generate_report.font(deps, 17), fill=generate_report.rgb(generate_report.INK))
+        legend_y += 32
+    draw.rectangle((930, legend_y, 954, legend_y + 24), fill=path_color("raw_fallback"))
+    draw.text((964, legend_y - 4), "Raw fallback", font=generate_report.font(deps, 17), fill=generate_report.rgb(generate_report.INK))
     img.save(out)
     return out
 
@@ -188,14 +191,14 @@ def build_docx(run_dir: Path, run_label: str, result: dict[str, Any], chart: Pat
     generate_report.add_metric_table_docx(doc, deps, [
         ("median production latency", f"{summary['medianSeconds']:.3f}s", "warmup excluded", "E1F4F2"),
         ("p95 production latency", f"{summary['p95Seconds']:.3f}s", f"{summary['sampleCount']} samples", "EAF2FB"),
-        ("path split", f"{summary['mlxCount']}/{summary['ollamaCount']}/{summary['rawFallbackCount']}", "MLX/Ollama/raw", "FFF4DD"),
+        ("path split", path_split_value(summary), path_split_label(summary), "FFF4DD"),
     ])
 
     doc.add_heading("Executive Summary", level=1)
     generate_report.add_docx_para(
         doc,
         deps,
-        "This run measures the actual production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual output review remains required for accepted-output quality and raw fallback review.",
+        f"This run measures the actual production cleanup chain after one warmup inside a single process: {chain_description(result)}. Manual output review remains required for accepted-output quality and raw fallback review.",
     )
     doc.add_picture(str(chart), width=Inches(6.2))
     doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -275,12 +278,12 @@ def build_pdf(run_dir: Path, run_label: str, result: dict[str, Any], chart: Path
         generate_report.pdf_metric_table(deps, [
             ("median production latency", f"{summary['medianSeconds']:.3f}s", "warmup excluded", "E1F4F2"),
             ("p95 production latency", f"{summary['p95Seconds']:.3f}s", f"{summary['sampleCount']} samples", "EAF2FB"),
-            ("path split", f"{summary['mlxCount']}/{summary['ollamaCount']}/{summary['rawFallbackCount']}", "MLX/Ollama/raw", "FFF4DD"),
+            ("path split", path_split_value(summary), path_split_label(summary), "FFF4DD"),
         ]),
         Spacer(1, 0.16 * inch),
         Image(str(chart), width=6.45 * inch, height=3.5 * inch),
         Paragraph("Executive Summary", styles["H1Custom"]),
-        Paragraph("This run measures the production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual review remains required for accepted-output quality and raw fallback review.", styles["BodyCustom"]),
+        Paragraph(f"This run measures the production cleanup chain after one warmup inside a single process: {chain_description(result)}. Manual review remains required for accepted-output quality and raw fallback review.", styles["BodyCustom"]),
         Paragraph("Sample Results", styles["H1Custom"]),
         Paragraph("The PDF shows the first six samples. The complete table is in report.md and production-acceptance.json.", styles["SmallCustom"]),
     ]
@@ -365,6 +368,41 @@ def generate_acceptance_report(input_json: Path, run_dir: Path | None, run_label
 
 def provider_chain_text(result: dict[str, Any]) -> str:
     return " -> ".join(f"{provider['id']} ({provider['modelName']})" for provider in result["providerChain"])
+
+
+def includes_ollama(result: dict[str, Any]) -> bool:
+    summary = result.get("summary", {})
+    if "ollamaCount" in summary:
+        return True
+    if any(provider.get("id") == "ollama" for provider in result.get("providerChain", [])):
+        return True
+    return any(sample.get("path") == "ollama" for sample in result.get("samples", []))
+
+
+def chain_description(result: dict[str, Any]) -> str:
+    if includes_ollama(result):
+        return "MLX first, Ollama fallback second, and raw transcript fallback last"
+    return "MLX cleanup, then raw transcript fallback"
+
+
+def path_counts_text(summary: dict[str, Any]) -> str:
+    parts = [f"`MLX {summary['mlxCount']}`"]
+    if "ollamaCount" in summary:
+        parts.append(f"`Ollama fallback {summary['ollamaCount']}`")
+    parts.append(f"`raw fallback {summary['rawFallbackCount']}`")
+    return ", ".join(parts)
+
+
+def path_split_value(summary: dict[str, Any]) -> str:
+    if "ollamaCount" in summary:
+        return f"{summary['mlxCount']}/{summary['ollamaCount']}/{summary['rawFallbackCount']}"
+    return f"{summary['mlxCount']}/{summary['rawFallbackCount']}"
+
+
+def path_split_label(summary: dict[str, Any]) -> str:
+    if "ollamaCount" in summary:
+        return "MLX/Ollama/raw"
+    return "MLX/raw"
 
 
 def diagnostic_rows(result: dict[str, Any]) -> list[dict[str, Any]]:

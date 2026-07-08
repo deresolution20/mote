@@ -23,10 +23,6 @@ public enum CleanupRejectionReason: String, Codable, Equatable {
     case personalDictionaryTermLoss
     case addedMeaningToken
     case missingMetallib
-    case httpStatus
-    case requestTimedOut
-    case emptyResponse
-    case decodeFailed
     case providerError
 }
 

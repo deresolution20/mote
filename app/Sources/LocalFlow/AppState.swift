@@ -64,17 +64,6 @@ final class AppState: ObservableObject {
     @Published var injectByTyping: Bool = UserDefaults.standard.object(forKey: "injectByTyping") as? Bool ?? true {
         didSet { UserDefaults.standard.set(injectByTyping, forKey: "injectByTyping") }
     }
-    /// Minutes Ollama keeps the cleanup model resident after use (0 = unload now).
-    @Published var keepAliveMinutes: Int = Cleaner.keepAliveMinutes {
-        didSet {
-            let clamped = max(0, keepAliveMinutes)
-            if clamped != keepAliveMinutes { keepAliveMinutes = clamped; return }
-            Cleaner.keepAliveMinutes = clamped
-            // Re-warm so the new residency window starts from a loaded model.
-            if cleanupEnabled { Cleaner.warmUp() }
-        }
-    }
-
     /// Custom vocabulary terms, mirrored for SwiftUI binding.
     @Published var dictionaryTerms: [String] = PersonalDictionary.shared.terms
 
@@ -210,7 +199,7 @@ final class AppState: ObservableObject {
                 if cleanupEnabled {
                     status = .cleaning
                     HUDController.shared.show(.cleaning)
-                    // Nil = Ollama down/slow/implausible output → paste raw.
+                    // Nil = MLX unavailable/error/implausible output → paste raw.
                     if let cleaned = await Cleaner.clean(raw) {
                         lastCleaned = cleaned
                         textToPaste = cleaned

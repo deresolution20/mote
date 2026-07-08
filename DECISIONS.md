@@ -3,11 +3,9 @@
 ## 2026-07-08 — MLX default accepted; sample 17 raw fallback approved
 
 Task 14 is accepted as the production default-provider decision. Local Flow now
-defaults to Swift-native MLX cleanup. The user-facing product is MLX-only: no
-provider selector and no Ollama rollback setting. Ollama remains in the codebase
-as a hidden engineering fallback for MLX unavailable/timeout/error states until
-a separate removal plan exists. Raw transcript remains the terminal safety
-fallback.
+uses Swift-native MLX cleanup only: no provider selector, no Ollama rollback
+setting, and no hidden Ollama fallback path. Raw transcript remains the terminal
+safety fallback for MLX unavailable/timeout/error/rejected states.
 
 Brice manually approved sample 17's raw fallback. MLX correctly rejected
 `"Yeah, the new hire starts next Monday."` because it dropped the protected
@@ -41,8 +39,9 @@ Post-MVP work, all verified live by Brice:
   runs non-interactively). `bundle.sh` auto-uses it. Ends the
   remove/re-add-Accessibility-every-rebuild treadmill (TCC now keys on the
   cert, not the ad-hoc CDHash).
-- **User-settable Ollama keep-alive**, default 10 min (was hard-coded 60m):
-  menu presets + free numeric field in setup window. 0 = unload immediately.
+- **User-settable Ollama keep-alive** (superseded by the 2026-07-08 MLX-only
+  cleanup removal), default 10 min (was hard-coded 60m): menu presets + free
+  numeric field in setup window. 0 = unload immediately.
 
 - **Personal dictionary** (shipped): custom-vocabulary correction pass on the
   raw transcript before cleanup. Phonetic match = Soundex key equality + tight

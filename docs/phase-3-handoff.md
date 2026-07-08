@@ -23,27 +23,20 @@ accepted after manual review.
 The app now presents MLX as the cleanup path. There is no user-facing provider
 selector or Ollama rollback setting.
 
-Ollama remains in the codebase as a hidden engineering rollback path through
-UserDefaults or:
-
-```bash
-LOCALFLOW_CLEANUP_PROVIDER=ollama
-```
-
 The internal provider chain is:
 
 ```text
-MLX -> Ollama -> raw transcript
+MLX -> raw transcript
 ```
 
 Task 12 changed the fallback policy:
 
 - `.accepted`: return cleaned text.
 - `.rejected`: stop the chain and return raw transcript.
-- `.unavailable`, `.timeout`, `.error`: continue to the next provider.
+- `.unavailable`, `.timeout`, `.error`: return raw transcript because there is
+  no secondary cleanup provider.
 
-This means safety/content rejection no longer waits on Ollama. Provider
-diagnostics are still recorded in `attempts`.
+Provider diagnostics are still recorded in `attempts`.
 
 ## Important Code Areas
 
@@ -51,8 +44,6 @@ diagnostics are still recorded in `attempts`.
   Provider IDs, selection, factory, and provider chain.
 - `app/Sources/LocalFlowCleanup/MLXCleanupProvider.swift`
   Native MLX cleanup provider.
-- `app/Sources/LocalFlowCleanup/OllamaCleanupProvider.swift`
-  Localhost Ollama fallback provider.
 - `app/Sources/LocalFlowCleanup/CleanupSafety.swift`
   Sanitizer, wrapper/link/Markdown guards, added-token guard, filler allowance.
 - `app/Sources/LocalFlowCleanup/CleanupPlausibility.swift`
@@ -78,12 +69,11 @@ Task 14 benchmark summary:
 
 - Sample count: `24`.
 - MLX accepted: `23`.
-- Ollama fallback: `0`.
 - Raw fallback: `1`.
 - Median production-chain latency: `0.195s`.
 - p95 production-chain latency: `0.218s`.
 - Max latency: `0.238s`.
-- Selected provider: `mlx` with no explicit `--provider` argument.
+- Selected provider: `mlx`.
 - Sample `08`: accepted by MLX with leading `so like` polished out.
 - Sample `20`: accepted by MLX with `uh` polished out.
 - Sample `17`: rejected by MLX as `protectedMarkerLoss` for `i think`; Brice
@@ -126,19 +116,18 @@ Observed results:
 - `git diff --check`: clean.
 - Bundle build: completed and signed with `LocalFlow Dev`.
 - MLX metallib copied into `app/.build/LocalFlow.app/Contents/Resources/`.
-- Production acceptance run without `--provider`: selected `mlx`.
+- Production acceptance run selected `mlx`.
 
 ## Current Decision Point
 
-MLX is now the accepted default provider. Task 14 no longer has an open
-sample-17 review gate. Future user-facing work should keep the product
+MLX is now the accepted and only cleanup provider. Task 14 no longer has an
+open sample-17 review gate. Future user-facing work should keep the product
 MLX-only unless a new design explicitly reintroduces provider selection.
-Engineering validation should preserve the hidden fallback contract:
+Engineering validation should preserve the raw-fallback contract:
 
 - Smoke test the signed app bundle manually.
-- Confirm hidden rollback with `LOCALFLOW_CLEANUP_PROVIDER=ollama` only when
-  changing provider-chain internals.
-- Keep Ollama provider code available until a separate removal plan exists.
+- Keep cleanup MLX-only unless a new design explicitly reintroduces provider
+  selection.
 - Keep raw fallback terminal.
 - Keep diagnostic attempts in reports.
 

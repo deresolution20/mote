@@ -1,29 +1,17 @@
 import Foundation
 
-/// Facade kept for existing app call sites. Provider selection defaults to MLX
-/// while preserving Ollama as an explicit rollback provider.
+/// Facade kept for existing app call sites. Cleanup is MLX-only; raw transcript
+/// fallback is handled by `CleanupAcceptanceRunner` when MLX does not produce an
+/// accepted result.
 public enum Cleaner {
     private static let providerFactory = CleanupProviderFactory()
 
-    public static var selectedProviderID: CleanupProviderID {
-        CleanupProviderID.selected()
-    }
-
     public static var displayName: String {
-        providerFactory.provider(for: selectedProviderID).displayName
+        providerFactory.provider.displayName
     }
 
     public static var model: String {
-        providerFactory.provider(for: selectedProviderID).modelName
-    }
-
-    public static var keepAliveDefaultMinutes: Int {
-        OllamaCleanupProvider.keepAliveDefaultMinutes
-    }
-
-    public static var keepAliveMinutes: Int {
-        get { OllamaCleanupProvider.keepAliveMinutes }
-        set { OllamaCleanupProvider.keepAliveMinutes = newValue }
+        providerFactory.provider.modelName
     }
 
     public static func clean(_ raw: String) async -> String? {
@@ -36,10 +24,10 @@ public enum Cleaner {
     }
 
     public static func warmUp() {
-        providerFactory.provider(for: selectedProviderID).warmUp()
+        providerFactory.provider.warmUp()
     }
 
     private static var providerChain: [any CleanupProvider] {
-        providerFactory.providerChain(for: selectedProviderID)
+        providerFactory.providerChain
     }
 }

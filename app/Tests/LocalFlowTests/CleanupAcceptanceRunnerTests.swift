@@ -17,27 +17,27 @@ import Testing
         #expect(result.attemptedProviders == [.mlx])
     }
 
-    @Test func usesFallbackProviderWhenPrimaryUnavailable() async {
-        let primary = DiagnosticCleanupProvider(
+    @Test func usesRawFallbackWhenMLXUnavailable() async {
+        let provider = DiagnosticCleanupProvider(
             id: .mlx,
             result: .unavailable(rejection: CleanupRejection(reason: .missingMetallib))
         )
-        let fallback = StubCleanupProvider(id: .ollama, response: "I think we should ship it Friday.")
+        let raw = "um so i think we should ship it friday"
 
         let result = await CleanupAcceptanceRunner.run(
-            raw: "um so i think we should ship it friday",
-            providers: [primary, fallback]
+            raw: raw,
+            providers: [provider]
         )
 
-        #expect(result.textToPaste == "I think we should ship it Friday.")
-        #expect(result.cleanedText == "I think we should ship it Friday.")
-        #expect(result.path == .provider(.ollama))
-        #expect(result.attemptedProviders == [.mlx, .ollama])
+        #expect(result.textToPaste == raw)
+        #expect(result.cleanedText == nil)
+        #expect(result.path == .rawFallback)
+        #expect(result.attemptedProviders == [.mlx])
+        #expect(result.attempts.map(\.outcome) == [.unavailable])
     }
 
     @Test func rejectedProviderStopsAtRawFallbackAndPreservesAttemptDiagnostics() async {
-        let fallbackCounter = CallCounter()
-        let primary = DiagnosticCleanupProvider(
+        let provider = DiagnosticCleanupProvider(
             id: .mlx,
             result: .rejected(
                 rawCandidate: "The new hire starts Monday.",
@@ -45,20 +45,11 @@ import Testing
                 rejection: CleanupRejection(reason: .protectedMarkerLoss, detail: "i think")
             )
         )
-        let fallback = DiagnosticCleanupProvider(
-            id: .ollama,
-            result: .accepted(
-                cleanedText: "Yeah, the new hire starts Monday, I think.",
-                rawCandidate: "Yeah, the new hire starts Monday, I think.",
-                sanitizedCandidate: "Yeah, the new hire starts Monday, I think."
-            ),
-            counter: fallbackCounter
-        )
         let raw = "yeah the uh the new hire starts monday i think"
 
         let result = await CleanupAcceptanceRunner.run(
             raw: raw,
-            providers: [primary, fallback]
+            providers: [provider]
         )
 
         #expect(result.textToPaste == raw)
@@ -72,55 +63,44 @@ import Testing
         #expect(result.attempts[0].sanitizedCandidate == "The new hire starts Monday.")
         #expect(result.attempts[0].rejection?.reason == .protectedMarkerLoss)
         #expect(result.attempts[0].latencySeconds >= 0)
-        #expect(await fallbackCounter.count == 0)
     }
 
-    @Test func errorProviderContinuesToFallbackProvider() async {
-        let fallbackCounter = CallCounter()
-        let primary = DiagnosticCleanupProvider(
+    @Test func usesRawFallbackWhenMLXErrors() async {
+        let provider = DiagnosticCleanupProvider(
             id: .mlx,
             result: .error(
                 rejection: CleanupRejection(reason: .providerError),
                 description: "model failed"
             )
         )
-        let fallback = DiagnosticCleanupProvider(
-            id: .ollama,
-            result: .accepted(cleanedText: "I think we should ship it Friday."),
-            counter: fallbackCounter
-        )
+        let raw = "um so i think we should ship it friday"
 
         let result = await CleanupAcceptanceRunner.run(
-            raw: "um so i think we should ship it friday",
-            providers: [primary, fallback]
+            raw: raw,
+            providers: [provider]
         )
-
-        #expect(result.textToPaste == "I think we should ship it Friday.")
-        #expect(result.cleanedText == "I think we should ship it Friday.")
-        #expect(result.path == .provider(.ollama))
-        #expect(result.attemptedProviders == [.mlx, .ollama])
-        #expect(result.attempts.map(\.outcome) == [.error, .accepted])
-        #expect(result.attempts[0].errorDescription == "model failed")
-        #expect(await fallbackCounter.count == 1)
-    }
-
-    @Test func usesRawFallbackWhenAllProvidersUnavailable() async {
-        let primary = DiagnosticCleanupProvider(
-            id: .mlx,
-            result: .unavailable(rejection: CleanupRejection(reason: .missingMetallib))
-        )
-        let fallback = DiagnosticCleanupProvider(
-            id: .ollama,
-            result: .unavailable(rejection: CleanupRejection(reason: .providerError))
-        )
-        let raw = "can you um can you send me the link to that doc"
-
-        let result = await CleanupAcceptanceRunner.run(raw: raw, providers: [primary, fallback])
 
         #expect(result.textToPaste == raw)
         #expect(result.cleanedText == nil)
         #expect(result.path == .rawFallback)
-        #expect(result.attemptedProviders == [.mlx, .ollama])
+        #expect(result.attemptedProviders == [.mlx])
+        #expect(result.attempts.map(\.outcome) == [.error])
+        #expect(result.attempts[0].errorDescription == "model failed")
+    }
+
+    @Test func usesRawFallbackWhenProviderUnavailable() async {
+        let provider = DiagnosticCleanupProvider(
+            id: .mlx,
+            result: .unavailable(rejection: CleanupRejection(reason: .missingMetallib))
+        )
+        let raw = "can you um can you send me the link to that doc"
+
+        let result = await CleanupAcceptanceRunner.run(raw: raw, providers: [provider])
+
+        #expect(result.textToPaste == raw)
+        #expect(result.cleanedText == nil)
+        #expect(result.path == .rawFallback)
+        #expect(result.attemptedProviders == [.mlx])
     }
 
     @Test func usesRawFallbackWhenProviderListIsEmpty() async {
@@ -134,16 +114,13 @@ import Testing
         #expect(result.attemptedProviders.isEmpty)
     }
 
-    @Test func doesNotCallFallbackProviderWhenPrimarySucceeds() async {
+    @Test func callsProviderOnceWhenPrimarySucceeds() async {
         let primaryCounter = CallCounter()
-        let fallbackCounter = CallCounter()
         let primary = StubCleanupProvider(id: .mlx, response: "Cleaned.", counter: primaryCounter)
-        let fallback = StubCleanupProvider(id: .ollama, response: "Fallback.", counter: fallbackCounter)
 
-        _ = await CleanupAcceptanceRunner.run(raw: "cleaned", providers: [primary, fallback])
+        _ = await CleanupAcceptanceRunner.run(raw: "cleaned", providers: [primary])
 
         #expect(await primaryCounter.count == 1)
-        #expect(await fallbackCounter.count == 0)
     }
 
     @Test func batchRunnerPreservesSampleIDs() async {

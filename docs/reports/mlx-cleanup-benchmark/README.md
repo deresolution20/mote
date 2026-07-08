@@ -112,14 +112,15 @@ JSON:
 The Task 5 run recorded median repeated cleanup latency of `0.139s`, p90 of
 `0.164s`, p95 of `0.166s`, and max of `0.199s` over 24 samples.
 
-## Default Provider Decision
+## Cleanup Provider Decision
 
-Task 14 promotes MLX to the production default after the Task 13 accepted-output
-filler polish, production-chain acceptance run, and manual approval of the
-sample 17 raw fallback. The production chain remains:
+Task 14 promoted MLX to the production cleanup provider after the Task 13
+accepted-output filler polish, production-chain acceptance run, and manual
+approval of the sample 17 raw fallback. A follow-up cleanup removed the hidden
+Ollama fallback path. The production chain is now:
 
 ```text
-MLX -> Ollama -> raw transcript
+MLX -> raw transcript
 ```
 
 The latest decision evidence is:
@@ -128,9 +129,9 @@ The latest decision evidence is:
 docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-14-mlx-default-provider/report.md
 ```
 
-Ollama remains available through explicit provider selection and as the fallback
-provider when MLX is selected. Raw transcript fallback remains the terminal
-safety behavior.
+Raw transcript fallback remains the terminal safety behavior. Historical
+Ollama-vs-MLX reports in this folder remain benchmark evidence, not the current
+app runtime.
 
 ## First Formal Run
 

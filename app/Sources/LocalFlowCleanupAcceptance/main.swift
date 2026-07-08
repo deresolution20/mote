@@ -15,7 +15,7 @@ struct CleanupAcceptanceCommand {
             }
 
             let factory = CleanupProviderFactory()
-            let providers = factory.providerChain(for: options.providerID)
+            let providers = factory.providerChain
             let providerChain = providers.map { provider in
                 ProviderDescriptor(
                     id: provider.id.rawValue,
@@ -54,7 +54,7 @@ struct CleanupAcceptanceCommand {
                 task: taskName,
                 createdAt: ISO8601DateFormatter().string(from: Date()),
                 status: "completed",
-                selectedProvider: options.providerID.rawValue,
+                selectedProvider: CleanupProviderID.mlx.rawValue,
                 providerChain: providerChain,
                 manifestPath: options.manifestPath.path,
                 sampleCount: sampleResults.count,
@@ -65,8 +65,8 @@ struct CleanupAcceptanceCommand {
                 samples: sampleResults,
                 notes: [
                     "This measures the production cleanup chain after one warmup call in the same process.",
-                    "For MLX selection, the measured chain is MLX first, then Ollama fallback, then raw transcript fallback.",
-                    "Automated safety gates reject implausible model outputs; human review remains required for accepted-output quality and raw fallback review.",
+                    "The measured chain is MLX cleanup, then raw transcript fallback.",
+                    "Automated safety gates reject implausible MLX outputs; human review remains required for accepted-output quality and raw fallback review.",
                 ]
             )
 
@@ -102,13 +102,11 @@ struct CleanupAcceptanceCommand {
 private struct Options {
     let manifestPath: URL
     let outputPath: URL?
-    let providerID: CleanupProviderID
     let limit: Int?
 
     static func parse(_ arguments: [String]) throws -> Options {
         var manifestPath: URL?
         var outputPath: URL?
-        var providerID: CleanupProviderID = .mlx
         var limit: Int?
 
         var index = 1
@@ -119,12 +117,6 @@ private struct Options {
                 manifestPath = URL(fileURLWithPath: try value(after: argument, in: arguments, at: &index))
             case "--output":
                 outputPath = URL(fileURLWithPath: try value(after: argument, in: arguments, at: &index))
-            case "--provider":
-                let raw = try value(after: argument, in: arguments, at: &index).lowercased()
-                guard let parsed = CleanupProviderID(rawValue: raw) else {
-                    throw CommandError.invalidArgument("unsupported provider \(raw)")
-                }
-                providerID = parsed
             case "--limit":
                 let raw = try value(after: argument, in: arguments, at: &index)
                 guard let parsed = Int(raw), parsed > 0 else {
@@ -142,7 +134,6 @@ private struct Options {
         return Options(
             manifestPath: manifestPath ?? defaultManifestPath(),
             outputPath: outputPath,
-            providerID: providerID,
             limit: limit
         )
     }
@@ -150,10 +141,9 @@ private struct Options {
     private static var help: String {
         """
         Usage:
-          local-flow-cleanup-acceptance [--manifest PATH] [--output PATH] [--provider mlx|ollama] [--limit N]
+          local-flow-cleanup-acceptance [--manifest PATH] [--output PATH] [--limit N]
 
         Defaults:
-          --provider mlx
           --manifest bench/samples/manifest.json, or ../bench/samples/manifest.json when run from app/
         """
     }
@@ -259,7 +249,6 @@ private struct BenchmarkSummary: Encodable {
     let p90Seconds: TimeInterval
     let p95Seconds: TimeInterval
     let mlxCount: Int
-    let ollamaCount: Int
     let rawFallbackCount: Int
     let rejectedAttemptCount: Int
     let timeoutAttemptCount: Int
@@ -277,7 +266,6 @@ private struct BenchmarkSummary: Encodable {
         p90Seconds = Self.percentile(0.9, values: latencies)
         p95Seconds = Self.percentile(0.95, values: latencies)
         mlxCount = samples.filter { $0.path == CleanupProviderID.mlx.rawValue }.count
-        ollamaCount = samples.filter { $0.path == CleanupProviderID.ollama.rawValue }.count
         rawFallbackCount = samples.filter { $0.path == CleanupAcceptancePath.rawFallback.label }.count
         let attempts = samples.flatMap(\.attempts)
         rejectedAttemptCount = attempts.filter { $0.outcome == CleanupProviderOutcome.rejected.rawValue }.count

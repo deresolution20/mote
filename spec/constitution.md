@@ -16,10 +16,9 @@ and is expected to run on Apple Silicon.
 The app is a native SwiftUI/AppKit menu-bar application. It uses AVFoundation
 for microphone capture, NSEvent/CoreGraphics/AppKit accessibility APIs for
 push-to-talk and text insertion, FluidAudio Parakeet v3 for speech-to-text, and
-local cleanup providers only. Ollama at `http://localhost:11434` with
-`gemma3:4b` is the local rollback/fallback cleanup provider. Swift-native MLX
-with `mlx-community/Qwen2.5-1.5B-Instruct-4bit` is the accepted production
-default cleanup provider after the Task 14 acceptance run and manual review.
+Swift-native MLX with `mlx-community/Qwen2.5-1.5B-Instruct-4bit` as the only
+cleanup provider after the Task 14 acceptance run, manual review, and later
+Ollama-removal cleanup.
 
 The benchmark package may use alternate ASR engines for comparison. It currently
 depends on WhisperKit through `argmax-oss-swift`, FluidAudio, and
@@ -49,8 +48,7 @@ open app/.build/LocalFlow.app
 
 First run requires Microphone and Accessibility permissions. Default cleanup
 requires the MLX model files plus `mlx.metallib` in the app bundle runtime
-lookup path. Ollama rollback/fallback requires local Ollama and the
-`gemma3:4b` model.
+lookup path.
 
 Run benchmark commands from `bench/`:
 
@@ -108,9 +106,8 @@ account system, analytics, telemetry, crash reporting, remote cleanup endpoint,
 or non-local ASR may be added to the runtime dictation path.
 
 Cleanup providers are cleanup only. They must never be treated as ASR engines.
-Ollama must remain hard-coded or otherwise constrained to localhost. MLX must
-remain Swift-native/local in the app runtime. Cloud-routed cleanup models are
-not allowed.
+MLX must remain Swift-native/local in the app runtime. Cloud-routed cleanup
+models are not allowed.
 
 Audio and transcripts must not be written to disk by the app. The raw transcript
 must remain recoverable for the last dictation, and cleanup must fall back to raw
@@ -121,9 +118,9 @@ intent, personal-dictionary terms, or other protected markers. Prompt changes
 and plausibility-guard changes require acceptance testing against the benchmark
 utterance set.
 
-MLX is the accepted default cleanup provider. Do not change the default cleanup
-provider or remove Ollama rollback/fallback without a new task spec, formal
-acceptance evidence, and an explicit rollback plan.
+MLX is the accepted and only cleanup provider. Do not add a provider selector,
+change the cleanup provider, or reintroduce Ollama/remote cleanup without a new
+task spec, formal acceptance evidence, and an explicit rollback plan.
 
 The app keeps the two-permission model: Microphone and Accessibility only. Do
 not add Input Monitoring, Screen Recording, Full Disk Access, App Sandbox

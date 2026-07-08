@@ -4,7 +4,7 @@
 
 Historical task spec. This task predates the Task 14 default-provider decision.
 Its Ollama-default scope line describes the Task 8 state, not the current
-product state. The current accepted chain is `MLX -> Ollama -> raw transcript`.
+product state. The current accepted chain is `MLX -> raw transcript`.
 
 ## Objective
 

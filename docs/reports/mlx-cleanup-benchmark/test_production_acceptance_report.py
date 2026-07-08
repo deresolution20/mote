@@ -29,8 +29,7 @@ ACCEPTANCE_RESULT = {
             "id": "mlx",
             "displayName": "MLX",
             "modelName": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
-        },
-        {"id": "ollama", "displayName": "Ollama", "modelName": "gemma3:4b"},
+        }
     ],
     "manifestPath": "bench/samples/manifest.json",
     "sampleCount": 2,
@@ -46,10 +45,9 @@ ACCEPTANCE_RESULT = {
         "p90Seconds": 0.167,
         "p95Seconds": 0.168,
         "mlxCount": 1,
-        "ollamaCount": 1,
-        "rawFallbackCount": 0,
+        "rawFallbackCount": 1,
         "requiresManualReview": True,
-        "automatedDecision": "latency_and_output_review_required",
+        "automatedDecision": "hold_for_raw_fallback_review",
     },
     "samples": [
         {
@@ -67,8 +65,8 @@ ACCEPTANCE_RESULT = {
             "file": "02.wav",
             "reference": "yeah so basically the dashboard is broken again",
             "latencySeconds": 0.170,
-            "path": "ollama",
-            "attemptedProviders": ["mlx", "ollama"],
+            "path": "raw_fallback",
+            "attemptedProviders": ["mlx"],
             "attempts": [
                 {
                     "provider": "mlx",
@@ -81,20 +79,9 @@ ACCEPTANCE_RESULT = {
                     "cleanedText": None,
                     "errorDescription": None,
                 },
-                {
-                    "provider": "ollama",
-                    "outcome": "accepted",
-                    "latencySeconds": 0.129,
-                    "rejectReason": None,
-                    "rejectDetail": None,
-                    "rawCandidate": "Yeah, the dashboard is broken again.",
-                    "sanitizedCandidate": "Yeah, the dashboard is broken again.",
-                    "cleanedText": "Yeah, the dashboard is broken again.",
-                    "errorDescription": None,
-                },
             ],
-            "textToPaste": "Yeah, the dashboard is broken again.",
-            "cleanedText": "Yeah, the dashboard is broken again.",
+            "textToPaste": "yeah so basically the dashboard is broken again",
+            "cleanedText": None,
         },
     ],
     "notes": ["Synthetic fixture for tests."],
@@ -116,7 +103,7 @@ class ProductionAcceptanceReportTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["summary"]["mlxCount"], 1)
-        self.assertEqual(result["summary"]["ollamaCount"], 1)
+        self.assertEqual(result["summary"]["rawFallbackCount"], 1)
 
     def test_rejects_failed_acceptance_result(self) -> None:
         failed = dict(ACCEPTANCE_RESULT)
@@ -137,8 +124,8 @@ class ProductionAcceptanceReportTests(unittest.TestCase):
         self.assertIn("# Local Flow Post-Safety Production Acceptance Benchmark", report)
         self.assertIn("Run label: `Task 10 Production Acceptance`", report)
         self.assertIn("Median production-chain latency: `0.155s`", report)
-        self.assertIn("Path counts: `MLX 1`, `Ollama fallback 1`, `raw fallback 0`", report)
-        self.assertIn("| 02 | 0.170s | ollama | mlx, ollama | Yeah, the dashboard is broken again. |", report)
+        self.assertIn("Path counts: `MLX 1`, `raw fallback 1`", report)
+        self.assertIn("| 02 | 0.170s | raw_fallback | mlx | yeah so basically the dashboard is broken again |", report)
         self.assertIn("## Rejected Attempt Diagnostics", report)
         self.assertIn("| 02 | mlx | 0.041s | rejected | protectedMarkerLoss | basically | Yeah, the dashboard is broken again. | Yeah, the dashboard is broken again. |", report)
 
@@ -146,7 +133,7 @@ class ProductionAcceptanceReportTests(unittest.TestCase):
         result = json.loads(json.dumps(ACCEPTANCE_RESULT))
         result["samples"][0]["attempts"] = [
             {
-                "provider": "ollama",
+                "provider": "mlx",
                 "outcome": "timeout",
                 "latencySeconds": 6.004,
                 "rejectReason": "requestTimedOut",
@@ -157,7 +144,7 @@ class ProductionAcceptanceReportTests(unittest.TestCase):
         report_path = self.module.build_markdown_report(self.temp_dir, "Task 11 Diagnostics", result)
 
         report = report_path.read_text(encoding="utf-8")
-        self.assertIn("| 01 | ollama | 6.004s | timeout | requestTimedOut | 6.0s |  |  |", report)
+        self.assertIn("| 01 | mlx | 6.004s | timeout | requestTimedOut | 6.0s |  |  |", report)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@
 
 Historical task spec. This task predates the Task 14 default-provider decision.
 Its Ollama-default and MLX-opt-in acceptance bullets describe the Task 6 state,
-not the current product state. Current default cleanup is MLX, with Ollama kept
-as rollback/fallback.
+not the current product state. Current cleanup is MLX-only with raw transcript
+fallback; Ollama provider selection and rollback have been removed.
 
 ## Objective
 

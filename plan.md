@@ -16,10 +16,10 @@ rationale. Several implementation decisions have since changed based on local
 benchmarks and live acceptance:
 
 - ASR default is FluidAudio Parakeet v3, not WhisperKit turbo.
-- Cleanup default is Swift-native MLX
-  `mlx-community/Qwen2.5-1.5B-Instruct-4bit`. Ollama `gemma3:4b` remains in
-  the codebase as a hidden engineering fallback for now, but the user-facing
-  product is MLX-only.
+- Cleanup is Swift-native MLX
+  `mlx-community/Qwen2.5-1.5B-Instruct-4bit` only. Ollama was removed from the
+  active app path after Task 14 acceptance; historical Ollama notes below remain
+  as original PRD context and benchmark evidence.
 - Text insertion defaults to direct Unicode typing; clipboard paste remains a
   compatibility fallback.
 - The app uses two permissions: Microphone and Accessibility.

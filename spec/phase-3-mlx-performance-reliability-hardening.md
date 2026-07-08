@@ -4,9 +4,9 @@
 
 Task 14 completed the default-provider decision. MLX is now the accepted default
 cleanup provider after the 2026-07-08 production-chain acceptance run and
-manual approval of sample 17's raw fallback. Ollama remains available as the
-localhost rollback/fallback provider, and raw transcript remains the terminal
-safety fallback.
+manual approval of sample 17's raw fallback. A follow-up cleanup removed the
+hidden Ollama rollback/fallback path, so raw transcript is now the only terminal
+safety fallback after MLX.
 
 ## Spec Tier
 
@@ -18,7 +18,8 @@ and safer without changing the core product promise.
 
 Add a production-ready MLX cleanup path for Local Flow so post-ASR text cleanup
 is faster, more predictable, and still fully local. MLX must not weaken the
-existing privacy, raw fallback, or meaning-preservation guarantees.
+existing privacy, raw fallback, or meaning-preservation guarantees. This phase
+is now implemented through the accepted MLX-only runtime.
 
 The current app remains a native macOS menu-bar dictation tool:
 
@@ -32,8 +33,8 @@ This phase changes only the cleanup and benchmark/reporting layer.
 
 ## Background And Evidence
 
-The current cleanup path uses Ollama with `gemma3:4b` over localhost. It is fully
-local, but the cleanup hop is the dominant latency source.
+The earlier cleanup path used Ollama with `gemma3:4b` over localhost. It was
+fully local, but the cleanup hop was the dominant latency source.
 
 Measured Ollama baseline from the existing cleanup benchmark:
 
@@ -64,9 +65,9 @@ Showpiece research reports were generated from this spike:
 - `docs/reports/local-flow-mlx-cleanup-benchmark.pdf`
 - `docs/reports/local-flow-mlx-cleanup-benchmark.docx`
 
-The result justifies a focused hardening phase. It does not justify a blind
-provider swap, because the proof run still showed output artifacts that must be
-guarded before MLX can become the default.
+The result justified a focused hardening phase. Later Task 14 evidence and
+manual review accepted MLX as the production cleanup provider, with raw fallback
+for rejected or unavailable output.
 
 ## Scope
 
@@ -76,7 +77,7 @@ guarded before MLX can become the default.
   local server, or daemon.
 - Bias implementation toward Swift-native MLX / MLX Swift in the app.
 - Keep Python `mlx-lm` only for benchmark/proof tooling when useful.
-- Add provider selection so Ollama remains available while MLX is being proven.
+- Use MLX as the production cleanup provider after acceptance.
 - Add deterministic output safety checks for MLX cleanup:
   - Strip Markdown/code formatting from cleanup output.
   - Reject added words or added content.
@@ -96,7 +97,7 @@ guarded before MLX can become the default.
 - Per-app context modes or style presets.
 - Replacing FluidAudio Parakeet or changing ASR strategy.
 - UI redesign.
-- Removing Ollama before MLX passes acceptance.
+- Reintroducing provider selection or Ollama rollback without a new task spec.
 - Requiring oMLX, a local MLX server, or any external app as part of the product
   runtime.
 
@@ -155,7 +156,7 @@ Each run report must include:
 
 ## Acceptance Criteria
 
-MLX cleanup can become the preferred provider only when all of these are true:
+MLX cleanup became the accepted provider after these criteria were satisfied:
 
 - Median cleanup latency is below `0.350s` on the 24-reference acceptance set.
 - p90 cleanup latency is below `0.500s` on the same set.
@@ -165,7 +166,6 @@ MLX cleanup can become the preferred provider only when all of these are true:
 - Protected phrases and markers survive cleanup.
 - Unsafe cleanup output falls back to raw text.
 - The dictation path has no non-local network dependency.
-- Ollama remains available as a fallback until MLX has passed acceptance.
 - A formal benchmark run produces PDF, DOCX, chart assets, and raw outputs under
   `docs/reports/mlx-cleanup-benchmark/runs/`.
 
@@ -178,7 +178,8 @@ MLX cleanup can become the preferred provider only when all of these are true:
 - Always keep the raw transcript recoverable.
 - Cleanup must preserve meaning over polish.
 - If cleanup output is questionable, paste raw.
-- Do not remove Ollama until a task spec explicitly covers migration and rollback.
+- Do not reintroduce Ollama/provider rollback without a task spec and acceptance
+  evidence.
 
 ## Quality Risks
 
@@ -198,14 +199,15 @@ output.
 Future task specs should be small enough to implement and verify independently:
 
 1. Benchmark reporting system under `docs/reports/mlx-cleanup-benchmark/`.
-2. Cleanup benchmark harness changes to produce raw MLX and Ollama results.
+2. Cleanup benchmark harness changes to produce raw MLX and historical Ollama
+   comparison results.
 3. Swift-native MLX provider spike with model load, warmup, and one cleanup call.
 4. Swift MLX metallib discovery/build/copy repeatability.
 5. Repeated Swift MLX cleanup benchmark in one process, excluding one-time load
    and warmup.
-6. Provider abstraction and app setting for cleanup provider selection.
+6. Provider abstraction, later simplified to the accepted MLX-only runtime.
 7. MLX prompt, sanitizer, and plausibility guard.
-8. Acceptance runner with raw fallback and provider-fallback verification.
+8. Acceptance runner with raw fallback verification.
 9. Final default-provider decision based on benchmark evidence.
 
 Task specs should preserve this order unless a later discovery shows a real
