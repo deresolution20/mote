@@ -36,9 +36,9 @@ private, and has no subscription.
 
 - 🎙️ **Push-to-talk dictation** — hold **Left ⌥ (Option)**, speak, release.
 - 🧠 **On-device transcription** — [FluidAudio Parakeet v3](https://github.com/FluidInference/FluidAudio) on the Neural Engine (chosen over Whisper by benchmark — see below).
-- ✨ **Local LLM cleanup** — a small [Ollama](https://ollama.com) model strips filler words and fixes grammar without changing meaning. A safety guard pastes your raw words if the model ever drifts.
+- ✨ **Local LLM cleanup** — native Swift MLX cleanup strips filler words and fixes grammar without changing meaning. Ollama remains available as a local rollback provider.
 - 🌊 **Live waveform overlay** — a floating pill shows recording → transcribing → cleaning → done.
-- 🔒 **Truly offline** — no network calls in the dictation path, ever. Ollama talks only to `localhost`.
+- 🔒 **Truly offline** — no network calls in the dictation path, ever. Optional Ollama rollback talks only to `localhost`.
 - 🔁 **Raw ⇄ cleaned toggle** — the unedited transcript is always one click away.
 - ⚙️ **Tunable** — set how long the cleanup model stays warm in memory (menu or settings).
 - 🪶 **Two permissions only** — Microphone and Accessibility. No Input Monitoring required.
@@ -55,14 +55,14 @@ private, and has no subscription.
  Parakeet v3 (Core ML / ANE) ── raw transcript      ← on-device ASR
         │
         ▼
- gemma3:4b via Ollama ── cleaned text                ← local LLM, localhost only
-        │   (kept raw as fallback; meaning-preserving guard)
+ Swift MLX cleanup ── cleaned text                   ← local LLM, on-device
+        │   (Ollama/raw fallback; meaning-preserving guard)
         ▼
  Clipboard + synthesized ⌘V ── inserted at your cursor
 ```
 
-Every stage sits behind a protocol so engines are swappable. **Ollama is used only for text
-cleanup — never for speech-to-text** (it can't do ASR).
+Every stage sits behind a protocol so engines are swappable. **Ollama is used only as an
+optional text-cleanup fallback — never for speech-to-text** (it can't do ASR).
 
 ## Requirements
 
@@ -71,8 +71,8 @@ cleanup — never for speech-to-text** (it can't do ASR).
 | **macOS 26 (Tahoe) or later** | Uses current AVFoundation / SwiftUI APIs | — |
 | **Apple Silicon Mac** (M1–M5) | Neural Engine for real-time ASR | — |
 | **Xcode Command Line Tools** (Swift 6.3+) | Builds the app (full Xcode not required) | `xcode-select --install` |
-| **Ollama** | Runs the local cleanup model | [ollama.com/download](https://ollama.com/download) |
-| **A small instruct model** | The cleanup brain | `ollama pull gemma3:4b` |
+| **Ollama** | Optional local cleanup rollback/fallback | [ollama.com/download](https://ollama.com/download) |
+| **A small instruct model** | Optional Ollama fallback model | `ollama pull gemma3:4b` |
 
 Swift package dependencies (fetched automatically on build):
 - [FluidAudio](https://github.com/FluidInference/FluidAudio) — Parakeet TDT v3 ASR (Apache-2.0)
@@ -83,9 +83,9 @@ Swift package dependencies (fetched automatically on build):
 ```bash
 # 1. Prerequisites
 xcode-select --install                       # Swift toolchain
-brew install ollama || open https://ollama.com/download
-ollama serve &                               # start the local server
-ollama pull gemma3:4b                         # ~3.3 GB cleanup model
+# Optional rollback provider:
+# brew install ollama || open https://ollama.com/download
+# ollama pull gemma3:4b                       # optional ~3.3 GB fallback model
 
 # 2. Build and bundle the app
 git clone https://github.com/deresolution20/local-flow.git
@@ -124,8 +124,9 @@ Full data: [`bench/RESULTS.md`](bench/RESULTS.md).
 | Apple SpeechTranscriber | 0.080 s | 18.6% | instant |
 | WhisperKit large-v3-turbo | 0.482 s | 23.2% | slow (ANE compile) |
 
-Cleanup (gemma3:4b) runs at ~0.65–0.75 s per utterance and preserved meaning on **24/24**
-of the test set (21 cleaned, 3 safely fell back to raw). See [`bench/ACCEPTANCE.md`](bench/ACCEPTANCE.md).
+Cleanup defaults to native Swift MLX, with Ollama as a local rollback provider and raw
+transcript as the terminal safety fallback. The latest MLX production-chain acceptance run
+is tracked under [`docs/reports/mlx-cleanup-benchmark/runs/`](docs/reports/mlx-cleanup-benchmark/runs/).
 
 The benchmark harness is a standalone SwiftPM CLI in [`bench/`](bench/) — record your own
 samples and reproduce the numbers.
@@ -152,8 +153,8 @@ samples and reproduce the numbers.
 ## Privacy
 
 The dictation path makes **no network calls**. Audio is processed in memory and never written
-to disk by the app. The cleanup model runs locally via Ollama on `localhost` — a hard-coded
-guard refuses any non-local endpoint.
+to disk by the app. Cleanup runs locally through Swift MLX by default. The optional Ollama
+rollback provider talks only to `localhost`; a hard-coded guard refuses any non-local endpoint.
 
 ## Credits
 

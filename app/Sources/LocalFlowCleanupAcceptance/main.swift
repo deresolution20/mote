@@ -66,7 +66,7 @@ struct CleanupAcceptanceCommand {
                 notes: [
                     "This measures the production cleanup chain after one warmup call in the same process.",
                     "For MLX selection, the measured chain is MLX first, then Ollama fallback, then raw transcript fallback.",
-                    "Automated safety gates reject implausible model outputs; human review is still required before changing the default provider.",
+                    "Automated safety gates reject implausible model outputs; human review remains required for accepted-output quality and raw fallback review.",
                 ]
             )
 

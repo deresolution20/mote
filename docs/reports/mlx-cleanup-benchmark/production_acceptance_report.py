@@ -58,7 +58,7 @@ def build_markdown_report(run_dir: Path, run_label: str, result: dict[str, Any])
         f"- p90: `{summary['p90Seconds']:.3f}s`; p95: `{summary['p95Seconds']:.3f}s`; max: `{summary['maxSeconds']:.3f}s`.",
         f"- Path counts: `MLX {summary['mlxCount']}`, `Ollama fallback {summary['ollamaCount']}`, `raw fallback {summary['rawFallbackCount']}`.",
         f"- Automated decision: `{summary['automatedDecision']}`.",
-        "- Manual review: `required` before changing the default provider.",
+        "- Manual review: `required` for accepted-output quality and raw fallback review.",
         "",
         "## Runtime Contract",
         "",
@@ -195,7 +195,7 @@ def build_docx(run_dir: Path, run_label: str, result: dict[str, Any], chart: Pat
     generate_report.add_docx_para(
         doc,
         deps,
-        "This run measures the actual production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual output review remains required before changing the default provider.",
+        "This run measures the actual production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual output review remains required for accepted-output quality and raw fallback review.",
     )
     doc.add_picture(str(chart), width=Inches(6.2))
     doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -210,7 +210,7 @@ def build_docx(run_dir: Path, run_label: str, result: dict[str, Any], chart: Pat
         ("Provider chain", provider_chain_text(result)),
         ("Warmup", f"{result['warmupSeconds']:.3f}s via {result['warmupPath']}"),
         ("Automated decision", summary["automatedDecision"]),
-        ("Manual review", "required before default switch"),
+        ("Manual review", "required for output quality"),
     ]:
         cells = table.add_row().cells
         generate_report.set_cell_text(cells[0], label, deps, bold=True, size=8.4)
@@ -280,7 +280,7 @@ def build_pdf(run_dir: Path, run_label: str, result: dict[str, Any], chart: Path
         Spacer(1, 0.16 * inch),
         Image(str(chart), width=6.45 * inch, height=3.5 * inch),
         Paragraph("Executive Summary", styles["H1Custom"]),
-        Paragraph("This run measures the production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual review remains required before changing the default provider.", styles["BodyCustom"]),
+        Paragraph("This run measures the production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. Manual review remains required for accepted-output quality and raw fallback review.", styles["BodyCustom"]),
         Paragraph("Sample Results", styles["H1Custom"]),
         Paragraph("The PDF shows the first six samples. The complete table is in report.md and production-acceptance.json.", styles["SmallCustom"]),
     ]

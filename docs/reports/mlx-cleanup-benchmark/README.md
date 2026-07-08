@@ -114,24 +114,22 @@ The Task 5 run recorded median repeated cleanup latency of `0.139s`, p90 of
 
 ## Default Provider Decision
 
-Task 9 keeps Ollama as the production default and keeps MLX opt-in. The evidence
-proves raw Swift MLX generation is fast and the app now has deterministic
-sanitizer/fallback behavior, but there is not yet a formal post-safety live
-benchmark for the full production chain:
+Task 14 promotes MLX to the production default after the Task 13 accepted-output
+filler polish and production-chain acceptance run. The production chain remains:
 
 ```text
 MLX -> Ollama -> raw transcript
 ```
 
-The Task 9 decision record is:
+The latest decision evidence is:
 
 ```text
-docs/reports/mlx-cleanup-benchmark/runs/2026-07-06-task-9-default-provider-decision/report.md
+docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-13-accepted-filler-polish/report.md
 ```
 
-MLX should become the default only after that production chain passes the
-24-reference acceptance set with zero accepted meaning changes and p90
-user-facing cleanup latency below `0.500s`.
+Ollama remains available through explicit provider selection and as the fallback
+provider when MLX is selected. Raw transcript fallback remains the terminal
+safety behavior.
 
 ## First Formal Run
 

@@ -32,7 +32,7 @@ if [[ -n "$METALLIB" ]]; then
   ln -s ../Resources "$APP/Contents/MacOS/Resources"
   echo "copied MLX metallib from $METALLIB"
 else
-  echo "MLX metallib not found; Ollama remains default and MLX cleanup will fall back to raw text"
+  echo "MLX metallib not found; MLX cleanup will be unavailable and the provider chain can fall back to Ollama/raw text"
 fi
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'

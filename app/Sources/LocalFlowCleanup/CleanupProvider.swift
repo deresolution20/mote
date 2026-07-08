@@ -17,7 +17,7 @@ public enum CleanupProviderID: String, CaseIterable, Codable {
         if let raw = defaults.string(forKey: userDefaultsKey), let provider = CleanupProviderID(rawValue: raw.lowercased()) {
             return provider
         }
-        return .ollama
+        return .mlx
     }
 }
 

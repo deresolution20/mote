@@ -3,36 +3,36 @@ import Testing
 @testable import LocalFlowCleanup
 
 @Suite struct CleanupProviderSelectionTests {
-    @Test func defaultsToOllamaWhenNoOverrideExists() throws {
+    @Test func defaultsToMLXWhenNoOverrideExists() throws {
         let defaults = try isolatedDefaults()
+
+        let selected = CleanupProviderID.selected(environment: [:], defaults: defaults)
+
+        #expect(selected == .mlx)
+    }
+
+    @Test func environmentOverrideSelectsOllamaForRollback() throws {
+        let defaults = try isolatedDefaults()
+        defaults.set(CleanupProviderID.mlx.rawValue, forKey: CleanupProviderID.userDefaultsKey)
+
+        let selected = CleanupProviderID.selected(
+            environment: [CleanupProviderID.environmentKey: "ollama"],
+            defaults: defaults
+        )
+
+        #expect(selected == .ollama)
+    }
+
+    @Test func userDefaultSelectsOllamaWhenEnvironmentIsUnset() throws {
+        let defaults = try isolatedDefaults()
+        defaults.set(CleanupProviderID.ollama.rawValue, forKey: CleanupProviderID.userDefaultsKey)
 
         let selected = CleanupProviderID.selected(environment: [:], defaults: defaults)
 
         #expect(selected == .ollama)
     }
 
-    @Test func environmentOverrideSelectsMLX() throws {
-        let defaults = try isolatedDefaults()
-        defaults.set(CleanupProviderID.ollama.rawValue, forKey: CleanupProviderID.userDefaultsKey)
-
-        let selected = CleanupProviderID.selected(
-            environment: [CleanupProviderID.environmentKey: "mlx"],
-            defaults: defaults
-        )
-
-        #expect(selected == .mlx)
-    }
-
-    @Test func userDefaultSelectsMLXWhenEnvironmentIsUnset() throws {
-        let defaults = try isolatedDefaults()
-        defaults.set(CleanupProviderID.mlx.rawValue, forKey: CleanupProviderID.userDefaultsKey)
-
-        let selected = CleanupProviderID.selected(environment: [:], defaults: defaults)
-
-        #expect(selected == .mlx)
-    }
-
-    @Test func invalidValuesFallBackToOllama() throws {
+    @Test func invalidValuesFallBackToMLX() throws {
         let defaults = try isolatedDefaults()
         defaults.set("cloud", forKey: CleanupProviderID.userDefaultsKey)
 
@@ -41,7 +41,7 @@ import Testing
             defaults: defaults
         )
 
-        #expect(selected == .ollama)
+        #expect(selected == .mlx)
     }
 
     @Test func factoryResolvesProviderIDsWithoutLoadingModels() {

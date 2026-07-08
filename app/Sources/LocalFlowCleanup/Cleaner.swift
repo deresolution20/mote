@@ -1,8 +1,7 @@
 import Foundation
 
-/// Facade kept for existing app call sites. Provider selection is intentionally
-/// non-default so Ollama remains the production cleanup path unless explicitly
-/// overridden for MLX validation.
+/// Facade kept for existing app call sites. Provider selection defaults to MLX
+/// while preserving Ollama as an explicit rollback provider.
 public enum Cleaner {
     private static let providerFactory = CleanupProviderFactory()
 
