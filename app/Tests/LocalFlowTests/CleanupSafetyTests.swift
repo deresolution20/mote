@@ -61,9 +61,31 @@ import Testing
         #expect(accepted == nil)
     }
 
-    @Test func acceptsRetainedFillerWhenCleanedCandidateOnlyAddsKnownFiller() {
+    @Test func polishesStandaloneFilledPauseFromAcceptedCandidate() {
         let raw = "okay um long story short we we missed the deadline by two days"
         let output = "Okay, uh, long story short, we missed the deadline by two days."
+
+        let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
+
+        #expect(evaluation.acceptedText == "Okay, long story short, we missed the deadline by two days.")
+        #expect(evaluation.sanitizedCandidate == "Okay, long story short, we missed the deadline by two days.")
+        #expect(evaluation.rejection == nil)
+    }
+
+    @Test func polishesOpeningSoLikeFromAcceptedCandidate() {
+        let raw = "so like the query takes uh forever when i add the group by"
+        let output = "so like the query takes forever when i add the group by"
+
+        let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
+
+        #expect(evaluation.acceptedText == "the query takes forever when i add the group by")
+        #expect(evaluation.sanitizedCandidate == "the query takes forever when i add the group by")
+        #expect(evaluation.rejection == nil)
+    }
+
+    @Test func preservesContextualLikeWhenPolishingFillers() {
+        let raw = "uh my flight gets in at like seven so dinner at eight works"
+        let output = "My flight gets in at like seven so dinner at eight works."
 
         let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
 

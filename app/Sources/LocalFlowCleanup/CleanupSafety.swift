@@ -34,23 +34,24 @@ enum CleanupSafety {
                 rejection: CleanupRejection(reason: .unknown)
             )
         }
-        if let rejection = CleanupPlausibility.evaluate(sanitizedText, raw: raw) {
+        let polishedText = polishFillers(in: sanitizedText)
+        if let rejection = CleanupPlausibility.evaluate(polishedText, raw: raw) {
             return CleanupSafetyEvaluation(
                 acceptedText: nil,
-                sanitizedCandidate: sanitizedText,
+                sanitizedCandidate: polishedText,
                 rejection: rejection
             )
         }
-        if let addedToken = firstAddedMeaningToken(in: sanitizedText, raw: raw) {
+        if let addedToken = firstAddedMeaningToken(in: polishedText, raw: raw) {
             return CleanupSafetyEvaluation(
                 acceptedText: nil,
-                sanitizedCandidate: sanitizedText,
+                sanitizedCandidate: polishedText,
                 rejection: CleanupRejection(reason: .addedMeaningToken, detail: addedToken)
             )
         }
         return CleanupSafetyEvaluation(
-            acceptedText: sanitizedText,
-            sanitizedCandidate: sanitizedText,
+            acceptedText: polishedText,
+            sanitizedCandidate: polishedText,
             rejection: nil
         )
     }
@@ -162,6 +163,50 @@ enum CleanupSafety {
 
     private static func collapseWhitespace(in text: String) -> String {
         text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private static func polishFillers(in text: String) -> String {
+        var polished = text
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)^\s*so\b[\s,;:]+like\b[\s,;:]*"#,
+            with: ""
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)([,;:])\s*\b(?:um|uh|erm)\b\s*[,;:]\s*"#,
+            with: "$1 "
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)^\s*\b(?:um|uh|erm)\b[\s,;:]*"#,
+            with: ""
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)[\s,;:]*\b(?:um|uh|erm)\b\s*$"#,
+            with: ""
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)([,;:])\s*\b(?:um|uh|erm)\b\s+"#,
+            with: "$1 "
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)\s+\b(?:um|uh|erm)\b\s*([,;:])\s*"#,
+            with: "$1 "
+        )
+        polished = replaceRegex(
+            in: polished,
+            pattern: #"(?i)\s+\b(?:um|uh|erm)\b\s+"#,
+            with: " "
+        )
+        return collapseWhitespace(in: polished.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private static func replaceRegex(in text: String, pattern: String, with replacement: String) -> String {
+        text.replacingOccurrences(of: pattern, with: replacement, options: .regularExpression)
     }
 
     private static func firstAddedMeaningToken(in cleaned: String, raw: String) -> String? {
