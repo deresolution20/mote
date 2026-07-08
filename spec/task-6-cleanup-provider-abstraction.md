@@ -1,5 +1,12 @@
 # Task 6: Cleanup Provider Abstraction
 
+## Current Status
+
+Historical task spec. This task predates the Task 14 default-provider decision.
+Its Ollama-default and MLX-opt-in acceptance bullets describe the Task 6 state,
+not the current product state. Current default cleanup is MLX, with Ollama kept
+as rollback/fallback.
+
 ## Objective
 
 Add a production cleanup provider boundary so Local Flow can keep Ollama as the

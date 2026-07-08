@@ -3,37 +3,20 @@ import SwiftUI
 
 struct MenuView: View {
     @EnvironmentObject var state: AppState
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Text(state.status.label)
-
-        Toggle("Clean up with AI (\(Cleaner.displayName): \(Cleaner.model))", isOn: $state.cleanupEnabled)
-
-        Toggle("Show waveform overlay", isOn: $state.hudEnabled)
-
-        Toggle("Insert by typing (skip clipboard)", isOn: $state.injectByTyping)
-
-        Menu("Keep model loaded: \(keepAliveLabel)") {
-            ForEach([0, 5, 10, 30, 60], id: \.self) { minutes in
-                Button {
-                    state.keepAliveMinutes = minutes
-                } label: {
-                    Label(
-                        minutes == 0 ? "Unload immediately" : "\(minutes) min",
-                        systemImage: state.keepAliveMinutes == minutes ? "checkmark" : ""
-                    )
-                }
-            }
-            Divider()
-            Text("Custom values in Setup & Permissions…")
-        }
-        .disabled(!state.cleanupEnabled)
 
         if !state.lastTranscript.isEmpty {
             Divider()
             Text("Raw: “\(truncated(state.lastTranscript))”")
             if !state.lastCleaned.isEmpty {
                 Text("Cleaned: “\(truncated(state.lastCleaned))”")
+                Button("Copy Cleaned Text") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(state.lastCleaned, forType: .string)
+                }
             }
             Button("Copy Raw Transcript") {
                 NSPasteboard.general.clearContents()
@@ -43,9 +26,10 @@ struct MenuView: View {
 
         Divider()
 
-        Button("Setup & Permissions…") {
-            state.showOnboarding()
+        Button("Settings…") {
+            openSettings()
         }
+        .keyboardShortcut(",", modifiers: .command)
 
         if state.allPermissionsGranted, case .needsPermissions = state.status {
             Button("Start Dictation Engine") {
@@ -63,9 +47,5 @@ struct MenuView: View {
 
     private func truncated(_ text: String) -> String {
         text.count > 60 ? String(text.prefix(60)) + "…" : text
-    }
-
-    private var keepAliveLabel: String {
-        state.keepAliveMinutes <= 0 ? "off" : "\(state.keepAliveMinutes) min"
     }
 }

@@ -15,8 +15,8 @@ This run measures the actual production cleanup chain after one warmup inside a 
 - Median production-chain latency: `0.195s`.
 - p90: `0.217s`; p95: `0.218s`; max: `0.238s`.
 - Path counts: `MLX 23`, `Ollama fallback 0`, `raw fallback 1`.
-- Automated decision: `hold_for_raw_fallback_review`.
-- Manual review: `required` for accepted-output quality and raw fallback review.
+- Automated decision: `accepted_after_manual_review`.
+- Manual review: `approved`; Brice approved sample `17` raw fallback as correct safety behavior for the Task 14 default-provider decision.
 
 ## Runtime Contract
 
@@ -60,6 +60,12 @@ This run measures the actual production cleanup chain after one warmup inside a 
 | id | provider | latency | outcome | reason | detail | raw candidate | sanitized candidate |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
 | 17 | mlx | 0.170s | rejected | protectedMarkerLoss | i think | Yeah, the new hire starts next Monday. | Yeah, the new hire starts next Monday. |
+
+## Manual Review
+
+Sample `17` is accepted as a raw fallback. MLX rejected the candidate because it
+dropped the protected marker `i think`, and the final pasted text preserves the
+raw transcript.
 
 ## Generated Artifacts
 

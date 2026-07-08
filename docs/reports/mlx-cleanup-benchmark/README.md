@@ -115,7 +115,8 @@ The Task 5 run recorded median repeated cleanup latency of `0.139s`, p90 of
 ## Default Provider Decision
 
 Task 14 promotes MLX to the production default after the Task 13 accepted-output
-filler polish and production-chain acceptance run. The production chain remains:
+filler polish, production-chain acceptance run, and manual approval of the
+sample 17 raw fallback. The production chain remains:
 
 ```text
 MLX -> Ollama -> raw transcript
@@ -124,7 +125,7 @@ MLX -> Ollama -> raw transcript
 The latest decision evidence is:
 
 ```text
-docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-13-accepted-filler-polish/report.md
+docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-14-mlx-default-provider/report.md
 ```
 
 Ollama remains available through explicit provider selection and as the fallback
@@ -139,9 +140,10 @@ The first formal run captures the Phase 3 MLX proof:
 - MLX `mlx-community/Qwen2.5-1.5B-Instruct-4bit`: load `0.489s`, warmup
   `0.180s`, median `0.240s`, p90 `0.264s`.
 
-The acceptance decision is `fail` for production defaulting because the MLX proof
-still showed formatting and wording artifacts. The performance result is strong;
-the provider still needs sanitizer, plausibility guard, and fallback behavior.
+This historical first-run acceptance decision was `fail` for production
+defaulting because the MLX proof still showed formatting and wording artifacts.
+Later tasks added sanitizer, plausibility guard, fallback behavior, and the
+accepted Task 14 default-provider decision.
 
 ## Verification
 

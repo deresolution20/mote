@@ -1,5 +1,11 @@
 # Task 8: Acceptance Runner And Fallback Verification
 
+## Current Status
+
+Historical task spec. This task predates the Task 14 default-provider decision.
+Its Ollama-default scope line describes the Task 8 state, not the current
+product state. The current accepted chain is `MLX -> Ollama -> raw transcript`.
+
 ## Objective
 
 Add a deterministic acceptance runner for cleanup decisions so the app can verify

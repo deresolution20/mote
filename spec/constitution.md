@@ -17,9 +17,9 @@ The app is a native SwiftUI/AppKit menu-bar application. It uses AVFoundation
 for microphone capture, NSEvent/CoreGraphics/AppKit accessibility APIs for
 push-to-talk and text insertion, FluidAudio Parakeet v3 for speech-to-text, and
 local cleanup providers only. Ollama at `http://localhost:11434` with
-`gemma3:4b` is the production default cleanup provider. Swift-native MLX with
-`mlx-community/Qwen2.5-1.5B-Instruct-4bit` is available as an opt-in cleanup
-provider while Phase 3 validation continues.
+`gemma3:4b` is the local rollback/fallback cleanup provider. Swift-native MLX
+with `mlx-community/Qwen2.5-1.5B-Instruct-4bit` is the accepted production
+default cleanup provider after the Task 14 acceptance run and manual review.
 
 The benchmark package may use alternate ASR engines for comparison. It currently
 depends on WhisperKit through `argmax-oss-swift`, FluidAudio, and
@@ -48,9 +48,9 @@ open app/.build/LocalFlow.app
 ```
 
 First run requires Microphone and Accessibility permissions. Default cleanup
-requires local Ollama and the `gemma3:4b` model. MLX cleanup is opt-in and
 requires the MLX model files plus `mlx.metallib` in the app bundle runtime
-lookup path.
+lookup path. Ollama rollback/fallback requires local Ollama and the
+`gemma3:4b` model.
 
 Run benchmark commands from `bench/`:
 
@@ -121,9 +121,9 @@ intent, personal-dictionary terms, or other protected markers. Prompt changes
 and plausibility-guard changes require acceptance testing against the benchmark
 utterance set.
 
-Do not make MLX the default cleanup provider until a formal post-safety
-acceptance run proves the production `MLX -> Ollama -> raw transcript` chain
-meets the latency and zero-meaning-change gates.
+MLX is the accepted default cleanup provider. Do not change the default cleanup
+provider or remove Ollama rollback/fallback without a new task spec, formal
+acceptance evidence, and an explicit rollback plan.
 
 The app keeps the two-permission model: Microphone and Accessibility only. Do
 not add Input Monitoring, Screen Recording, Full Disk Access, App Sandbox

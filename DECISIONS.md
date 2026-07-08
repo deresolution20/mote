@@ -1,5 +1,23 @@
 # Local Flow — decision log
 
+## 2026-07-08 — MLX default accepted; sample 17 raw fallback approved
+
+Task 14 is accepted as the production default-provider decision. Local Flow now
+defaults to Swift-native MLX cleanup. The user-facing product is MLX-only: no
+provider selector and no Ollama rollback setting. Ollama remains in the codebase
+as a hidden engineering fallback for MLX unavailable/timeout/error states until
+a separate removal plan exists. Raw transcript remains the terminal safety
+fallback.
+
+Brice manually approved sample 17's raw fallback. MLX correctly rejected
+`"Yeah, the new hire starts next Monday."` because it dropped the protected
+marker `i think`; pasting the raw transcript is the intended safe behavior for
+that sample.
+
+Current insertion default is direct Unicode typing, not clipboard paste. The
+clipboard path remains available as a compatibility fallback and must restore
+the previous clipboard contents.
+
 ## 2026-07-04 — published as a public MIT repo
 
 Repo: https://github.com/deresolution20/local-flow (public, MIT, owner

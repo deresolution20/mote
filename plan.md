@@ -1,10 +1,29 @@
 # Local Flow — a fully-local, offline Wispr Flow clone for macOS
 
 > **Working name:** `local-flow` (rename freely).
-> **Status:** Plan — not yet implemented.
+> **Status:** Historical PRD. MVP Phases 0-2 are complete, Phase 3 is in
+> progress, and Swift-native MLX cleanup is now the accepted default after the
+> 2026-07-08 Task 14 acceptance run and manual review. For current runtime state,
+> see `README.md`, `DECISIONS.md`, and `docs/phase-3-handoff.md`.
 > **Author of plan:** synthesized from a fact-checked deep-research pass (23 sources fetched, 104 claims extracted, 25 adversarially verified with 3-vote panels). Citations at the end. Where a claim was *refuted* in verification, it is flagged so you don't design around it.
 
 ---
+
+## Current implementation note
+
+This document preserves the original product requirements and research
+rationale. Several implementation decisions have since changed based on local
+benchmarks and live acceptance:
+
+- ASR default is FluidAudio Parakeet v3, not WhisperKit turbo.
+- Cleanup default is Swift-native MLX
+  `mlx-community/Qwen2.5-1.5B-Instruct-4bit`. Ollama `gemma3:4b` remains in
+  the codebase as a hidden engineering fallback for now, but the user-facing
+  product is MLX-only.
+- Text insertion defaults to direct Unicode typing; clipboard paste remains a
+  compatibility fallback.
+- The app uses two permissions: Microphone and Accessibility.
+- `speak2` is reference-only because its license status was refuted.
 
 ## 1. Objective
 

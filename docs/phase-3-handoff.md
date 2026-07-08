@@ -17,16 +17,20 @@ git log -3 --oneline --decorate
 ## Current Product State
 
 MVP Phases 0-2 are complete. Phase 3 MLX cleanup proof and hardening work is
-implemented through Task 14.
+implemented through Task 14, and the Task 14 default-provider decision is
+accepted after manual review.
 
-The app now defaults to MLX. Ollama remains available as an explicit rollback
-provider through UserDefaults or:
+The app now presents MLX as the cleanup path. There is no user-facing provider
+selector or Ollama rollback setting.
+
+Ollama remains in the codebase as a hidden engineering rollback path through
+UserDefaults or:
 
 ```bash
 LOCALFLOW_CLEANUP_PROVIDER=ollama
 ```
 
-The intended production chain is:
+The internal provider chain is:
 
 ```text
 MLX -> Ollama -> raw transcript
@@ -82,7 +86,8 @@ Task 14 benchmark summary:
 - Selected provider: `mlx` with no explicit `--provider` argument.
 - Sample `08`: accepted by MLX with leading `so like` polished out.
 - Sample `20`: accepted by MLX with `uh` polished out.
-- Sample `17`: rejected by MLX as `protectedMarkerLoss` for `i think`.
+- Sample `17`: rejected by MLX as `protectedMarkerLoss` for `i think`; Brice
+  approved the resulting raw fallback as correct safety behavior.
 - Sample `17` attempted providers: `mlx` only.
 
 The Task 14 run folder contains:
@@ -125,11 +130,15 @@ Observed results:
 
 ## Current Decision Point
 
-MLX is now the default provider. Next work should be post-default validation:
+MLX is now the accepted default provider. Task 14 no longer has an open
+sample-17 review gate. Future user-facing work should keep the product
+MLX-only unless a new design explicitly reintroduces provider selection.
+Engineering validation should preserve the hidden fallback contract:
 
 - Smoke test the signed app bundle manually.
-- Confirm rollback with `LOCALFLOW_CLEANUP_PROVIDER=ollama`.
-- Keep Ollama provider available.
+- Confirm hidden rollback with `LOCALFLOW_CLEANUP_PROVIDER=ollama` only when
+  changing provider-chain internals.
+- Keep Ollama provider code available until a separate removal plan exists.
 - Keep raw fallback terminal.
 - Keep diagnostic attempts in reports.
 
@@ -174,11 +183,11 @@ python3 docs/reports/mlx-cleanup-benchmark/production_acceptance_report.py \
 ## Copy-Paste Goal For Fresh Session
 
 ```text
-Continue Local Flow post-default MLX validation. Start by reading
+Continue Local Flow after the accepted Task 14 MLX default-provider decision.
+Start by reading
 docs/phase-3-handoff.md and the Task 14 report at
 docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-14-mlx-default-provider/report.md.
-Smoke test the signed app bundle, verify Ollama rollback remains available via
-LOCALFLOW_CLEANUP_PROVIDER=ollama, preserve raw transcript fallback, and verify
-changes with swift test, Python report tests, git diff --check, bundle build,
-and a production acceptance run.
+Next product discussion is the menu-bar toolbar/dropdown experience. Keep the
+user-facing product MLX-only, with no provider selector. Preserve raw transcript
+fallback.
 ```

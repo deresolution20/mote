@@ -1,5 +1,9 @@
 # Local Flow Task 9 Default Provider Decision
 
+> Historical report. Superseded by Task 14, which accepted MLX as the default
+> provider after the post-safety production-chain run and manual approval of
+> sample 17's raw fallback.
+
 Run label: `task-9-default-provider-decision`
 
 ## Decision

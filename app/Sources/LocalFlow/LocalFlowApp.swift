@@ -11,6 +11,10 @@ struct LocalFlowApp: App {
         } label: {
             Image(systemName: state.status.symbolName)
         }
+
+        Settings {
+            SettingsView().environmentObject(state)
+        }
     }
 }
 

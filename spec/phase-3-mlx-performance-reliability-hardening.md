@@ -1,5 +1,13 @@
 # Phase 3 Spec: MLX Performance And Reliability Hardening
 
+## Current Status
+
+Task 14 completed the default-provider decision. MLX is now the accepted default
+cleanup provider after the 2026-07-08 production-chain acceptance run and
+manual approval of sample 17's raw fallback. Ollama remains available as the
+localhost rollback/fallback provider, and raw transcript remains the terminal
+safety fallback.
+
 ## Spec Tier
 
 This is a phase spec. It sits below the Local Flow product definition and above

@@ -1,5 +1,12 @@
 # Task 9: Default Provider Decision
 
+## Current Status
+
+Superseded by the Task 14 default-provider decision. Task 9 correctly held the
+default at Ollama because the production chain had not yet been benchmarked.
+Task 14 later accepted MLX as the default after the post-safety production-chain
+run and Brice's manual approval of sample 17's raw fallback.
+
 ## Decision
 
 Ollama remains the production default cleanup provider.

@@ -1,5 +1,12 @@
 # Task 7: MLX Sanitizer And Plausibility Guard
 
+## Current Status
+
+Historical task spec. This task predates the Task 14 default-provider decision.
+Its "keep Ollama as default" scope line describes the Task 7 state, not the
+current product state. The sanitizer and plausibility guard remain part of the
+current MLX-default path.
+
 ## Objective
 
 Harden the opt-in Swift MLX cleanup provider so model output is sanitized and

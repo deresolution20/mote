@@ -29,7 +29,7 @@ final class AppState: ObservableObject {
 
         var label: String {
             switch self {
-            case .needsPermissions: return "Permissions needed — open Setup"
+            case .needsPermissions: return "Permissions needed — open Settings"
             case .loadingModel: return "Loading speech model…"
             case .idle: return "Ready — hold Left ⌥ and speak"
             case .recording: return "Recording…"

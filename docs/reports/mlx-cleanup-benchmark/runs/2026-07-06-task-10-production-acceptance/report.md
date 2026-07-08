@@ -1,5 +1,8 @@
 # Local Flow Post-Safety Production Acceptance Benchmark
 
+> Historical report. Superseded by Task 14, which accepted MLX as the default
+> provider after manual approval of sample 17's raw fallback.
+
 Run label: `Task 10 Production Acceptance`
 
 ## Executive Summary
