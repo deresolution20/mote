@@ -4,6 +4,7 @@ reference/
 # Swift build artifacts
 .build/
 .derivedData/
+.worktrees/
 *.xcodeproj
 .swiftpm/
 
