@@ -83,6 +83,17 @@ import Testing
         #expect(evaluation.rejection == nil)
     }
 
+    @Test func polishesInternalDiscourseLikeFromAcceptedCandidate() {
+        let raw = "um so you're saying like uh dashboards down"
+        let output = "You're saying like dashboards down?"
+
+        let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
+
+        #expect(evaluation.acceptedText == "You're saying dashboards down?")
+        #expect(evaluation.sanitizedCandidate == "You're saying dashboards down?")
+        #expect(evaluation.rejection == nil)
+    }
+
     @Test func preservesContextualLikeWhenPolishingFillers() {
         let raw = "uh my flight gets in at like seven so dinner at eight works"
         let output = "My flight gets in at like seven so dinner at eight works."
