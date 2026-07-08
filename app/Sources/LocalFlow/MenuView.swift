@@ -1,3 +1,4 @@
+import LocalFlowCleanup
 import SwiftUI
 
 struct MenuView: View {
@@ -5,11 +6,18 @@ struct MenuView: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Text(state.status.label)
+        let snapshot = MenuRuntimeSnapshot(
+            statusLabel: state.status.label,
+            control: state.menuRuntimeControl,
+            lastRawTranscript: state.lastTranscript,
+            lastCleanedText: state.lastCleaned
+        )
 
-        if state.allPermissionsGranted, case .needsPermissions = state.status {
-            Button("Start Dictation Engine") {
-                Task { await state.startPipeline() }
+        Text(snapshot.statusLabel)
+
+        if let controlTitle = snapshot.controlTitle {
+            Button(controlTitle) {
+                run(snapshot.control)
             }
             Divider()
         }
@@ -19,19 +27,23 @@ struct MenuView: View {
         }
         .keyboardShortcut(",", modifiers: .command)
 
-        if !state.lastTranscript.isEmpty {
+        if snapshot.hasLastDictation {
             Divider()
             Text("Last Dictation")
-            Text("Raw: “\(truncated(state.lastTranscript))”")
-            Button("Copy Last Raw") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(state.lastTranscript, forType: .string)
+            if let rawPreview = snapshot.rawPreview {
+                Text(rawPreview)
             }
-            if !state.lastCleaned.isEmpty {
-                Text("Cleaned: “\(truncated(state.lastCleaned))”")
+            if snapshot.canCopyRaw {
+                Button("Copy Last Raw") {
+                    copy(state.lastTranscript)
+                }
+            }
+            if let cleanedPreview = snapshot.cleanedPreview {
+                Text(cleanedPreview)
+            }
+            if snapshot.canCopyCleaned {
                 Button("Copy Last Cleaned") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(state.lastCleaned, forType: .string)
+                    copy(state.lastCleaned)
                 }
             }
         }
@@ -44,7 +56,21 @@ struct MenuView: View {
         .keyboardShortcut("q")
     }
 
-    private func truncated(_ text: String) -> String {
-        text.count > 60 ? String(text.prefix(60)) + "…" : text
+    private func run(_ control: MenuRuntimeControl) {
+        switch control {
+        case .none:
+            break
+        case .start:
+            Task { await state.startPipeline() }
+        case .pause:
+            state.pauseDictation()
+        case .resume:
+            Task { await state.resumeDictation() }
+        }
+    }
+
+    private func copy(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 }

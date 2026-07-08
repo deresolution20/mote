@@ -13,6 +13,7 @@ final class AppState: ObservableObject {
         case recording
         case transcribing
         case cleaning
+        case paused
         case failed(String)
 
         var symbolName: String {
@@ -23,6 +24,7 @@ final class AppState: ObservableObject {
             case .recording: return "mic.fill"
             case .transcribing: return "waveform"
             case .cleaning: return "sparkles"
+            case .paused: return "pause.circle"
             case .failed: return "exclamationmark.triangle"
             }
         }
@@ -35,6 +37,7 @@ final class AppState: ObservableObject {
             case .recording: return "Recording…"
             case .transcribing: return "Transcribing…"
             case .cleaning: return "Cleaning up…"
+            case .paused: return "Paused — choose Resume Dictation"
             case .failed(let msg): return "Error: \(msg)"
             }
         }
@@ -80,13 +83,28 @@ final class AppState: ObservableObject {
     private let capture = AudioCapture()
     private let transcriber = Transcriber()
     private var hotkey: HotkeyMonitor?
-    private var pipelineStarted = false
+    private var engineLoaded = false
+    private var hotkeyActive = false
+    private var pauseRequested = false
     private var recordingWatchdog: Task<Void, Never>?
     /// Longest sensible push-to-talk hold; past this the release event was lost.
     private let maxRecordingSeconds: UInt64 = 30
 
     var allPermissionsGranted: Bool {
         micGranted && accessibilityGranted
+    }
+
+    var menuRuntimeControl: MenuRuntimeControl {
+        if case .paused = status { return .resume }
+        if pauseRequested { return .resume }
+        if allPermissionsGranted, case .needsPermissions = status { return .start }
+        guard hotkeyActive else { return .none }
+        switch status {
+        case .idle, .recording, .transcribing, .cleaning:
+            return .pause
+        case .needsPermissions, .loadingModel, .paused, .failed:
+            return .none
+        }
     }
 
     func refreshPermissions() {
@@ -117,18 +135,75 @@ final class AppState: ObservableObject {
     }
 
     func startPipeline() async {
-        guard !pipelineStarted else { return }
-        pipelineStarted = true
-        status = .loadingModel
-        if cleanupEnabled { Cleaner.warmUp() }
-        do {
-            try await transcriber.load()
-        } catch {
-            status = .failed("model load failed: \(error.localizedDescription)")
-            pipelineStarted = false
+        guard allPermissionsGranted else {
+            status = .needsPermissions
+            showOnboarding()
             return
         }
+        guard !hotkeyActive else { return }
+        pauseRequested = false
+        if !engineLoaded {
+            status = .loadingModel
+            if cleanupEnabled { Cleaner.warmUp() }
+            do {
+                try await transcriber.load()
+                engineLoaded = true
+            } catch {
+                status = .failed("model load failed: \(error.localizedDescription)")
+                return
+            }
+        }
 
+        if installHotkeyMonitor() {
+            status = .idle
+        } else {
+            status = .failed("could not install hotkey listener — check Accessibility permission")
+        }
+    }
+
+    func pauseDictation() {
+        guard engineLoaded || hotkeyActive else { return }
+        pauseRequested = true
+        stopHotkeyMonitor()
+
+        switch status {
+        case .recording:
+            recordingWatchdog?.cancel()
+            _ = capture.stop()
+            HUDController.shared.hide()
+            status = .paused
+        case .idle:
+            status = .paused
+        case .transcribing, .cleaning:
+            break
+        case .needsPermissions, .loadingModel, .paused, .failed:
+            if engineLoaded { status = .paused }
+        }
+    }
+
+    func resumeDictation() async {
+        guard allPermissionsGranted else {
+            status = .needsPermissions
+            showOnboarding()
+            return
+        }
+        pauseRequested = false
+        if engineLoaded {
+            guard !hotkeyActive else {
+                if case .paused = status { status = .idle }
+                return
+            }
+            if installHotkeyMonitor() {
+                if case .paused = status { status = .idle }
+            } else {
+                status = .failed("could not install hotkey listener — check Accessibility permission")
+            }
+        } else {
+            await startPipeline()
+        }
+    }
+
+    private func installHotkeyMonitor() -> Bool {
         let monitor = HotkeyMonitor(
             key: .leftOption,
             onKeyDown: { [weak self] in self?.hotkeyPressed() },
@@ -137,16 +212,23 @@ final class AppState: ObservableObject {
         )
         if monitor.start() {
             hotkey = monitor
-            status = .idle
+            hotkeyActive = true
+            return true
         } else {
-            status = .failed("could not install hotkey listener — check Accessibility permission")
-            pipelineStarted = false
+            return false
         }
+    }
+
+    private func stopHotkeyMonitor() {
+        hotkey?.stop()
+        hotkey = nil
+        hotkeyActive = false
     }
 
     private func hotkeyPressed() {
         // A press always clears a lingering error state.
         if case .failed = status { status = .idle }
+        guard !pauseRequested else { return }
         guard case .idle = status else { return }
         do {
             try capture.start()
@@ -177,7 +259,7 @@ final class AppState: ObservableObject {
         let samples = capture.stop()
         // Ignore accidental taps: < 0.3 s of audio.
         guard samples.count > 4800 else {
-            status = .idle
+            status = pauseRequested ? .paused : .idle
             HUDController.shared.hide()
             return
         }
@@ -191,7 +273,7 @@ final class AppState: ObservableObject {
                 lastTranscript = raw
                 lastCleaned = ""
                 guard !raw.isEmpty else {
-                    status = .idle
+                    status = pauseRequested ? .paused : .idle
                     HUDController.shared.hide()
                     return
                 }
@@ -206,14 +288,14 @@ final class AppState: ObservableObject {
                     }
                 }
                 TextInjector.insert(textToPaste, method: injectByTyping ? .type : .clipboard)
-                status = .idle
+                status = pauseRequested ? .paused : .idle
                 HUDController.shared.finishAndHide()
             } catch {
                 status = .failed("transcription failed: \(error.localizedDescription)")
                 HUDController.shared.hide()
                 // Recover to idle after a beat so the next attempt works.
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
-                if case .failed = status { status = .idle }
+                if case .failed = status { status = pauseRequested ? .paused : .idle }
             }
         }
     }
