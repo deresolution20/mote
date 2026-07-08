@@ -1,4 +1,3 @@
-import LocalFlowCleanup
 import SwiftUI
 
 struct MenuView: View {
@@ -8,32 +7,32 @@ struct MenuView: View {
     var body: some View {
         Text(state.status.label)
 
-        if !state.lastTranscript.isEmpty {
+        if state.allPermissionsGranted, case .needsPermissions = state.status {
+            Button("Start Dictation Engine") {
+                Task { await state.startPipeline() }
+            }
             Divider()
-            Text("Raw: “\(truncated(state.lastTranscript))”")
-            if !state.lastCleaned.isEmpty {
-                Text("Cleaned: “\(truncated(state.lastCleaned))”")
-                Button("Copy Cleaned Text") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(state.lastCleaned, forType: .string)
-                }
-            }
-            Button("Copy Raw Transcript") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(state.lastTranscript, forType: .string)
-            }
         }
-
-        Divider()
 
         Button("Settings…") {
             openSettings()
         }
         .keyboardShortcut(",", modifiers: .command)
 
-        if state.allPermissionsGranted, case .needsPermissions = state.status {
-            Button("Start Dictation Engine") {
-                Task { await state.startPipeline() }
+        if !state.lastTranscript.isEmpty {
+            Divider()
+            Text("Last Dictation")
+            Text("Raw: “\(truncated(state.lastTranscript))”")
+            Button("Copy Last Raw") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(state.lastTranscript, forType: .string)
+            }
+            if !state.lastCleaned.isEmpty {
+                Text("Cleaned: “\(truncated(state.lastCleaned))”")
+                Button("Copy Last Cleaned") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(state.lastCleaned, forType: .string)
+                }
             }
         }
 
