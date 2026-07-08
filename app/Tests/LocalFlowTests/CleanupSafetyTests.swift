@@ -94,9 +94,31 @@ import Testing
         #expect(evaluation.rejection == nil)
     }
 
+    @Test func polishesCopulaDiscourseLikeFromAcceptedCandidate() {
+        let raw = "um you're like saying like um like the dashboards are down or like for real"
+        let output = "You're like saying the dashboards are down or for real?"
+
+        let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
+
+        #expect(evaluation.acceptedText == "You're saying the dashboards are down or for real?")
+        #expect(evaluation.sanitizedCandidate == "You're saying the dashboards are down or for real?")
+        #expect(evaluation.rejection == nil)
+    }
+
     @Test func preservesContextualLikeWhenPolishingFillers() {
         let raw = "uh my flight gets in at like seven so dinner at eight works"
         let output = "My flight gets in at like seven so dinner at eight works."
+
+        let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
+
+        #expect(evaluation.acceptedText == output)
+        #expect(evaluation.sanitizedCandidate == output)
+        #expect(evaluation.rejection == nil)
+    }
+
+    @Test func preservesVerbLikeBeforeDiscourseGerund() {
+        let raw = "i like saying the dashboards are down because it is precise"
+        let output = "I like saying the dashboards are down because it is precise."
 
         let evaluation = CleanupSafety.evaluate(rawOutput: output, raw: raw)
 

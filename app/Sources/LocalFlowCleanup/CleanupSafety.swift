@@ -174,6 +174,11 @@ enum CleanupSafety {
         )
         polished = replaceRegex(
             in: polished,
+            pattern: #"(?i)\b(i(?:['’]m| am)|you(?:['’]re| are)|we(?:['’]re| are)|they(?:['’]re| are)|he(?:['’]s| is)|she(?:['’]s| is)|it(?:['’]s| is)|am|are|is|was|were|be|been|being)\b\s+like\b\s+(say|says|said|saying|ask|asks|asked|asking|tell|tells|told|telling)\b"#,
+            with: "$1 $2"
+        )
+        polished = replaceRegex(
+            in: polished,
             pattern: #"(?i)\b(say|says|said|saying|ask|asks|asked|asking|tell|tells|told|telling)\b\s+like\b\s+"#,
             with: "$1 "
         )
