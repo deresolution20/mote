@@ -37,6 +37,14 @@ let package = Package(
             dependencies: ["LocalFlowCleanup"],
             path: "Sources/LocalFlowCleanupAcceptance"
         ),
+        .executableTarget(
+            name: "local-flow-streaming-benchmark",
+            dependencies: [
+                .product(name: "FluidAudio", package: "FluidAudio"),
+                "LocalFlowCleanup",
+            ],
+            path: "Sources/LocalFlowStreamingBenchmark"
+        ),
         .testTarget(
             name: "LocalFlowTests",
             dependencies: ["LocalFlowCleanup", "LocalFlow"],
