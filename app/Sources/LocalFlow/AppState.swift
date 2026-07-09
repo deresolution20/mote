@@ -82,13 +82,21 @@ final class AppState: ObservableObject {
 
     private let capture = AudioCapture()
     private let transcriber = Transcriber()
+    private let streamingTranscriber = StreamingTranscriber()
     private var hotkey: HotkeyMonitor?
     private var engineLoaded = false
+    private var streamingLoaded = false
     private var hotkeyActive = false
     private var pauseRequested = false
+    private var currentHUDTail = ""
     private var recordingWatchdog: Task<Void, Never>?
+    private var streamingSetupTask: Task<Void, Never>?
     /// Longest sensible push-to-talk hold; past this the release event was lost.
     private let maxRecordingSeconds: UInt64 = 30
+
+    private var useStreamingFinalTranscript: Bool {
+        ProcessInfo.processInfo.environment["LOCALFLOW_STREAMING_FINAL"] == "1"
+    }
 
     var allPermissionsGranted: Bool {
         micGranted && accessibilityGranted
@@ -147,6 +155,12 @@ final class AppState: ObservableObject {
             if cleanupEnabled { Cleaner.warmUp() }
             do {
                 try await transcriber.load()
+                do {
+                    try await streamingTranscriber.load()
+                    streamingLoaded = true
+                } catch {
+                    streamingLoaded = false
+                }
                 engineLoaded = true
             } catch {
                 status = .failed("model load failed: \(error.localizedDescription)")
@@ -170,9 +184,11 @@ final class AppState: ObservableObject {
         case .recording:
             recordingWatchdog?.cancel()
             _ = capture.stop()
+            clearStreamingSession()
             HUDController.shared.hide()
             status = .paused
         case .idle:
+            clearStreamingSession()
             status = .paused
         case .transcribing, .cleaning:
             break
@@ -230,10 +246,31 @@ final class AppState: ObservableObject {
         if case .failed = status { status = .idle }
         guard !pauseRequested else { return }
         guard case .idle = status else { return }
+        currentHUDTail = ""
+        streamingSetupTask?.cancel()
+        let streamingLoaded = self.streamingLoaded
+        let streamingTranscriber = self.streamingTranscriber
+        if streamingLoaded {
+            streamingSetupTask = Task {
+                await streamingTranscriber.reset()
+                guard !Task.isCancelled else { return }
+                await streamingTranscriber.setPartialHandler { [weak self] partial in
+                    guard let self else { return }
+                    let tail = HUDCaptionTail.tail(from: partial)
+                    guard tail != self.currentHUDTail else { return }
+                    self.currentHUDTail = tail
+                    HUDController.shared.updateCaptionTail(tail)
+                }
+            }
+        }
         do {
-            try capture.start()
+            try capture.start(liveSamplesHandler: streamingLoaded ? { chunk in
+                Task {
+                    await streamingTranscriber.append(samples: chunk)
+                }
+            } : nil)
             status = .recording
-            HUDController.shared.show(.recording)
+            HUDController.shared.show(.recording, captionTail: currentHUDTail)
             // Watchdog: if the release event is ever lost, don't record forever.
             recordingWatchdog = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: (self?.maxRecordingSeconds ?? 30) * 1_000_000_000)
@@ -241,6 +278,7 @@ final class AppState: ObservableObject {
                 if case .recording = self.status { self.hotkeyReleased() }
             }
         } catch {
+            clearStreamingSession()
             status = .failed("mic capture failed: \(error.localizedDescription)")
         }
     }
@@ -249,6 +287,7 @@ final class AppState: ObservableObject {
         recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         _ = capture.stop()
+        clearStreamingSession()
         status = .idle
         HUDController.shared.hide()
     }
@@ -259,15 +298,24 @@ final class AppState: ObservableObject {
         let samples = capture.stop()
         // Ignore accidental taps: < 0.3 s of audio.
         guard samples.count > 4800 else {
+            clearStreamingSession()
             status = pauseRequested ? .paused : .idle
             HUDController.shared.hide()
             return
         }
         status = .transcribing
-        HUDController.shared.show(.transcribing)
+        HUDController.shared.show(.transcribing, captionTail: currentHUDTail)
+        let streamingFinishTask: Task<String, Never>? = streamingLoaded ? Task {
+            (try? await streamingTranscriber.finish()) ?? ""
+        } : nil
         Task {
+            defer {
+                clearStreamingSession(clearHUD: false)
+            }
             do {
-                let heard = try await transcriber.transcribe(samples)
+                let tdtHeard = try await transcriber.transcribe(samples)
+                let streamingHeard = await streamingFinishTask?.value ?? ""
+                let heard = useStreamingFinalTranscript && !streamingHeard.isEmpty ? streamingHeard : tdtHeard
                 // Personal-dictionary correction on the raw ASR output, before cleanup.
                 let raw = PersonalDictionary.shared.correct(heard)
                 lastTranscript = raw
@@ -280,7 +328,7 @@ final class AppState: ObservableObject {
                 var textToPaste = raw
                 if cleanupEnabled {
                     status = .cleaning
-                    HUDController.shared.show(.cleaning)
+                    HUDController.shared.show(.cleaning, captionTail: currentHUDTail)
                     // Nil = MLX unavailable/error/implausible output → paste raw.
                     if let cleaned = await Cleaner.clean(raw) {
                         lastCleaned = cleaned
@@ -297,6 +345,19 @@ final class AppState: ObservableObject {
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 if case .failed = status { status = pauseRequested ? .paused : .idle }
             }
+        }
+    }
+
+    private func clearStreamingSession(clearHUD: Bool = true) {
+        currentHUDTail = ""
+        streamingSetupTask?.cancel()
+        streamingSetupTask = nil
+        if clearHUD {
+            HUDController.shared.updateCaptionTail("")
+        }
+        let streamingTranscriber = self.streamingTranscriber
+        Task {
+            await streamingTranscriber.setPartialHandler(nil)
         }
     }
 }

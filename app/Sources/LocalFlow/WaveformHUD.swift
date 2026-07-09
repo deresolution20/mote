@@ -12,6 +12,7 @@ enum HUDPhase: Equatable {
 @MainActor
 final class HUDModel: ObservableObject {
     @Published var phase: HUDPhase = .recording
+    @Published var captionTail: String = ""
 }
 
 /// A floating, non-activating overlay that shows an animated waveform pill while
@@ -26,26 +27,33 @@ final class HUDController {
     /// Guards the delayed hide so a new dictation cancels a pending fade.
     private var hideGeneration = 0
 
-    private static let size = CGSize(width: 168, height: 56)
+    private static let size = CGSize(width: 300, height: 56)
 
     var enabled: Bool {
         UserDefaults.standard.object(forKey: "hudEnabled") as? Bool ?? true
     }
 
-    func show(_ phase: HUDPhase) {
+    func show(_ phase: HUDPhase, captionTail: String = "") {
         guard enabled else { return }
         hideGeneration += 1
         model.phase = phase
+        model.captionTail = captionTail
         let panel = panel ?? makePanel()
         reposition(panel)
         panel.alphaValue = 1
         panel.orderFrontRegardless()
     }
 
+    func updateCaptionTail(_ captionTail: String) {
+        guard enabled, panel != nil else { return }
+        model.captionTail = captionTail
+    }
+
     /// Flash the done state, then fade out — unless a new dictation supersedes it.
     func finishAndHide() {
         guard enabled, panel != nil else { return }
         model.phase = .done
+        model.captionTail = ""
         hideGeneration += 1
         let token = hideGeneration
         Task { @MainActor in
@@ -57,6 +65,7 @@ final class HUDController {
 
     func hide() {
         hideGeneration += 1
+        model.captionTail = ""
         panel?.orderOut(nil)
     }
 
@@ -107,14 +116,13 @@ struct WaveformHUDView: View {
             switch model.phase {
             case .recording:
                 WaveBars(animating: true, tint: .accentColor)
+                captionText
             case .transcribing:
                 WaveBars(animating: true, tint: .secondary)
-                Text("Transcribing")
-                    .font(.caption).foregroundStyle(.secondary)
+                captionTextOrFallback("Transcribing")
             case .cleaning:
                 Image(systemName: "sparkles").foregroundStyle(Color.accentColor)
-                Text("Cleaning up")
-                    .font(.caption).foregroundStyle(.secondary)
+                captionTextOrFallback("Cleaning up")
             case .done:
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                 Text("Done").font(.caption).foregroundStyle(.secondary)
@@ -127,6 +135,28 @@ struct WaveformHUDView: View {
         .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
         .padding(6)
         .animation(.easeInOut(duration: 0.2), value: model.phase)
+        .animation(.easeInOut(duration: 0.15), value: model.captionTail)
+    }
+
+    @ViewBuilder
+    private var captionText: some View {
+        if !model.captionTail.isEmpty {
+            Text(model.captionTail)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .foregroundStyle(.primary)
+                .frame(maxWidth: 210, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func captionTextOrFallback(_ fallback: String) -> some View {
+        if model.captionTail.isEmpty {
+            Text(fallback).font(.caption).foregroundStyle(.secondary)
+        } else {
+            captionText
+        }
     }
 }
 
