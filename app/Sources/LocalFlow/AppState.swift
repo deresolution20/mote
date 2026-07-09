@@ -2,6 +2,73 @@ import AppKit
 import LocalFlowCleanup
 import SwiftUI
 
+private final class StreamingAppendSerialQueue: @unchecked Sendable {
+    private let lock = NSLock()
+    private var activeToken: Int?
+    private var acceptsEnqueues = false
+    private var tail: Task<Void, Never>?
+
+    func startSession(token: Int) {
+        lock.lock()
+        activeToken = token
+        acceptsEnqueues = true
+        tail = nil
+        lock.unlock()
+    }
+
+    func enqueue(for token: Int, _ operation: @escaping @Sendable () async -> Void) {
+        lock.lock()
+        guard activeToken == token, acceptsEnqueues else {
+            lock.unlock()
+            return
+        }
+
+        let previousTail = tail
+        let task = Task { [weak self] in
+            await previousTail?.value
+            guard let self, self.isActive(token: token) else { return }
+            await operation()
+        }
+        tail = task
+        lock.unlock()
+    }
+
+    func freeze(token: Int) {
+        lock.lock()
+        if activeToken == token {
+            acceptsEnqueues = false
+        }
+        lock.unlock()
+    }
+
+    func invalidate(token: Int) {
+        lock.lock()
+        if activeToken == token {
+            activeToken = nil
+            acceptsEnqueues = false
+        }
+        tail = nil
+        lock.unlock()
+    }
+
+    func waitForDrain(token: Int) async {
+        let task = drainTask(for: token)
+        await task?.value
+    }
+
+    private func isActive(token: Int) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return activeToken == token
+    }
+
+    private func drainTask(for token: Int) -> Task<Void, Never>? {
+        lock.lock()
+        defer { lock.unlock() }
+        return activeToken == token ? tail : nil
+    }
+}
+
 @MainActor
 final class AppState: ObservableObject {
     static let shared = AppState()
@@ -86,6 +153,7 @@ final class AppState: ObservableObject {
     private var hotkey: HotkeyMonitor?
     private var engineLoaded = false
     private var streamingLoaded = false
+    private let streamingAppendQueue = StreamingAppendSerialQueue()
     private var hotkeyActive = false
     private var pauseRequested = false
     private var currentHUDTail = ""
@@ -250,6 +318,7 @@ final class AppState: ObservableObject {
         guard case .idle = status else { return }
         let sessionToken = beginStreamingSession()
         let streamingLoaded = self.streamingLoaded
+        let streamingAppendQueue = self.streamingAppendQueue
         let streamingTranscriber = self.streamingTranscriber
         if streamingLoaded {
             let setupTask = Task { [weak self] in
@@ -274,11 +343,11 @@ final class AppState: ObservableObject {
         let setupTask = streamingSetupTask
         do {
             try capture.start(liveSamplesHandler: streamingLoaded ? { chunk in
-                Task { [weak self] in
+                streamingAppendQueue.enqueue(for: sessionToken) { [weak self] in
                     await setupTask?.value
+                    guard let self else { return }
                     let shouldAppend = await MainActor.run {
-                        guard let self else { return false }
-                        return self.canAppendStreamingSamples(for: sessionToken)
+                        self.canRunStreamingAppend(for: sessionToken)
                     }
                     guard shouldAppend else { return }
                     await streamingTranscriber.append(samples: chunk)
@@ -318,17 +387,29 @@ final class AppState: ObservableObject {
             HUDController.shared.hide()
             return
         }
+        let sessionToken = streamingSessionToken
         let releasedHUDTail = currentHUDTail
         let setupTask = streamingSetupTask
-        invalidateStreamingSession(clearHUD: false, clearTail: false)
+        let streamingAppendQueue = self.streamingAppendQueue
+        let streamingTranscriber = self.streamingTranscriber
+        freezeStreamingSessionForRelease(sessionToken)
         status = .transcribing
         HUDController.shared.show(.transcribing, captionTail: releasedHUDTail)
-        let streamingFinishTask: Task<String, Never>? = streamingLoaded ? Task {
+        let streamingFinishTask: Task<String, Never>? = streamingLoaded ? Task { [weak self] in
             await setupTask?.value
+            await streamingAppendQueue.waitForDrain(token: sessionToken)
+            let shouldFinish = await MainActor.run {
+                guard let self else { return false }
+                return self.canRunStreamingAppend(for: sessionToken)
+            }
+            guard shouldFinish else { return "" }
             return (try? await streamingTranscriber.finish()) ?? ""
         } : nil
         Task {
-            defer { currentHUDTail = "" }
+            defer {
+                currentHUDTail = ""
+                clearStreamingSession()
+            }
             do {
                 let tdtHeard = try await transcriber.transcribe(samples)
                 let streamingHeard = await streamingFinishTask?.value ?? ""
@@ -374,6 +455,7 @@ final class AppState: ObservableObject {
         streamingSetupTask?.cancel()
         streamingSetupTask = nil
         streamingSessionToken += 1
+        streamingAppendQueue.startSession(token: streamingSessionToken)
         acceptsStreamingPartials = true
         HUDController.shared.updateCaptionTail("")
         return streamingSessionToken
@@ -381,10 +463,12 @@ final class AppState: ObservableObject {
 
     @discardableResult
     private func invalidateStreamingSession(clearHUD: Bool = true, clearTail: Bool = true) -> Int {
+        let expiredSessionToken = streamingSessionToken
+        streamingAppendQueue.invalidate(token: expiredSessionToken)
         streamingSetupTask?.cancel()
         streamingSetupTask = nil
         streamingSessionToken += 1
-        let invalidatedToken = streamingSessionToken
+        let invalidatedStateToken = streamingSessionToken
         acceptsStreamingPartials = false
         if clearTail {
             currentHUDTail = ""
@@ -392,20 +476,22 @@ final class AppState: ObservableObject {
         if clearHUD {
             HUDController.shared.updateCaptionTail("")
         }
-        clearStreamingPartialHandlerIfStillInvalidated(invalidatedToken)
-        return invalidatedToken
+        clearStreamingPartialHandlerIfStillInvalidated(invalidatedStateToken)
+        return invalidatedStateToken
     }
 
     private func canAcceptStreamingPartials(for sessionToken: Int) -> Bool {
         sessionToken == streamingSessionToken && acceptsStreamingPartials
     }
 
-    private func canAppendStreamingSamples(for sessionToken: Int) -> Bool {
-        guard canAcceptStreamingPartials(for: sessionToken) else { return false }
-        if case .recording = status {
-            return true
-        }
-        return false
+    private func canRunStreamingAppend(for sessionToken: Int) -> Bool {
+        sessionToken == streamingSessionToken
+    }
+
+    private func freezeStreamingSessionForRelease(_ sessionToken: Int) {
+        guard sessionToken == streamingSessionToken else { return }
+        acceptsStreamingPartials = false
+        streamingAppendQueue.freeze(token: sessionToken)
     }
 
     private func clearStreamingPartialHandlerIfStillInvalidated(_ invalidatedToken: Int) {
