@@ -12,7 +12,7 @@ final class AudioCapture {
         commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false
     )!
 
-    func start() throws {
+    func start(liveSamplesHandler: (([Float]) -> Void)? = nil) throws {
         lock.lock()
         samples.removeAll(keepingCapacity: true)
         lock.unlock()
@@ -47,6 +47,7 @@ final class AudioCapture {
             self.lock.lock()
             self.samples.append(contentsOf: chunk)
             self.lock.unlock()
+            liveSamplesHandler?(chunk)
         }
 
         try engine.start()
