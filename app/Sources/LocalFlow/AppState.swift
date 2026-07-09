@@ -520,6 +520,7 @@ final class AppState: ObservableObject {
         guard sessionToken == streamingSessionToken else { return }
         streamingSessionFailed = true
         acceptsStreamingPartials = false
+        streamingAppendQueue.freeze(token: sessionToken)
         currentHUDTail = ""
         HUDController.shared.updateCaptionTail("")
     }
