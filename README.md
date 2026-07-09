@@ -105,9 +105,9 @@ On first launch a setup window walks you through granting **Microphone** and **A
 2. **Hold Left ⌥**, speak a sentence, release.
 3. Cleaned text appears at your cursor; the waveform pill confirms each stage.
 
-From the menu-bar icon you can open Settings, copy the last raw or cleaned transcript,
-start the dictation engine when needed, and quit. Durable preferences live in the
-standard macOS Settings window.
+From the menu-bar icon you can pause/resume dictation, open Settings, copy the last
+raw or cleaned transcript, start the dictation engine when needed, and quit. Durable
+preferences live in the standard macOS Settings window.
 
 ## Benchmarks
 
@@ -146,6 +146,7 @@ samples and reproduce the numbers.
 - [x] **Phase 2 (MVP)** — local LLM cleanup with raw⇄cleaned toggle
 - [x] **Phase 3 (in progress)** — animated waveform HUD + MLX default cleanup hardening
 - [x] Personal dictionary (custom vocabulary / proper nouns)
+- [x] Menu-bar runtime console with pause/resume and last-dictation copy actions
 - [ ] Streaming partial transcripts in the overlay
 - [ ] Per-app context modes and style presets
 

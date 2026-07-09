@@ -1,5 +1,28 @@
 # Local Flow — decision log
 
+## 2026-07-09 — menu runtime console accepted and smoke-tested
+
+The menu-bar dropdown now acts as a compact runtime console instead of a second
+Settings surface. It shows current status, Pause/Resume Dictation, Settings,
+last raw/cleaned dictation copy actions, and Quit. Durable preferences remain
+in macOS Settings.
+
+Pause/Resume is a runtime control only. Pause stops the hotkey monitor without
+unloading the already-loaded dictation model; resuming reinstalls the hotkey
+monitor and returns to the ready state. Pausing while recording discards the
+current capture.
+
+Smoke test on the signed app passed: the fresh menu showed Pause Dictation,
+pause changed it to Resume Dictation, resume returned to ready, and live
+dictation of "um so like i think we should uh ship it friday" landed as
+"I think we should ship it Friday." The last-dictation menu showed raw and
+cleaned copy actions.
+
+The `LocalFlow Dev` certificate is valid and still used by `bundle.sh`.
+A sandboxed Keychain/signature check falsely reported `0 valid identities` and
+`CSSMERR_TP_NOT_TRUSTED`; unsandboxed checks confirmed one valid `LocalFlow Dev`
+identity, successful codesign verification, and `Authority=LocalFlow Dev`.
+
 ## 2026-07-08 — MLX default accepted; sample 17 raw fallback approved
 
 Task 14 is accepted as the production default-provider decision. Local Flow now
