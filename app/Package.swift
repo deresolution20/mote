@@ -39,7 +39,7 @@ let package = Package(
         ),
         .testTarget(
             name: "LocalFlowTests",
-            dependencies: ["LocalFlowCleanup"],
+            dependencies: ["LocalFlowCleanup", "LocalFlow"],
             path: "Tests/LocalFlowTests"
         ),
     ]

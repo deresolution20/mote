@@ -14,6 +14,10 @@ actor StreamingTranscriber {
         available
     }
 
+    var hasFailedCurrentSession: Bool {
+        failedCurrentSession
+    }
+
     func load() async throws {
         guard manager == nil else {
             available = true

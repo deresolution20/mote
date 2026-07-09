@@ -158,6 +158,7 @@ final class AppState: ObservableObject {
     private var pauseRequested = false
     private var currentHUDTail = ""
     private var streamingSessionToken = 0
+    private var streamingSessionFailed = false
     private var acceptsStreamingPartials = false
     private var recordingWatchdog: Task<Void, Never>?
     private var streamingSetupTask: Task<Void, Never>?
@@ -323,6 +324,14 @@ final class AppState: ObservableObject {
         if streamingLoaded {
             let setupTask = Task { [weak self] in
                 await streamingTranscriber.reset()
+                let hasFailed = await streamingTranscriber.hasFailedCurrentSession
+                guard !Task.isCancelled else { return }
+                if hasFailed {
+                    await MainActor.run {
+                        self?.markStreamingSessionFailed(sessionToken)
+                    }
+                    return
+                }
                 guard !Task.isCancelled else { return }
                 let shouldInstallHandler = await MainActor.run {
                     guard let self else { return false }
@@ -351,6 +360,12 @@ final class AppState: ObservableObject {
                     }
                     guard shouldAppend else { return }
                     await streamingTranscriber.append(samples: chunk)
+                    let hasFailed = await streamingTranscriber.hasFailedCurrentSession
+                    if hasFailed {
+                        await MainActor.run {
+                            self.markStreamingSessionFailed(sessionToken)
+                        }
+                    }
                 }
             } : nil)
             status = .recording
@@ -394,7 +409,10 @@ final class AppState: ObservableObject {
         let streamingTranscriber = self.streamingTranscriber
         freezeStreamingSessionForRelease(sessionToken)
         status = .transcribing
-        HUDController.shared.show(.transcribing, captionTail: releasedHUDTail)
+        HUDController.shared.show(
+            .transcribing,
+            captionTail: hudCaptionTailForReleasedSession(releasedHUDTail, token: sessionToken)
+        )
         let streamingFinishTask: Task<String, Never>? = streamingLoaded ? Task { [weak self] in
             await setupTask?.value
             await streamingAppendQueue.waitForDrain(token: sessionToken)
@@ -426,7 +444,10 @@ final class AppState: ObservableObject {
                 var textToPaste = raw
                 if cleanupEnabled {
                     status = .cleaning
-                    HUDController.shared.show(.cleaning, captionTail: releasedHUDTail)
+                    HUDController.shared.show(
+                        .cleaning,
+                        captionTail: hudCaptionTailForReleasedSession(releasedHUDTail, token: sessionToken)
+                    )
                     // Nil = MLX unavailable/error/implausible output → paste raw.
                     if let cleaned = await Cleaner.clean(raw) {
                         lastCleaned = cleaned
@@ -452,6 +473,7 @@ final class AppState: ObservableObject {
 
     private func beginStreamingSession() -> Int {
         currentHUDTail = ""
+        streamingSessionFailed = false
         streamingSetupTask?.cancel()
         streamingSetupTask = nil
         streamingSessionToken += 1
@@ -481,11 +503,11 @@ final class AppState: ObservableObject {
     }
 
     private func canAcceptStreamingPartials(for sessionToken: Int) -> Bool {
-        sessionToken == streamingSessionToken && acceptsStreamingPartials
+        sessionToken == streamingSessionToken && acceptsStreamingPartials && !streamingSessionFailed
     }
 
     private func canRunStreamingAppend(for sessionToken: Int) -> Bool {
-        sessionToken == streamingSessionToken
+        sessionToken == streamingSessionToken && !streamingSessionFailed
     }
 
     private func freezeStreamingSessionForRelease(_ sessionToken: Int) {
@@ -493,6 +515,45 @@ final class AppState: ObservableObject {
         acceptsStreamingPartials = false
         streamingAppendQueue.freeze(token: sessionToken)
     }
+
+    private func markStreamingSessionFailed(_ sessionToken: Int) {
+        guard sessionToken == streamingSessionToken else { return }
+        streamingSessionFailed = true
+        acceptsStreamingPartials = false
+        currentHUDTail = ""
+        HUDController.shared.updateCaptionTail("")
+    }
+
+    private func hudCaptionTailForReleasedSession(_ releasedHUDTail: String, token sessionToken: Int) -> String {
+        guard sessionToken == streamingSessionToken, !streamingSessionFailed else { return "" }
+        return releasedHUDTail
+    }
+
+    #if DEBUG
+    func testingBeginStreamingSession() -> Int {
+        beginStreamingSession()
+    }
+
+    func testingMarkStreamingSessionFailed(_ sessionToken: Int) {
+        markStreamingSessionFailed(sessionToken)
+    }
+
+    func testingHUDCaptionTailForReleasedSession(_ releasedHUDTail: String, token sessionToken: Int) -> String {
+        hudCaptionTailForReleasedSession(releasedHUDTail, token: sessionToken)
+    }
+
+    var testingStreamingSessionFailed: Bool {
+        streamingSessionFailed
+    }
+
+    var testingCurrentHUDTail: String {
+        currentHUDTail
+    }
+
+    func testingSetCurrentHUDTail(_ tail: String) {
+        currentHUDTail = tail
+    }
+    #endif
 
     private func clearStreamingPartialHandlerIfStillInvalidated(_ invalidatedToken: Int) {
         let streamingTranscriber = self.streamingTranscriber
