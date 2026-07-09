@@ -1,307 +1,1168 @@
 {
-  "createdAt" : "2026-07-09T20:59:59Z",
-  "loadSeconds" : 0.2655290365219116,
+  "createdAt" : "2026-07-09T21:09:04Z",
+  "loadSeconds" : 0.4083770513534546,
   "manifestPath" : "\/Users\/brice\/Claude Code work\/fable5_projects\/local-flow\/bench\/samples\/manifest.json",
+  "promotionDecision" : "hold",
+  "promotionRationale" : "Hold streaming final promotion: streaming mean contentWER exceeds the accepted TDT baseline.",
   "sampleCount" : 24,
   "samples" : [
     {
       "contentWER" : 0,
+      "correctedStreamingText" : "um so i think we should ship it friday",
       "file" : "01.wav",
-      "finalizationLatencySeconds" : 0.0054999589920043945,
+      "finalizationLatencySeconds" : 0.005584001541137695,
       "id" : "01",
       "partialCount" : 8,
+      "partialUpdateCadenceSeconds" : [
+        0.02040696144104004,
+        0.007055044174194336,
+        0.013225913047790527,
+        0.01948106288909912,
+        0.006433010101318359,
+        0.01888895034790039,
+        0.006388068199157715
+      ],
       "reference" : "um, so I think we should ship it Friday",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "I think we should ship it Friday.",
+            "latencySeconds" : 2.803351044654846,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "I think we should ship it Friday.",
+            "sanitizedCandidate" : "I think we should ship it Friday."
+          }
+        ],
+        "cleanedText" : "I think we should ship it Friday.",
+        "latencySeconds" : 2.8033920526504517,
+        "path" : "mlx",
+        "textToPaste" : "I think we should ship it Friday."
+      },
       "streamingText" : "um so i think we should ship it friday",
-      "timeToFirstPartialSeconds" : 0.40984201431274414,
-      "totalLatencySeconds" : 0.56899094581604,
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.08428502082824707,
+      "tdtText" : "Um so I think we should ship it Friday.",
+      "tdtWER" : 0,
+      "timeToFirstPartialSeconds" : 0.40291106700897217,
+      "totalLatencySeconds" : 0.5707360506057739,
       "wer" : 0
     },
     {
       "contentWER" : 0.2,
+      "correctedStreamingText" : "yeah so basically the dashboard is broken again",
       "file" : "02.wav",
-      "finalizationLatencySeconds" : 0.005716919898986816,
+      "finalizationLatencySeconds" : 0.006126046180725098,
       "id" : "02",
       "partialCount" : 9,
+      "partialUpdateCadenceSeconds" : [
+        0.006041049957275391,
+        0.023345947265625,
+        0.028545022010803223,
+        0.07483601570129395,
+        0.005949974060058594,
+        0.028447985649108887,
+        0.03991103172302246,
+        0.018635988235473633
+      ],
       "reference" : "yeah so basically the uh the dashboard is is broken again",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Yeah, so basically the dashboard is broken again.",
+            "latencySeconds" : 0.20201897621154785,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Yeah, so basically the dashboard is broken again.",
+            "sanitizedCandidate" : "Yeah, so basically the dashboard is broken again."
+          }
+        ],
+        "cleanedText" : "Yeah, so basically the dashboard is broken again.",
+        "latencySeconds" : 0.20202195644378662,
+        "path" : "mlx",
+        "textToPaste" : "Yeah, so basically the dashboard is broken again."
+      },
       "streamingText" : "yeah so basically the dashboard is broken again",
-      "timeToFirstPartialSeconds" : 0.12414896488189697,
-      "totalLatencySeconds" : 0.39591896533966064,
+      "tdtContentWER" : 0.2,
+      "tdtLatencySeconds" : 0.07529497146606445,
+      "tdtText" : "Yeah, so basically the uh dashboard is uh broken again.",
+      "tdtWER" : 0.18181818181818182,
+      "timeToFirstPartialSeconds" : 0.13815796375274658,
+      "totalLatencySeconds" : 0.40582501888275146,
       "wer" : 0.2727272727272727
     },
     {
       "contentWER" : 0,
+      "correctedStreamingText" : "can you um can you send me the link to that doc",
       "file" : "03.wav",
-      "finalizationLatencySeconds" : 0.0057909488677978516,
+      "finalizationLatencySeconds" : 0.005544066429138184,
       "id" : "03",
       "partialCount" : 11,
+      "partialUpdateCadenceSeconds" : [
+        0.0577239990234375,
+        0.01162707805633545,
+        0.005903959274291992,
+        0.017680048942565918,
+        0.005800008773803711,
+        0.012284994125366211,
+        0.005999922752380371,
+        0.01823604106903076,
+        0.0057599544525146484,
+        0.02814006805419922
+      ],
       "reference" : "can you um, can you send me the link to that doc?",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Can you send me the link to that doc.",
+            "latencySeconds" : 0.19265496730804443,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Can you send me the link to that doc.",
+            "sanitizedCandidate" : "Can you send me the link to that doc."
+          }
+        ],
+        "cleanedText" : "Can you send me the link to that doc.",
+        "latencySeconds" : 0.19265806674957275,
+        "path" : "mlx",
+        "textToPaste" : "Can you send me the link to that doc."
+      },
       "streamingText" : "can you um can you send me the link to that doc",
-      "timeToFirstPartialSeconds" : 0.09182596206665039,
-      "totalLatencySeconds" : 0.2800629138946533,
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07386398315429688,
+      "tdtText" : "Can you um can you send me the link to that doc?",
+      "tdtWER" : 0,
+      "timeToFirstPartialSeconds" : 0.09487497806549072,
+      "totalLatencySeconds" : 0.28221702575683594,
       "wer" : 0
     },
     {
       "contentWER" : 0.45454545454545453,
+      "correctedStreamingText" : "so i was thinking maybe uh grab blue japan",
       "file" : "04.wav",
-      "finalizationLatencySeconds" : 0.005517005920410156,
+      "finalizationLatencySeconds" : 0.005717039108276367,
       "id" : "04",
       "partialCount" : 12,
+      "partialUpdateCadenceSeconds" : [
+        0.011773943901062012,
+        0.005990028381347656,
+        0.005944967269897461,
+        0.023226022720336914,
+        0.06384801864624023,
+        0.017943978309631348,
+        0.005931973457336426,
+        0.011438965797424316,
+        0.005928993225097656,
+        0.01740109920501709,
+        0.005807995796203613
+      ],
       "reference" : "so i was thinking maybe we uh we grab lunch after standup",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "So I was thinking maybe grab blue Japan.",
+            "latencySeconds" : 0.1806941032409668,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "So I was thinking maybe grab blue Japan.",
+            "sanitizedCandidate" : "So I was thinking maybe grab blue Japan."
+          }
+        ],
+        "cleanedText" : "So I was thinking maybe grab blue Japan.",
+        "latencySeconds" : 0.18069791793823242,
+        "path" : "mlx",
+        "textToPaste" : "So I was thinking maybe grab blue Japan."
+      },
       "streamingText" : "so i was thinking maybe uh grab blue japan",
-      "timeToFirstPartialSeconds" : 0.07134902477264404,
-      "totalLatencySeconds" : 0.25296294689178467,
+      "tdtContentWER" : 0.36363636363636365,
+      "tdtLatencySeconds" : 0.07525205612182617,
+      "tdtText" : "So I was thinking maybe uh grab lunch after stand-up.",
+      "tdtWER" : 0.3333333333333333,
+      "timeToFirstPartialSeconds" : 0.07006800174713135,
+      "totalLatencySeconds" : 0.25677692890167236,
       "wer" : 0.4166666666666667
     },
     {
       "contentWER" : 0,
+      "correctedStreamingText" : "uh let's move the meeting to like three thirty instead",
       "file" : "05.wav",
-      "finalizationLatencySeconds" : 0.0057669878005981445,
+      "finalizationLatencySeconds" : 0.0060149431228637695,
       "id" : "05",
       "partialCount" : 12,
+      "partialUpdateCadenceSeconds" : [
+        0.017338991165161133,
+        0.005767941474914551,
+        0.011471986770629883,
+        0.017295002937316895,
+        0.005795001983642578,
+        0.01140904426574707,
+        0.005892038345336914,
+        0.01822793483734131,
+        0.006272077560424805,
+        0.022856950759887695,
+        0.005797982215881348
+      ],
       "reference" : "uh let's move the meeting to like three thirty instead",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Let's move the meeting to three thirty instead.",
+            "latencySeconds" : 0.18725204467773438,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Let's move the meeting to three thirty instead.",
+            "sanitizedCandidate" : "Let's move the meeting to three thirty instead."
+          }
+        ],
+        "cleanedText" : "Let's move the meeting to three thirty instead.",
+        "latencySeconds" : 0.1872549057006836,
+        "path" : "mlx",
+        "textToPaste" : "Let's move the meeting to three thirty instead."
+      },
       "streamingText" : "uh let's move the meeting to like three thirty instead",
-      "timeToFirstPartialSeconds" : 0.19825303554534912,
-      "totalLatencySeconds" : 0.3407710790634155,
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07707607746124268,
+      "tdtText" : "Uh let's move the meeting to like three thirty instead.",
+      "tdtWER" : 0,
+      "timeToFirstPartialSeconds" : 0.20401906967163086,
+      "totalLatencySeconds" : 0.3496140241622925,
       "wer" : 0
     },
     {
       "contentWER" : 0.4,
+      "correctedStreamingText" : "i mean it's probably i mean it's probably a cash issue you know",
       "file" : "07.wav",
-      "finalizationLatencySeconds" : 0.005771040916442871,
+      "finalizationLatencySeconds" : 0.0058629512786865234,
       "id" : "07",
       "partialCount" : 15,
+      "partialUpdateCadenceSeconds" : [
+        0.01805400848388672,
+        0.005899906158447266,
+        0.005834102630615234,
+        0.006250977516174316,
+        0.14691197872161865,
+        0.011919975280761719,
+        0.005997061729431152,
+        0.0061299800872802734,
+        0.02953791618347168,
+        0.017475008964538574,
+        0.017603039741516113,
+        0.011654019355773926,
+        0.006029009819030762,
+        0.005890011787414551
+      ],
       "reference" : "i mean it's it's probably a caching issue you know",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "I mean it's probably a cash issue, you know.",
+            "latencySeconds" : 0.21081304550170898,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "I mean it's probably a cash issue, you know.",
+            "sanitizedCandidate" : "I mean it's probably a cash issue, you know."
+          }
+        ],
+        "cleanedText" : "I mean it's probably a cash issue, you know.",
+        "latencySeconds" : 0.2108159065246582,
+        "path" : "mlx",
+        "textToPaste" : "I mean it's probably a cash issue, you know."
+      },
       "streamingText" : "i mean it's probably i mean it's probably a cash issue you know",
-      "timeToFirstPartialSeconds" : 0.1076430082321167,
-      "totalLatencySeconds" : 0.39700400829315186,
+      "tdtContentWER" : 0.3,
+      "tdtLatencySeconds" : 0.07730507850646973,
+      "tdtText" : "I mean it's probably I mean it's probably a caching issue, you know.",
+      "tdtWER" : 0.3,
+      "timeToFirstPartialSeconds" : 0.11541402339935303,
+      "totalLatencySeconds" : 0.41649794578552246,
       "wer" : 0.4
     },
     {
       "contentWER" : 0,
+      "correctedStreamingText" : "so like the query takes forever when i add the group by",
       "file" : "08.wav",
-      "finalizationLatencySeconds" : 0.005545973777770996,
+      "finalizationLatencySeconds" : 0.005818009376525879,
       "id" : "08",
       "partialCount" : 13,
+      "partialUpdateCadenceSeconds" : [
+        0.01738607883453369,
+        0.012130975723266602,
+        0.024356961250305176,
+        0.017454981803894043,
+        0.023833036422729492,
+        0.05966901779174805,
+        0.006360054016113281,
+        0.018436908721923828,
+        0.012309074401855469,
+        0.006021022796630859,
+        0.0059299468994140625,
+        0.029891014099121094
+      ],
       "reference" : "so like the query takes uh forever when i add the group by",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "the query takes forever when i add the group by",
+            "latencySeconds" : 0.20974302291870117,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "so like the query takes forever when i add the group by",
+            "sanitizedCandidate" : "the query takes forever when i add the group by"
+          }
+        ],
+        "cleanedText" : "the query takes forever when i add the group by",
+        "latencySeconds" : 0.2097480297088623,
+        "path" : "mlx",
+        "textToPaste" : "the query takes forever when i add the group by"
+      },
       "streamingText" : "so like the query takes forever when i add the group by",
-      "timeToFirstPartialSeconds" : 0.062336087226867676,
-      "totalLatencySeconds" : 0.29191505908966064,
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07460391521453857,
+      "tdtText" : "So like the query takes uh forever when I add the group by?",
+      "tdtWER" : 0,
+      "timeToFirstPartialSeconds" : 0.06636500358581543,
+      "totalLatencySeconds" : 0.30600011348724365,
       "wer" : 0.07692307692307693
     },
     {
       "contentWER" : 0.1,
+      "correctedStreamingText" : "remind me to s uh follow up with sarah tomorrow morning",
       "file" : "09.wav",
-      "finalizationLatencySeconds" : 0.005406975746154785,
+      "finalizationLatencySeconds" : 0.005755901336669922,
       "id" : "09",
       "partialCount" : 14,
+      "partialUpdateCadenceSeconds" : [
+        0.005942940711975098,
+        0.005797982215881348,
+        0.035157084465026855,
+        0.005945920944213867,
+        0.04078102111816406,
+        0.023808002471923828,
+        0.005810976028442383,
+        0.022755980491638184,
+        0.011855006217956543,
+        0.011481046676635742,
+        0.00577700138092041,
+        0.006006956100463867,
+        0.006130099296569824
+      ],
       "reference" : "um remind me to uh to follow up with sarah tomorrow morning",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Remind me to follow up with Sarah tomorrow morning.",
+            "latencySeconds" : 0.2010180950164795,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Remind me to follow up with Sarah tomorrow morning.",
+            "sanitizedCandidate" : "Remind me to follow up with Sarah tomorrow morning."
+          }
+        ],
+        "cleanedText" : "Remind me to follow up with Sarah tomorrow morning.",
+        "latencySeconds" : 0.20102190971374512,
+        "path" : "mlx",
+        "textToPaste" : "Remind me to follow up with Sarah tomorrow morning."
+      },
       "streamingText" : "remind me to s uh follow up with sarah tomorrow morning",
-      "timeToFirstPartialSeconds" : 0.11972498893737793,
-      "totalLatencySeconds" : 0.36445796489715576,
+      "tdtContentWER" : 0.1,
+      "tdtLatencySeconds" : 0.07661008834838867,
+      "tdtText" : "Um, remind me to s uh follow up with Sarah tomorrow morning.",
+      "tdtWER" : 0.16666666666666666,
+      "timeToFirstPartialSeconds" : 0.12226009368896484,
+      "totalLatencySeconds" : 0.3751800060272217,
       "wer" : 0.25
     },
     {
       "contentWER" : 0.09090909090909091,
+      "correctedStreamingText" : "yeah i'll uh i'll push the fix after i grab a copy",
       "file" : "10.wav",
-      "finalizationLatencySeconds" : 0.005530953407287598,
+      "finalizationLatencySeconds" : 0.005720019340515137,
       "id" : "10",
       "partialCount" : 15,
+      "partialUpdateCadenceSeconds" : [
+        0.035257935523986816,
+        0.034741997718811035,
+        0.011980056762695312,
+        0.006055951118469238,
+        0.01772594451904297,
+        0.012063026428222656,
+        0.011749029159545898,
+        0.029713034629821777,
+        0.006133913993835449,
+        0.011472105979919434,
+        0.0061779022216796875,
+        0.005970001220703125,
+        0.0058209896087646484,
+        0.006114006042480469
+      ],
       "reference" : "yeah i'll uh i'll push the fix after i grab a coffee",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Yeah, I'll push the fix after I grab a copy.",
+            "latencySeconds" : 0.2170419692993164,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Yeah, I'll push the fix after I grab a copy.",
+            "sanitizedCandidate" : "Yeah, I'll push the fix after I grab a copy."
+          }
+        ],
+        "cleanedText" : "Yeah, I'll push the fix after I grab a copy.",
+        "latencySeconds" : 0.21704506874084473,
+        "path" : "mlx",
+        "textToPaste" : "Yeah, I'll push the fix after I grab a copy."
+      },
       "streamingText" : "yeah i'll uh i'll push the fix after i grab a copy",
-      "timeToFirstPartialSeconds" : 0.10731399059295654,
-      "totalLatencySeconds" : 0.3066669702529907,
+      "tdtContentWER" : 0.09090909090909091,
+      "tdtLatencySeconds" : 0.07570397853851318,
+      "tdtText" : "Yeah, I'll uh I'll push the fix after I grab a copy.",
+      "tdtWER" : 0.08333333333333333,
+      "timeToFirstPartialSeconds" : 0.11407303810119629,
+      "totalLatencySeconds" : 0.32080399990081787,
       "wer" : 0.08333333333333333
     },
     {
       "contentWER" : 0.2,
+      "correctedStreamingText" : "so the memory usage spikes every nine around midnight",
       "file" : "11.wav",
-      "finalizationLatencySeconds" : 0.005527973175048828,
+      "finalizationLatencySeconds" : 0.005584001541137695,
       "id" : "11",
       "partialCount" : 13,
+      "partialUpdateCadenceSeconds" : [
+        0.03461503982543945,
+        0.06517195701599121,
+        0.005859971046447754,
+        0.017376065254211426,
+        0.005777955055236816,
+        0.03408098220825195,
+        0.011597990989685059,
+        0.01745903491973877,
+        0.0059549808502197266,
+        0.005980968475341797,
+        0.022814035415649414,
+        0.011646032333374023
+      ],
       "reference" : "so the uh the memory usage spikes every night around midnight",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "So, the memory usage spikes every nine around midnight.",
+            "latencySeconds" : 0.18581891059875488,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "So, the memory usage spikes every nine around midnight.",
+            "sanitizedCandidate" : "So, the memory usage spikes every nine around midnight."
+          }
+        ],
+        "cleanedText" : "So, the memory usage spikes every nine around midnight.",
+        "latencySeconds" : 0.1858229637145996,
+        "path" : "mlx",
+        "textToPaste" : "So, the memory usage spikes every nine around midnight."
+      },
       "streamingText" : "so the memory usage spikes every nine around midnight",
-      "timeToFirstPartialSeconds" : 0.062493085861206055,
-      "totalLatencySeconds" : 0.3060680627822876,
+      "tdtContentWER" : 0.1,
+      "tdtLatencySeconds" : 0.07596206665039062,
+      "tdtText" : "So the uh memory usage spikes every night around midnight?",
+      "tdtWER" : 0.09090909090909091,
+      "timeToFirstPartialSeconds" : 0.06522703170776367,
+      "totalLatencySeconds" : 0.31481897830963135,
       "wer" : 0.2727272727272727
     },
     {
       "contentWER" : 1,
+      "correctedStreamingText" : "",
       "file" : "12.wav",
-      "finalizationLatencySeconds" : 0.005764961242675781,
+      "finalizationLatencySeconds" : 0.006876945495605469,
       "id" : "12",
       "partialCount" : 0,
+      "partialUpdateCadenceSeconds" : [
+
+      ],
       "reference" : "um can we like circle back on the pricing thing next week",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "latencySeconds" : 0.11360490322113037,
+            "outcome" : "rejected",
+            "provider" : "mlx",
+            "rawCandidate" : "Output:",
+            "rejectReason" : "multilineOutput",
+            "sanitizedCandidate" : ""
+          }
+        ],
+        "latencySeconds" : 0.11360800266265869,
+        "path" : "raw_fallback",
+        "textToPaste" : ""
+      },
       "streamingText" : "",
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07534205913543701,
+      "tdtText" : "Um can we like circle back on the pricing thing next week?",
+      "tdtWER" : 0,
       "timeToFirstPartialSeconds" : null,
-      "totalLatencySeconds" : 0.28689098358154297,
+      "totalLatencySeconds" : 0.31209397315979004,
       "wer" : 1
     },
     {
       "contentWER" : 0.18181818181818182,
+      "correctedStreamingText" : "honestly i think the second option is way better",
       "file" : "13.wav",
-      "finalizationLatencySeconds" : 0.00554502010345459,
+      "finalizationLatencySeconds" : 0.0056639909744262695,
       "id" : "13",
       "partialCount" : 11,
+      "partialUpdateCadenceSeconds" : [
+        0.005761981010437012,
+        0.017280101776123047,
+        0.00619196891784668,
+        0.02967393398284912,
+        0.005958080291748047,
+        0.02283298969268799,
+        0.006055951118469238,
+        0.011507987976074219,
+        0.029285073280334473,
+        0.0237199068069458
+      ],
       "reference" : "honestly i think the the second option is is way better",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Honestly, I think the second option is way better.",
+            "latencySeconds" : 0.19712698459625244,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Honestly, I think the second option is way better.",
+            "sanitizedCandidate" : "Honestly, I think the second option is way better."
+          }
+        ],
+        "cleanedText" : "Honestly, I think the second option is way better.",
+        "latencySeconds" : 0.1971299648284912,
+        "path" : "mlx",
+        "textToPaste" : "Honestly, I think the second option is way better."
+      },
       "streamingText" : "honestly i think the second option is way better",
-      "timeToFirstPartialSeconds" : 0.09025907516479492,
-      "totalLatencySeconds" : 0.2720390558242798,
+      "tdtContentWER" : 0.18181818181818182,
+      "tdtLatencySeconds" : 0.07386410236358643,
+      "tdtText" : "Honestly, I think the second option is way better.",
+      "tdtWER" : 0.18181818181818182,
+      "timeToFirstPartialSeconds" : 0.09291398525238037,
+      "totalLatencySeconds" : 0.280053973197937,
       "wer" : 0.18181818181818182
     },
     {
       "contentWER" : 1,
+      "correctedStreamingText" : "",
       "file" : "14.wav",
-      "finalizationLatencySeconds" : 0.0055370330810546875,
+      "finalizationLatencySeconds" : 0.0058710575103759766,
       "id" : "14",
       "partialCount" : 0,
+      "partialUpdateCadenceSeconds" : [
+
+      ],
       "reference" : "uh my flight gets in at like seven so dinner at eight works",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "latencySeconds" : 0.11302804946899414,
+            "outcome" : "rejected",
+            "provider" : "mlx",
+            "rawCandidate" : "Output:",
+            "rejectReason" : "multilineOutput",
+            "sanitizedCandidate" : ""
+          }
+        ],
+        "latencySeconds" : 0.11303210258483887,
+        "path" : "raw_fallback",
+        "textToPaste" : ""
+      },
       "streamingText" : "",
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07818996906280518,
+      "tdtText" : "Uh my flight gets in at like seven, so dinner at eight works.",
+      "tdtWER" : 0,
       "timeToFirstPartialSeconds" : null,
-      "totalLatencySeconds" : 0.39342594146728516,
+      "totalLatencySeconds" : 0.39768099784851074,
       "wer" : 1
     },
     {
       "contentWER" : 0.36363636363636365,
+      "correctedStreamingText" : "basically zindest tickets should route to the treeage queue",
       "file" : "15.wav",
-      "finalizationLatencySeconds" : 0.005527973175048828,
+      "finalizationLatencySeconds" : 0.005799055099487305,
       "id" : "15",
       "partialCount" : 13,
+      "partialUpdateCadenceSeconds" : [
+        0.11536300182342529,
+        0.017425060272216797,
+        0.005845904350280762,
+        0.005878090858459473,
+        0.012117981910705566,
+        0.011827945709228516,
+        0.00856006145477295,
+        0.012115955352783203,
+        0.005789995193481445,
+        0.05244302749633789,
+        0.023090004920959473,
+        0.023285984992980957
+      ],
       "reference" : "so basically um zendesk tickets should route to the uh the triage queue",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "basically zindest tickets should route to the treeage queue",
+            "latencySeconds" : 0.21604907512664795,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "basically zindest tickets should route to the treeage queue",
+            "sanitizedCandidate" : "basically zindest tickets should route to the treeage queue"
+          }
+        ],
+        "cleanedText" : "basically zindest tickets should route to the treeage queue",
+        "latencySeconds" : 0.21605205535888672,
+        "path" : "mlx",
+        "textToPaste" : "basically zindest tickets should route to the treeage queue"
+      },
       "streamingText" : "basically zindest tickets should route to the treeage queue",
-      "timeToFirstPartialSeconds" : 0.11889493465423584,
-      "totalLatencySeconds" : 0.4141979217529297,
+      "tdtContentWER" : 0.09090909090909091,
+      "tdtLatencySeconds" : 0.07663309574127197,
+      "tdtText" : "So basically um Zendesk tickets should route to the uh triage queue.",
+      "tdtWER" : 0.07692307692307693,
+      "timeToFirstPartialSeconds" : 0.12276697158813477,
+      "totalLatencySeconds" : 0.42831099033355713,
       "wer" : 0.46153846153846156
     },
     {
       "contentWER" : 0.18181818181818182,
+      "correctedStreamingText" : "want to test this on the staging cluster first",
       "file" : "16.wav",
-      "finalizationLatencySeconds" : 0.0055359601974487305,
+      "finalizationLatencySeconds" : 0.005995035171508789,
       "id" : "16",
       "partialCount" : 11,
+      "partialUpdateCadenceSeconds" : [
+        0.017753005027770996,
+        0.25741302967071533,
+        0.02659296989440918,
+        0.01368701457977295,
+        0.018812060356140137,
+        0.01462101936340332,
+        0.007331967353820801,
+        0.026440024375915527,
+        0.006514906883239746,
+        0.030153989791870117
+      ],
       "reference" : "i want to um to test this on the staging cluster first",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Want to test this on the staging cluster first.",
+            "latencySeconds" : 0.17977797985076904,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Want to test this on the staging cluster first.",
+            "sanitizedCandidate" : "Want to test this on the staging cluster first."
+          }
+        ],
+        "cleanedText" : "Want to test this on the staging cluster first.",
+        "latencySeconds" : 0.17978203296661377,
+        "path" : "mlx",
+        "textToPaste" : "Want to test this on the staging cluster first."
+      },
       "streamingText" : "want to test this on the staging cluster first",
-      "timeToFirstPartialSeconds" : 0.12368202209472656,
-      "totalLatencySeconds" : 0.4284619092941284,
+      "tdtContentWER" : 0,
+      "tdtLatencySeconds" : 0.07252192497253418,
+      "tdtText" : "I want to um to test this on the staging cluster first.",
+      "tdtWER" : 0,
+      "timeToFirstPartialSeconds" : 0.18394792079925537,
+      "totalLatencySeconds" : 0.6399279832839966,
       "wer" : 0.25
     },
     {
       "contentWER" : 0.2222222222222222,
+      "correctedStreamingText" : "yeah the uh new iron starts monday i think",
       "file" : "17.wav",
-      "finalizationLatencySeconds" : 0.005586981773376465,
+      "finalizationLatencySeconds" : 0.005669951438903809,
       "id" : "17",
       "partialCount" : 11,
+      "partialUpdateCadenceSeconds" : [
+        0.01147305965423584,
+        0.04655492305755615,
+        0.01156604290008545,
+        0.029790043830871582,
+        0.006415963172912598,
+        0.0064029693603515625,
+        0.01808798313140869,
+        0.012318015098571777,
+        0.006208062171936035,
+        0.006338953971862793
+      ],
       "reference" : "yeah the uh the new hire starts monday i think",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "latencySeconds" : 0.1666550636291504,
+            "outcome" : "rejected",
+            "provider" : "mlx",
+            "rawCandidate" : "Yeah, the new iron starts Monday.",
+            "rejectDetail" : "i think",
+            "rejectReason" : "protectedMarkerLoss",
+            "sanitizedCandidate" : "Yeah, the new iron starts Monday."
+          }
+        ],
+        "latencySeconds" : 0.1666579246520996,
+        "path" : "raw_fallback",
+        "textToPaste" : "yeah the uh new iron starts monday i think"
+      },
       "streamingText" : "yeah the uh new iron starts monday i think",
-      "timeToFirstPartialSeconds" : 0.15869104862213135,
-      "totalLatencySeconds" : 0.3270909786224365,
+      "tdtContentWER" : 0.2222222222222222,
+      "tdtLatencySeconds" : 0.07388496398925781,
+      "tdtText" : "Yeah, the uh new hour starts Monday I think.",
+      "tdtWER" : 0.2,
+      "timeToFirstPartialSeconds" : 0.16332793235778809,
+      "totalLatencySeconds" : 0.3366769552230835,
       "wer" : 0.2
     },
     {
       "contentWER" : 0.2222222222222222,
+      "correctedStreamingText" : "um let's just uh let's just revert it and we'll investigate it tomorrow",
       "file" : "18.wav",
-      "finalizationLatencySeconds" : 0.005694985389709473,
+      "finalizationLatencySeconds" : 0.005755066871643066,
       "id" : "18",
       "partialCount" : 17,
+      "partialUpdateCadenceSeconds" : [
+        0.023692011833190918,
+        0.006532073020935059,
+        0.05961799621582031,
+        0.012045979499816895,
+        0.06540799140930176,
+        0.029930949211120605,
+        0.01763308048248291,
+        0.02888190746307373,
+        0.017567992210388184,
+        0.006096005439758301,
+        0.008291006088256836,
+        0.006390094757080078,
+        0.005966901779174805,
+        0.005855083465576172,
+        0.011716961860656738,
+        0.005769014358520508
+      ],
       "reference" : "um let's just uh let's just revert it and investigate tomorrow",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Let's just revert it and we'll investigate it tomorrow.",
+            "latencySeconds" : 0.21565401554107666,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Let's just revert it and we'll investigate it tomorrow.",
+            "sanitizedCandidate" : "Let's just revert it and we'll investigate it tomorrow."
+          }
+        ],
+        "cleanedText" : "Let's just revert it and we'll investigate it tomorrow.",
+        "latencySeconds" : 0.21565699577331543,
+        "path" : "mlx",
+        "textToPaste" : "Let's just revert it and we'll investigate it tomorrow."
+      },
       "streamingText" : "um let's just uh let's just revert it and we'll investigate it tomorrow",
-      "timeToFirstPartialSeconds" : 0.12560296058654785,
-      "totalLatencySeconds" : 0.4334390163421631,
+      "tdtContentWER" : 0.2222222222222222,
+      "tdtLatencySeconds" : 0.07873296737670898,
+      "tdtText" : "Um, let's just uh let's just revert it and we'll investigate it tomorrow.",
+      "tdtWER" : 0.18181818181818182,
+      "timeToFirstPartialSeconds" : 0.12907898426055908,
+      "totalLatencySeconds" : 0.4522700309753418,
       "wer" : 0.18181818181818182
     },
     {
       "contentWER" : 0.2727272727272727,
+      "correctedStreamingText" : "so graffiti's uh is the api key rotated before the demo",
       "file" : "19.wav",
-      "finalizationLatencySeconds" : 0.005858063697814941,
+      "finalizationLatencySeconds" : 0.00589299201965332,
       "id" : "19",
       "partialCount" : 17,
+      "partialUpdateCadenceSeconds" : [
+        0.041018009185791016,
+        0.006098031997680664,
+        0.01757991313934326,
+        0.011996030807495117,
+        0.023419976234436035,
+        0.012163043022155762,
+        0.011880040168762207,
+        0.011570930480957031,
+        0.0061550140380859375,
+        0.005993962287902832,
+        0.019285082817077637,
+        0.024679899215698242,
+        0.012675046920776367,
+        0.01261603832244873,
+        0.012609004974365234,
+        0.012028932571411133
+      ],
       "reference" : "so grafana needs uh needs the api key rotated before the demo",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "so graffiti's is the api key rotated before the demo",
+            "latencySeconds" : 0.20340001583099365,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "so graffiti's is the api key rotated before the demo",
+            "sanitizedCandidate" : "so graffiti's is the api key rotated before the demo"
+          }
+        ],
+        "cleanedText" : "so graffiti's is the api key rotated before the demo",
+        "latencySeconds" : 0.20340299606323242,
+        "path" : "mlx",
+        "textToPaste" : "so graffiti's is the api key rotated before the demo"
+      },
       "streamingText" : "so graffiti's uh is the api key rotated before the demo",
-      "timeToFirstPartialSeconds" : 0.08019208908081055,
-      "totalLatencySeconds" : 0.34318411350250244,
+      "tdtContentWER" : 0.2727272727272727,
+      "tdtLatencySeconds" : 0.07767093181610107,
+      "tdtText" : "So Grafani's uh it's the API key rotated before the demo.",
+      "tdtWER" : 0.25,
+      "timeToFirstPartialSeconds" : 0.08440697193145752,
+      "totalLatencySeconds" : 0.36401498317718506,
       "wer" : 0.25
     },
     {
       "contentWER" : 1,
+      "correctedStreamingText" : "",
       "file" : "20.wav",
-      "finalizationLatencySeconds" : 0.006029963493347168,
+      "finalizationLatencySeconds" : 0.005831003189086914,
       "id" : "20",
       "partialCount" : 0,
+      "partialUpdateCadenceSeconds" : [
+
+      ],
       "reference" : "okay um long story short we we missed the deadline by two days",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "latencySeconds" : 0.11382603645324707,
+            "outcome" : "rejected",
+            "provider" : "mlx",
+            "rawCandidate" : "Output:",
+            "rejectReason" : "multilineOutput",
+            "sanitizedCandidate" : ""
+          }
+        ],
+        "latencySeconds" : 0.1138300895690918,
+        "path" : "raw_fallback",
+        "textToPaste" : ""
+      },
       "streamingText" : "",
+      "tdtContentWER" : 0.08333333333333333,
+      "tdtLatencySeconds" : 0.07338392734527588,
+      "tdtText" : "Okay, uh long story short, we missed the deadline by two days.",
+      "tdtWER" : 0.15384615384615385,
       "timeToFirstPartialSeconds" : null,
-      "totalLatencySeconds" : 0.3298379182815552,
+      "totalLatencySeconds" : 0.33444905281066895,
       "wer" : 1
     },
     {
       "contentWER" : 0.4444444444444444,
+      "correctedStreamingText" : "um so i like think we should uh we should ship it friday",
       "file" : "21.wav",
-      "finalizationLatencySeconds" : 0.006006956100463867,
+      "finalizationLatencySeconds" : 0.0060700178146362305,
       "id" : "21",
       "partialCount" : 13,
+      "partialUpdateCadenceSeconds" : [
+        0.00633692741394043,
+        0.012295007705688477,
+        0.03514599800109863,
+        0.011728048324584961,
+        0.005968928337097168,
+        0.05748403072357178,
+        0.012290000915527344,
+        0.01164102554321289,
+        0.01768803596496582,
+        0.006029963493347168,
+        0.017680048942565918,
+        0.005968928337097168
+      ],
       "reference" : "um so like i think we should uh ship it friday",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "I think we should ship it Friday.",
+            "latencySeconds" : 0.17721903324127197,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "I think we should ship it Friday.",
+            "sanitizedCandidate" : "I think we should ship it Friday."
+          }
+        ],
+        "cleanedText" : "I think we should ship it Friday.",
+        "latencySeconds" : 0.17722105979919434,
+        "path" : "mlx",
+        "textToPaste" : "I think we should ship it Friday."
+      },
       "streamingText" : "um so i like think we should uh we should ship it friday",
-      "timeToFirstPartialSeconds" : 0.14472901821136475,
-      "totalLatencySeconds" : 0.3836709260940552,
+      "tdtContentWER" : 0.4444444444444444,
+      "tdtLatencySeconds" : 0.0763709545135498,
+      "tdtText" : "Um so I like think we should uh we should ship it Friday.",
+      "tdtWER" : 0.36363636363636365,
+      "timeToFirstPartialSeconds" : 0.1305760145187378,
+      "totalLatencySeconds" : 0.3543750047683716,
       "wer" : 0.36363636363636365
     },
     {
       "contentWER" : 0.2,
+      "correctedStreamingText" : "yeah so basically the uh dashboard is broken again",
       "file" : "22.wav",
-      "finalizationLatencySeconds" : 0.005825996398925781,
+      "finalizationLatencySeconds" : 0.005769014358520508,
       "id" : "22",
       "partialCount" : 9,
+      "partialUpdateCadenceSeconds" : [
+        0.01161503791809082,
+        0.011690020561218262,
+        0.05878400802612305,
+        0.05212199687957764,
+        0.01744997501373291,
+        0.005951046943664551,
+        0.017979025840759277,
+        0.017663955688476562
+      ],
       "reference" : "yeah so basically the uh the dashboard is is broken again",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Yeah, basically the dashboard is broken again.",
+            "latencySeconds" : 0.17230594158172607,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Yeah, basically the dashboard is broken again.",
+            "sanitizedCandidate" : "Yeah, basically the dashboard is broken again."
+          }
+        ],
+        "cleanedText" : "Yeah, basically the dashboard is broken again.",
+        "latencySeconds" : 0.1723099946975708,
+        "path" : "mlx",
+        "textToPaste" : "Yeah, basically the dashboard is broken again."
+      },
       "streamingText" : "yeah so basically the uh dashboard is broken again",
-      "timeToFirstPartialSeconds" : 0.0936579704284668,
-      "totalLatencySeconds" : 0.3293650150299072,
+      "tdtContentWER" : 0.4,
+      "tdtLatencySeconds" : 0.0733720064163208,
+      "tdtText" : "Yeah, so basically the uh dashboard's broken again.",
+      "tdtWER" : 0.36363636363636365,
+      "timeToFirstPartialSeconds" : 0.09389197826385498,
+      "totalLatencySeconds" : 0.3333040475845337,
       "wer" : 0.18181818181818182
     },
     {
       "contentWER" : 0.25,
+      "correctedStreamingText" : "can you send me the link to that doc",
       "file" : "23.wav",
-      "finalizationLatencySeconds" : 0.005638003349304199,
+      "finalizationLatencySeconds" : 0.005712985992431641,
       "id" : "23",
       "partialCount" : 8,
+      "partialUpdateCadenceSeconds" : [
+        0.10555195808410645,
+        0.005830049514770508,
+        0.0117340087890625,
+        0.00580596923828125,
+        0.0060700178146362305,
+        0.0058400630950927734,
+        0.022949934005737305
+      ],
       "reference" : "can you um can you send me the the link to that doc",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "Can you send me the link to that doc.",
+            "latencySeconds" : 0.17932093143463135,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "Can you send me the link to that doc.",
+            "sanitizedCandidate" : "Can you send me the link to that doc."
+          }
+        ],
+        "cleanedText" : "Can you send me the link to that doc.",
+        "latencySeconds" : 0.17932391166687012,
+        "path" : "mlx",
+        "textToPaste" : "Can you send me the link to that doc."
+      },
       "streamingText" : "can you send me the link to that doc",
-      "timeToFirstPartialSeconds" : 0.10261201858520508,
-      "totalLatencySeconds" : 0.2744859457015991,
+      "tdtContentWER" : 0.08333333333333333,
+      "tdtLatencySeconds" : 0.07189309597015381,
+      "tdtText" : "Can you um can you send me the link to that doc?",
+      "tdtWER" : 0.07692307692307693,
+      "timeToFirstPartialSeconds" : 0.10760200023651123,
+      "totalLatencySeconds" : 0.28294897079467773,
       "wer" : 0.3076923076923077
     },
     {
       "contentWER" : 1,
+      "correctedStreamingText" : "",
       "file" : "25.wav",
-      "finalizationLatencySeconds" : 0.006960034370422363,
+      "finalizationLatencySeconds" : 0.005764007568359375,
       "id" : "25",
       "partialCount" : 0,
+      "partialUpdateCadenceSeconds" : [
+
+      ],
       "reference" : "uh let's move the meeting to like three thirty instead",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "latencySeconds" : 0.1156378984451294,
+            "outcome" : "rejected",
+            "provider" : "mlx",
+            "rawCandidate" : "Output:",
+            "rejectReason" : "multilineOutput",
+            "sanitizedCandidate" : ""
+          }
+        ],
+        "latencySeconds" : 0.11564207077026367,
+        "path" : "raw_fallback",
+        "textToPaste" : ""
+      },
       "streamingText" : "",
+      "tdtContentWER" : 0.1111111111111111,
+      "tdtLatencySeconds" : 0.07632207870483398,
+      "tdtText" : "Uh let's move the mean to like three thirty instead.",
+      "tdtWER" : 0.1,
       "timeToFirstPartialSeconds" : null,
-      "totalLatencySeconds" : 0.2744450569152832,
+      "totalLatencySeconds" : 0.28810691833496094,
       "wer" : 1
     },
     {
       "contentWER" : 0.5,
+      "correctedStreamingText" : "okay so the the customer side they learn to firing twice",
       "file" : "26.wav",
-      "finalizationLatencySeconds" : 0.005851030349731445,
+      "finalizationLatencySeconds" : 0.005697011947631836,
       "id" : "26",
       "partialCount" : 13,
+      "partialUpdateCadenceSeconds" : [
+        0.011746048927307129,
+        0.08040297031402588,
+        0.011553049087524414,
+        0.017518997192382812,
+        0.017424941062927246,
+        0.011790037155151367,
+        0.017457008361816406,
+        0.006096005439758301,
+        0.028599023818969727,
+        0.006060004234313965,
+        0.0058689117431640625,
+        0.017210006713867188
+      ],
       "reference" : "okay so um the customer said the alerts are uh firing twice",
+      "streamingCleanup" : {
+        "attemptedProviders" : [
+          "mlx"
+        ],
+        "attempts" : [
+          {
+            "cleanedText" : "okay so the customer side they learn to firing twice",
+            "latencySeconds" : 0.1766049861907959,
+            "outcome" : "accepted",
+            "provider" : "mlx",
+            "rawCandidate" : "okay so the customer side they learn to firing twice",
+            "sanitizedCandidate" : "okay so the customer side they learn to firing twice"
+          }
+        ],
+        "cleanedText" : "okay so the customer side they learn to firing twice",
+        "latencySeconds" : 0.17660808563232422,
+        "path" : "mlx",
+        "textToPaste" : "okay so the customer side they learn to firing twice"
+      },
       "streamingText" : "okay so the the customer side they learn to firing twice",
-      "timeToFirstPartialSeconds" : 0.08088302612304688,
-      "totalLatencySeconds" : 0.3304710388183594,
+      "tdtContentWER" : 0.1,
+      "tdtLatencySeconds" : 0.07706296443939209,
+      "tdtText" : "Okay, so the the customer said the alerts are firing twice.",
+      "tdtWER" : 0.16666666666666666,
+      "timeToFirstPartialSeconds" : 0.08575999736785889,
+      "totalLatencySeconds" : 0.3344820737838745,
       "wer" : 0.5
     }
   ],
   "status" : "completed",
   "summary" : {
     "meanContentWER" : 0.3451809764309764,
+    "meanTDTContentWER" : 0.1402777777777778,
+    "meanTDTWER" : 0.1363053613053613,
     "meanWER" : 0.36044580419580413,
-    "medianFinalizationLatencySeconds" : 0.005666494369506836,
-    "medianTimeToFirstPartialSeconds" : 0.10747849941253662,
-    "medianTotalLatencySeconds" : 0.3301544785499573,
-    "sampleCount" : 24
+    "medianFinalizationLatencySeconds" : 0.005766510963439941,
+    "medianPartialCadenceSeconds" : 0.012028932571411133,
+    "medianTDTLatencySeconds" : 0.0758330225944519,
+    "medianTimeToFirstPartialSeconds" : 0.11474353075027466,
+    "medianTotalLatencySeconds" : 0.335579514503479,
+    "promotionDecision" : "hold",
+    "promotionRationale" : "Hold streaming final promotion: streaming mean contentWER exceeds the accepted TDT baseline.",
+    "sampleCount" : 24,
+    "streamingCleanupAcceptedCount" : 19,
+    "streamingCleanupRawFallbackCount" : 5,
+    "streamingContentWERBetterOrEqualCount" : 13
   },
   "task" : "streaming-hud-asr-benchmark",
+  "tdtLoadSeconds" : 13.595064997673035,
   "variant" : "parakeet-eou-160ms"
 }

@@ -1,6 +1,7 @@
 @preconcurrency import AVFoundation
 import FluidAudio
 import Foundation
+import LocalFlowCleanup
 
 private let taskName = "streaming-hud-asr-benchmark"
 private let benchmarkVariant = StreamingModelVariant.parakeetEou160ms
@@ -22,15 +23,30 @@ struct StreamingBenchmarkCommand {
             try await manager.loadModels()
             let loadSeconds = Date().timeIntervalSince(loadStarted)
 
+            let tdtLoadStarted = Date()
+            let tdtModels = try await AsrModels.downloadAndLoad(version: .v3)
+            let tdtManager = AsrManager(config: .default)
+            try await tdtManager.loadModels(tdtModels)
+            let tdtLoadSeconds = Date().timeIntervalSince(tdtLoadStarted)
+            let cleanupProviders = CleanupProviderFactory().providerChain
+            cleanupProviders.forEach { $0.warmUp() }
+
             var sampleResults: [SampleResult] = []
             sampleResults.reserveCapacity(selectedSamples.count)
 
             for sample in selectedSamples {
                 try await manager.reset()
                 let sampleURL = loadedManifest.url.deletingLastPathComponent().appendingPathComponent(sample.file)
-                let result = try await runSample(sample: sample, url: sampleURL, manager: manager)
+                let result = try await runSample(
+                    sample: sample,
+                    url: sampleURL,
+                    streamingManager: manager,
+                    tdtManager: tdtManager,
+                    cleanupProviders: cleanupProviders
+                )
                 sampleResults.append(result)
             }
+            let summary = BenchmarkSummary(samples: sampleResults)
 
             let output = BenchmarkOutput(
                 task: taskName,
@@ -39,8 +55,11 @@ struct StreamingBenchmarkCommand {
                 variant: benchmarkVariant.rawValue,
                 manifestPath: loadedManifest.url.path,
                 loadSeconds: loadSeconds,
+                tdtLoadSeconds: tdtLoadSeconds,
                 sampleCount: sampleResults.count,
-                summary: BenchmarkSummary(samples: sampleResults),
+                summary: summary,
+                promotionDecision: summary.promotionDecision,
+                promotionRationale: summary.promotionRationale,
                 samples: sampleResults
             )
 
@@ -68,14 +87,16 @@ struct StreamingBenchmarkCommand {
 private func runSample(
     sample: ManifestSample,
     url: URL,
-    manager: any StreamingAsrManager
+    streamingManager: any StreamingAsrManager,
+    tdtManager: AsrManager,
+    cleanupProviders: [any CleanupProvider]
 ) async throws -> SampleResult {
     let file = try AVAudioFile(forReading: url)
     let chunkFrames: AVAudioFrameCount = 4096
     let partialStats = PartialStats()
     let sampleStarted = Date()
 
-    await manager.setPartialTranscriptCallback { partial in
+    await streamingManager.setPartialTranscriptCallback { partial in
         guard !partial.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         partialStats.recordPartial(text: partial, at: Date().timeIntervalSince(sampleStarted))
     }
@@ -88,26 +109,46 @@ private func runSample(
         }
         try file.read(into: buffer, frameCount: frames)
         guard buffer.frameLength > 0 else { continue }
-        try await manager.appendAudio(buffer)
-        try await manager.processBufferedAudio()
+        try await streamingManager.appendAudio(buffer)
+        try await streamingManager.processBufferedAudio()
     }
 
     let finishStarted = Date()
-    let streamingText = try await manager.finish().trimmingCharacters(in: .whitespacesAndNewlines)
+    let streamingText = try await streamingManager.finish().trimmingCharacters(in: .whitespacesAndNewlines)
     let finalizationLatencySeconds = Date().timeIntervalSince(finishStarted)
     let totalLatencySeconds = Date().timeIntervalSince(sampleStarted)
+    let tdtStarted = Date()
+    var decoderState = TdtDecoderState.make()
+    let tdtText = try await tdtManager.transcribe(url, decoderState: &decoderState)
+        .text
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    let tdtLatencySeconds = Date().timeIntervalSince(tdtStarted)
+    let correctedStreamingText = PersonalDictionary.shared.correct(streamingText)
+    let cleanupStarted = Date()
+    let cleanupResult = await CleanupAcceptanceRunner.run(raw: correctedStreamingText, providers: cleanupProviders)
+    let cleanupLatencySeconds = Date().timeIntervalSince(cleanupStarted)
 
     return SampleResult(
         id: sample.id,
         file: sample.file,
         reference: sample.reference,
         streamingText: streamingText,
+        tdtText: tdtText,
         timeToFirstPartialSeconds: partialStats.firstPartialAt,
         partialCount: partialStats.count,
+        partialUpdateCadenceSeconds: partialStats.cadenceSeconds,
         finalizationLatencySeconds: finalizationLatencySeconds,
         totalLatencySeconds: totalLatencySeconds,
+        tdtLatencySeconds: tdtLatencySeconds,
         wer: wordErrorRate(reference: sample.reference, hypothesis: streamingText),
-        contentWER: wordErrorRate(reference: sample.reference, hypothesis: streamingText, ignoringFillers: true)
+        contentWER: wordErrorRate(reference: sample.reference, hypothesis: streamingText, ignoringFillers: true),
+        tdtWER: wordErrorRate(reference: sample.reference, hypothesis: tdtText),
+        tdtContentWER: wordErrorRate(reference: sample.reference, hypothesis: tdtText, ignoringFillers: true),
+        correctedStreamingText: correctedStreamingText,
+        streamingCleanup: CleanupResultSummary(
+            result: cleanupResult,
+            latencySeconds: cleanupLatencySeconds
+        )
     )
 }
 
@@ -115,6 +156,7 @@ private final class PartialStats: @unchecked Sendable {
     private let lock = NSLock()
     private var _firstPartialAt: TimeInterval?
     private var _lastPartialText = ""
+    private var _partialTimestamps: [TimeInterval] = []
     private var _count = 0
 
     var firstPartialAt: TimeInterval? {
@@ -135,12 +177,21 @@ private final class PartialStats: @unchecked Sendable {
         return _count
     }
 
+    var cadenceSeconds: [TimeInterval] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard _partialTimestamps.count > 1 else { return [] }
+        return zip(_partialTimestamps.dropFirst(), _partialTimestamps)
+            .map { current, previous in current - previous }
+    }
+
     func recordPartial(text: String, at timestamp: TimeInterval) {
         lock.lock()
         defer { lock.unlock() }
         if _firstPartialAt == nil {
             _firstPartialAt = timestamp
         }
+        _partialTimestamps.append(timestamp)
         _lastPartialText = text
         _count += 1
     }
@@ -244,8 +295,11 @@ private struct BenchmarkOutput: Encodable {
     let variant: String
     let manifestPath: String
     let loadSeconds: TimeInterval
+    let tdtLoadSeconds: TimeInterval
     let sampleCount: Int
     let summary: BenchmarkSummary
+    let promotionDecision: String
+    let promotionRationale: String
     let samples: [SampleResult]
 }
 
@@ -254,24 +308,38 @@ private struct SampleResult: Encodable {
     let file: String
     let reference: String
     let streamingText: String
+    let tdtText: String
     let timeToFirstPartialSeconds: TimeInterval?
     let partialCount: Int
+    let partialUpdateCadenceSeconds: [TimeInterval]
     let finalizationLatencySeconds: TimeInterval
     let totalLatencySeconds: TimeInterval
+    let tdtLatencySeconds: TimeInterval
     let wer: Double
     let contentWER: Double
+    let tdtWER: Double
+    let tdtContentWER: Double
+    let correctedStreamingText: String
+    let streamingCleanup: CleanupResultSummary
 
     private enum CodingKeys: String, CodingKey {
         case id
         case file
         case reference
         case streamingText
+        case tdtText
         case timeToFirstPartialSeconds
         case partialCount
+        case partialUpdateCadenceSeconds
         case finalizationLatencySeconds
         case totalLatencySeconds
+        case tdtLatencySeconds
         case wer
         case contentWER
+        case tdtWER
+        case tdtContentWER
+        case correctedStreamingText
+        case streamingCleanup
     }
 
     func encode(to encoder: Encoder) throws {
@@ -280,30 +348,107 @@ private struct SampleResult: Encodable {
         try container.encode(file, forKey: .file)
         try container.encode(reference, forKey: .reference)
         try container.encode(streamingText, forKey: .streamingText)
+        try container.encode(tdtText, forKey: .tdtText)
         try container.encode(timeToFirstPartialSeconds, forKey: .timeToFirstPartialSeconds)
         try container.encode(partialCount, forKey: .partialCount)
+        try container.encode(partialUpdateCadenceSeconds, forKey: .partialUpdateCadenceSeconds)
         try container.encode(finalizationLatencySeconds, forKey: .finalizationLatencySeconds)
         try container.encode(totalLatencySeconds, forKey: .totalLatencySeconds)
+        try container.encode(tdtLatencySeconds, forKey: .tdtLatencySeconds)
         try container.encode(wer, forKey: .wer)
         try container.encode(contentWER, forKey: .contentWER)
+        try container.encode(tdtWER, forKey: .tdtWER)
+        try container.encode(tdtContentWER, forKey: .tdtContentWER)
+        try container.encode(correctedStreamingText, forKey: .correctedStreamingText)
+        try container.encode(streamingCleanup, forKey: .streamingCleanup)
+    }
+}
+
+private struct CleanupResultSummary: Encodable {
+    let path: String
+    let latencySeconds: TimeInterval
+    let attemptedProviders: [String]
+    let textToPaste: String
+    let cleanedText: String?
+    let attempts: [CleanupAttemptSummary]
+
+    init(result: CleanupAcceptanceResult, latencySeconds: TimeInterval) {
+        path = result.path.label
+        self.latencySeconds = latencySeconds
+        attemptedProviders = result.attemptedProviders.map(\.rawValue)
+        textToPaste = result.textToPaste
+        cleanedText = result.cleanedText
+        attempts = result.attempts.map(CleanupAttemptSummary.init)
+    }
+}
+
+private struct CleanupAttemptSummary: Encodable {
+    let provider: String
+    let outcome: String
+    let latencySeconds: TimeInterval
+    let rejectReason: String?
+    let rejectDetail: String?
+    let rawCandidate: String?
+    let sanitizedCandidate: String?
+    let cleanedText: String?
+    let errorDescription: String?
+
+    init(_ attempt: CleanupProviderAttempt) {
+        provider = attempt.providerID.rawValue
+        outcome = attempt.outcome.rawValue
+        latencySeconds = attempt.latencySeconds
+        rejectReason = attempt.rejection?.reason.rawValue
+        rejectDetail = attempt.rejection?.detail
+        rawCandidate = attempt.rawCandidate
+        sanitizedCandidate = attempt.sanitizedCandidate
+        cleanedText = attempt.cleanedText
+        errorDescription = attempt.errorDescription
     }
 }
 
 private struct BenchmarkSummary: Encodable {
     let sampleCount: Int
     let medianTimeToFirstPartialSeconds: TimeInterval?
+    let medianPartialCadenceSeconds: TimeInterval?
     let medianFinalizationLatencySeconds: TimeInterval
     let medianTotalLatencySeconds: TimeInterval
+    let medianTDTLatencySeconds: TimeInterval
     let meanWER: Double
     let meanContentWER: Double
+    let meanTDTWER: Double
+    let meanTDTContentWER: Double
+    let streamingContentWERBetterOrEqualCount: Int
+    let streamingCleanupRawFallbackCount: Int
+    let streamingCleanupAcceptedCount: Int
+    let promotionDecision: String
+    let promotionRationale: String
 
     init(samples: [SampleResult]) {
         sampleCount = samples.count
         medianTimeToFirstPartialSeconds = median(samples.compactMap(\.timeToFirstPartialSeconds))
+        medianPartialCadenceSeconds = median(samples.flatMap(\.partialUpdateCadenceSeconds))
         medianFinalizationLatencySeconds = median(samples.map(\.finalizationLatencySeconds)) ?? 0
         medianTotalLatencySeconds = median(samples.map(\.totalLatencySeconds)) ?? 0
+        medianTDTLatencySeconds = median(samples.map(\.tdtLatencySeconds)) ?? 0
         meanWER = samples.isEmpty ? 0 : samples.map(\.wer).reduce(0, +) / Double(samples.count)
         meanContentWER = samples.isEmpty ? 0 : samples.map(\.contentWER).reduce(0, +) / Double(samples.count)
+        meanTDTWER = samples.isEmpty ? 0 : samples.map(\.tdtWER).reduce(0, +) / Double(samples.count)
+        meanTDTContentWER = samples.isEmpty ? 0 : samples.map(\.tdtContentWER).reduce(0, +) / Double(samples.count)
+        streamingContentWERBetterOrEqualCount = samples.filter { $0.contentWER <= $0.tdtContentWER }.count
+        streamingCleanupRawFallbackCount = samples.filter {
+            $0.streamingCleanup.path == CleanupAcceptancePath.rawFallback.label
+        }.count
+        streamingCleanupAcceptedCount = samples.count - streamingCleanupRawFallbackCount
+        promotionDecision = "hold"
+        if samples.isEmpty {
+            promotionRationale = "No benchmark samples were processed."
+        } else if meanContentWER > meanTDTContentWER {
+            promotionRationale = "Hold streaming final promotion: streaming mean contentWER exceeds the accepted TDT baseline."
+        } else if streamingCleanupRawFallbackCount > 0 {
+            promotionRationale = "Hold streaming final promotion: streaming cleanup produced raw fallback outcomes requiring review."
+        } else {
+            promotionRationale = "Hold streaming final promotion pending manual review of full benchmark output and live HUD smoke evidence."
+        }
     }
 }
 
