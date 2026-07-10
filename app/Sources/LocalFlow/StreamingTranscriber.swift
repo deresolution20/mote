@@ -4,11 +4,27 @@ import Foundation
 
 actor StreamingTranscriber {
     typealias PartialHandler = @MainActor @Sendable (String) -> Void
+    typealias ManagerFactory = @Sendable () -> any StreamingAsrManager
 
+    private let managerFactory: ManagerFactory
+    /// One inference chunk for the manager the factory builds, in 16 kHz samples.
+    /// Must match the injected variant's chunk size or warmUp() buffers audio
+    /// without ever running inference and the warmup is a silent no-op.
+    private let modelChunkSamples: Int
     private var manager: (any StreamingAsrManager)?
     private var partialHandler: PartialHandler?
     private var available = false
     private var failedCurrentSession = false
+
+    init(
+        managerFactory: @escaping ManagerFactory = {
+            StreamingModelVariant.parakeetEou160ms.createManager()
+        },
+        modelChunkSamples: Int = StreamingHUDLatencyTuning.streamingModelChunkSamples
+    ) {
+        self.managerFactory = managerFactory
+        self.modelChunkSamples = modelChunkSamples
+    }
 
     var isAvailable: Bool {
         available
@@ -19,12 +35,9 @@ actor StreamingTranscriber {
     }
 
     func load() async throws {
-        guard manager == nil else {
-            available = true
-            return
-        }
+        guard manager == nil else { return }
 
-        let manager = StreamingModelVariant.parakeetEou160ms.createManager()
+        let manager = managerFactory()
         await manager.setPartialTranscriptCallback { [weak self] text in
             Task {
                 await self?.emitPartial(text)
@@ -32,7 +45,31 @@ actor StreamingTranscriber {
         }
         try await manager.loadModels()
         self.manager = manager
-        available = true
+    }
+
+    func warmUp() async throws {
+        guard let manager else {
+            throw NSError(domain: "LocalFlow", code: 5, userInfo: [
+                NSLocalizedDescriptionKey: "streaming model is not loaded"
+            ])
+        }
+
+        available = false
+        failedCurrentSession = false
+        do {
+            try await manager.reset()
+            let silence = Array(repeating: Float.zero, count: modelChunkSamples)
+            let buffer = try Self.makeBuffer(samples: silence)
+            try await manager.appendAudio(buffer)
+            try await manager.processBufferedAudio()
+            try await manager.reset()
+            available = true
+        } catch {
+            try? await manager.reset()
+            available = false
+            failedCurrentSession = false
+            throw error
+        }
     }
 
     func setPartialHandler(_ handler: PartialHandler?) {
@@ -50,20 +87,25 @@ actor StreamingTranscriber {
         }
     }
 
-    func append(samples: [Float]) async {
-        guard !failedCurrentSession, let manager, !samples.isEmpty else { return }
+    /// Returns true only when the samples were actually fed through inference,
+    /// so callers can trust it for latency accounting.
+    @discardableResult
+    func append(samples: [Float]) async -> Bool {
+        guard available, !failedCurrentSession, let manager, !samples.isEmpty else { return false }
 
         do {
             let buffer = try Self.makeBuffer(samples: samples)
             try await manager.appendAudio(buffer)
             try await manager.processBufferedAudio()
+            return true
         } catch {
             failedCurrentSession = true
+            return false
         }
     }
 
     func finish() async throws -> String {
-        guard !failedCurrentSession, let manager else { return "" }
+        guard available, !failedCurrentSession, let manager else { return "" }
 
         do {
             let text = try await manager.finish()

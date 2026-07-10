@@ -135,7 +135,12 @@ struct WaveformHUDView: View {
         .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
         .padding(6)
         .animation(.easeInOut(duration: 0.2), value: model.phase)
-        .animation(.easeInOut(duration: 0.15), value: model.captionTail)
+        .animation(
+            StreamingHUDLatencyTuning.captionAnimationDuration == 0
+                ? nil
+                : .easeInOut(duration: StreamingHUDLatencyTuning.captionAnimationDuration),
+            value: model.captionTail
+        )
     }
 
     @ViewBuilder

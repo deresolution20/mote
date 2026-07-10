@@ -26,7 +26,13 @@ final class AudioCapture {
         }
         self.converter = converter
 
-        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
+        input.installTap(
+            onBus: 0,
+            bufferSize: StreamingHUDLatencyTuning.audioTapBufferFrames(
+                inputSampleRate: inputFormat.sampleRate
+            ),
+            format: inputFormat
+        ) { [weak self] buffer, _ in
             guard let self, let converter = self.converter else { return }
             let ratio = self.targetFormat.sampleRate / inputFormat.sampleRate
             let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 64
@@ -50,7 +56,15 @@ final class AudioCapture {
             liveSamplesHandler?(chunk)
         }
 
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            // Leaving the tap installed would make the next start()'s installTap
+            // raise an uncatchable NSException on the already-tapped bus.
+            input.removeTap(onBus: 0)
+            self.converter = nil
+            throw error
+        }
     }
 
     /// Stops capture and returns everything recorded since start().

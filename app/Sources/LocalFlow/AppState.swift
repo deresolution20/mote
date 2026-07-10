@@ -1,6 +1,12 @@
 import AppKit
 import LocalFlowCleanup
+import OSLog
 import SwiftUI
+
+private let streamingLatencyLogger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.brice.localflow",
+    category: "StreamingLatency"
+)
 
 private final class StreamingAppendSerialQueue: @unchecked Sendable {
     private let lock = NSLock()
@@ -162,6 +168,8 @@ final class AppState: ObservableObject {
     private var acceptsStreamingPartials = false
     private var recordingWatchdog: Task<Void, Never>?
     private var streamingSetupTask: Task<Void, Never>?
+    private var streamingWarmupTask: Task<Void, Never>?
+    private var hasLoggedFirstHUDPartial = false
     /// Longest sensible push-to-talk hold; past this the release event was lost.
     private let maxRecordingSeconds: UInt64 = 30
 
@@ -226,23 +234,55 @@ final class AppState: ObservableObject {
             if cleanupEnabled { Cleaner.warmUp() }
             do {
                 try await transcriber.load()
-                do {
-                    try await streamingTranscriber.load()
-                    streamingLoaded = true
-                } catch {
-                    streamingLoaded = false
-                }
                 engineLoaded = true
             } catch {
                 status = .failed("model load failed: \(error.localizedDescription)")
                 return
             }
         }
+        // Off the critical path: dictation is usable via TDT as soon as the
+        // hotkey installs; streaming captions switch on when warmup finishes.
+        ensureStreamingWarmedUp()
 
         if installHotkeyMonitor() {
             status = .idle
         } else {
             status = .failed("could not install hotkey listener — check Accessibility permission")
+        }
+    }
+
+    /// Loads and warms the streaming model without blocking dictation readiness.
+    /// Safe to call on every pipeline start/resume: it retries after a failed
+    /// attempt, never runs two attempts concurrently, and sessions fall back to
+    /// TDT-only until it succeeds.
+    private func ensureStreamingWarmedUp() {
+        guard !streamingLoaded, streamingWarmupTask == nil else { return }
+        let streamingTranscriber = self.streamingTranscriber
+        streamingWarmupTask = Task { [weak self] in
+            defer { self?.streamingWarmupTask = nil }
+            do {
+                try await streamingTranscriber.load()
+            } catch {
+                streamingLatencyLogger.error(
+                    "Streaming model load failed; continuing with TDT: \(error.localizedDescription, privacy: .public)"
+                )
+                return
+            }
+            do {
+                let warmupStartedAt = ProcessInfo.processInfo.systemUptime
+                try await streamingTranscriber.warmUp()
+                let warmupMilliseconds = Int(
+                    (ProcessInfo.processInfo.systemUptime - warmupStartedAt) * 1_000
+                )
+                streamingLatencyLogger.info(
+                    "Streaming warmup completed in \(warmupMilliseconds, privacy: .public) ms"
+                )
+                self?.streamingLoaded = true
+            } catch {
+                streamingLatencyLogger.error(
+                    "Streaming warmup failed; continuing with TDT: \(error.localizedDescription, privacy: .public)"
+                )
+            }
         }
     }
 
@@ -276,6 +316,7 @@ final class AppState: ObservableObject {
         }
         pauseRequested = false
         if engineLoaded {
+            ensureStreamingWarmedUp()
             guard !hotkeyActive else {
                 if case .paused = status { status = .idle }
                 return
@@ -318,6 +359,8 @@ final class AppState: ObservableObject {
         guard !pauseRequested else { return }
         guard case .idle = status else { return }
         let sessionToken = beginStreamingSession()
+        let sessionStartedAt = ProcessInfo.processInfo.systemUptime
+        streamingLatencyLogger.info("Streaming session \(sessionToken, privacy: .public) started")
         let streamingLoaded = self.streamingLoaded
         let streamingAppendQueue = self.streamingAppendQueue
         let streamingTranscriber = self.streamingTranscriber
@@ -343,6 +386,15 @@ final class AppState: ObservableObject {
                     guard self.canAcceptStreamingPartials(for: sessionToken) else { return }
                     let tail = HUDCaptionTail.tail(from: partial)
                     guard tail != self.currentHUDTail else { return }
+                    if !self.hasLoggedFirstHUDPartial, !tail.isEmpty {
+                        self.hasLoggedFirstHUDPartial = true
+                        let elapsedMilliseconds = Int(
+                            (ProcessInfo.processInfo.systemUptime - sessionStartedAt) * 1_000
+                        )
+                        streamingLatencyLogger.info(
+                            "Session \(sessionToken, privacy: .public) first HUD partial at \(elapsedMilliseconds, privacy: .public) ms"
+                        )
+                    }
                     self.currentHUDTail = tail
                     HUDController.shared.updateCaptionTail(tail)
                 }
@@ -350,8 +402,22 @@ final class AppState: ObservableObject {
             streamingSetupTask = setupTask
         }
         let setupTask = streamingSetupTask
+        var streamedSampleCount = 0
         do {
             try capture.start(liveSamplesHandler: streamingLoaded ? { chunk in
+                let chunkReceivedAt = ProcessInfo.processInfo.systemUptime
+                let previousSampleCount = streamedSampleCount
+                streamedSampleCount += chunk.count
+                let isFirstChunk = previousSampleCount == 0
+                let chunkSamples = StreamingHUDLatencyTuning.streamingModelChunkSamples
+                let crossesFirstInferenceBoundary =
+                    previousSampleCount < chunkSamples && streamedSampleCount >= chunkSamples
+                if isFirstChunk {
+                    let elapsedMilliseconds = Int((chunkReceivedAt - sessionStartedAt) * 1_000)
+                    streamingLatencyLogger.info(
+                        "Session \(sessionToken, privacy: .public) first microphone chunk at \(elapsedMilliseconds, privacy: .public) ms (\(chunk.count, privacy: .public) samples)"
+                    )
+                }
                 streamingAppendQueue.enqueue(for: sessionToken) { [weak self] in
                     await setupTask?.value
                     guard let self else { return }
@@ -359,7 +425,15 @@ final class AppState: ObservableObject {
                         self.canRunStreamingAppend(for: sessionToken)
                     }
                     guard shouldAppend else { return }
-                    await streamingTranscriber.append(samples: chunk)
+                    let inferenceRan = await streamingTranscriber.append(samples: chunk)
+                    if inferenceRan, crossesFirstInferenceBoundary {
+                        let elapsedMilliseconds = Int(
+                            (ProcessInfo.processInfo.systemUptime - sessionStartedAt) * 1_000
+                        )
+                        streamingLatencyLogger.info(
+                            "Session \(sessionToken, privacy: .public) first inference completed at \(elapsedMilliseconds, privacy: .public) ms"
+                        )
+                    }
                     let hasFailed = await streamingTranscriber.hasFailedCurrentSession
                     if hasFailed {
                         await MainActor.run {
@@ -473,6 +547,7 @@ final class AppState: ObservableObject {
 
     private func beginStreamingSession() -> Int {
         currentHUDTail = ""
+        hasLoggedFirstHUDPartial = false
         streamingSessionFailed = false
         streamingSetupTask?.cancel()
         streamingSetupTask = nil
