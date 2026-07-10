@@ -4,7 +4,7 @@ import Foundation
 /// Captures the default microphone into an in-memory 16 kHz mono Float32 buffer.
 /// Same capture format the benchmark used, so measured accuracy carries over.
 final class AudioCapture {
-    private let engine = AVAudioEngine()
+    private var engine: AVAudioEngine?
     private let lock = NSLock()
     private var samples: [Float] = []
     private var converter: AVAudioConverter?
@@ -12,11 +12,17 @@ final class AudioCapture {
         commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false
     )!
 
+    static func makeEngineForCapture() -> AVAudioEngine {
+        AVAudioEngine()
+    }
+
     func start(liveSamplesHandler: (([Float]) -> Void)? = nil) throws {
         lock.lock()
         samples.removeAll(keepingCapacity: true)
         lock.unlock()
 
+        let engine = Self.makeEngineForCapture()
+        self.engine = engine
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
         guard let converter = AVAudioConverter(from: inputFormat, to: targetFormat) else {
@@ -69,8 +75,11 @@ final class AudioCapture {
 
     /// Stops capture and returns everything recorded since start().
     func stop() -> [Float] {
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
+        if let engine {
+            engine.inputNode.removeTap(onBus: 0)
+            engine.stop()
+            self.engine = nil
+        }
         converter = nil
         lock.lock()
         defer { lock.unlock() }
