@@ -4,7 +4,7 @@ import Testing
 @Suite struct SettingsDiagnosticsSnapshotTests {
     @Test func formatsCurrentDiagnosticsForSettings() {
         let snapshot = SettingsDiagnosticsSnapshot(
-            status: "Ready - hold Left Option and speak",
+            status: "Grotdown ready — ⌥ Space",
             cleanupDisplayName: "MLX",
             cleanupModel: "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
             usesDirectTyping: true,

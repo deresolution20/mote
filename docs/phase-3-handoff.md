@@ -1,4 +1,4 @@
-# Local Flow Fresh Session Handoff
+# Grotdown Fresh Session Handoff
 
 Snapshot for a fresh Codex session. Current date: 2026-07-09.
 
@@ -16,9 +16,11 @@ git log -3 --oneline --decorate
 
 ## Current Product State
 
-MVP Phases 0-2 are complete. Phase 3 MLX cleanup proof and hardening work is
-implemented through Task 14, and the Task 14 default-provider decision is
-accepted after manual review.
+MVP Phases 0-2 are complete. The product is now named **Grotdown**: a
+menu-bar-first, on-device dictation app with guarded Plain/GFM output, a
+rebindable Option-Space default hotkey, local History, and Snippets. Phase 3
+MLX cleanup proof and hardening work is implemented through Task 14, and the
+Task 14 default-provider decision is accepted after manual review.
 
 The app now presents MLX as the cleanup path. There is no user-facing provider
 selector or Ollama rollback setting.
@@ -142,7 +144,7 @@ Observed results:
 - Fresh app menu showed `Pause Dictation`.
 - Pause changed the dropdown to `Paused — choose Resume Dictation` with
   `Resume Dictation`.
-- Resume returned the dropdown to `Ready — hold Left ⌥ and speak`.
+- Resume returned the panel to its configured-hotkey ready state.
 - Manual dictation smoke passed: "um so like i think we should uh ship it
   friday" landed as "I think we should ship it Friday."
 - Last dictation menu showed raw and cleaned copy actions.
@@ -208,7 +210,7 @@ python3 docs/reports/mlx-cleanup-benchmark/production_acceptance_report.py \
 ## Copy-Paste Goal For Fresh Session
 
 ```text
-Continue Local Flow after the accepted Task 14 MLX default-provider decision.
+Continue Grotdown after the accepted Task 14 MLX default-provider decision.
 Start by reading
 docs/phase-3-handoff.md and the Task 14 report at
 docs/reports/mlx-cleanup-benchmark/runs/2026-07-08-task-14-mlx-default-provider/report.md.

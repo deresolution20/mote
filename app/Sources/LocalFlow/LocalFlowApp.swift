@@ -7,10 +7,16 @@ struct LocalFlowApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuView().environmentObject(state)
+            CapturePanelView().environmentObject(state)
         } label: {
             Image(systemName: state.status.symbolName)
         }
+        .menuBarExtraStyle(.window)
+
+        WindowGroup(id: "library") {
+            LibraryRootView().environmentObject(state)
+        }
+        .defaultSize(width: 960, height: 580)
 
         Settings {
             SettingsView().environmentObject(state)

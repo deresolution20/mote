@@ -4,7 +4,7 @@ import CoreGraphics
 /// Inserts transcribed text at the cursor of the frontmost app. Requires
 /// Accessibility permission for synthesized events to be delivered.
 enum TextInjector {
-    enum Method {
+    enum Method: Equatable {
         /// Types the text directly as synthesized Unicode key events. Never
         /// touches the clipboard — preferred where clipboard managers or DLP
         /// agents may capture pasted content (e.g. managed work machines).
@@ -21,6 +21,13 @@ enum TextInjector {
         case .type: typeText(text)
         case .clipboard: pasteViaClipboard(text)
         }
+    }
+
+    static func copy(_ text: String) {
+        guard !text.isEmpty else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
     }
 
     // MARK: - Direct typing (no clipboard)

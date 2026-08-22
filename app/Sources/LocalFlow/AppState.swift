@@ -106,7 +106,7 @@ final class AppState: ObservableObject {
             switch self {
             case .needsPermissions: return "Permissions needed — open Settings"
             case .loadingModel: return "Loading speech model…"
-            case .idle: return "Ready — hold Left ⌥ and speak"
+            case .idle: return "Ready — use your configured hotkey"
             case .recording: return "Recording…"
             case .transcribing: return "Transcribing…"
             case .cleaning: return "Cleaning up…"
@@ -123,25 +123,69 @@ final class AppState: ObservableObject {
     @Published var lastTranscript: String = ""
     /// What cleanup produced for the last dictation (empty if off / fell back).
     @Published var lastCleaned: String = ""
-    @Published var cleanupEnabled: Bool = UserDefaults.standard.object(forKey: "cleanupEnabled") as? Bool ?? true {
+    @Published var pendingDictation: PendingDictation?
+    let historyStore = HistoryStore()
+    let snippetStore = SnippetStore()
+    let microphoneDeviceService = MicrophoneDeviceService()
+
+    private let preferences = GrotdownPreferences()
+    private let outputDeliveryCoordinator = OutputDeliveryCoordinator()
+
+    @Published var outputFormat: OutputFormat = .plain {
+        didSet { preferences.outputFormat = outputFormat }
+    }
+    @Published var captureMode: CaptureMode = .holdToTalk {
         didSet {
-            UserDefaults.standard.set(cleanupEnabled, forKey: "cleanupEnabled")
+            preferences.captureMode = captureMode
+            reconfigureHotkeyIfIdle()
+        }
+    }
+    @Published var hotkeyConfiguration: HotkeyConfiguration = .default {
+        didSet {
+            preferences.hotkeyConfiguration = hotkeyConfiguration
+            reconfigureHotkeyIfIdle()
+        }
+    }
+    @Published var autoInsert = true {
+        didSet { preferences.autoInsert = autoInsert }
+    }
+    @Published var preserveCodeAndBackticks = false {
+        didSet { preferences.preserveCodeAndBackticks = preserveCodeAndBackticks }
+    }
+    @Published var selectedMicrophoneDeviceID: UInt32? {
+        didSet { preferences.selectedMicrophoneDeviceID = selectedMicrophoneDeviceID }
+    }
+    @Published var cleanupEnabled = true {
+        didSet {
+            preferences.cleanupEnabled = cleanupEnabled
             if cleanupEnabled { Cleaner.warmUp() }
         }
     }
-    @Published var hudEnabled: Bool = UserDefaults.standard.object(forKey: "hudEnabled") as? Bool ?? true {
+    @Published var hudEnabled = true {
         didSet {
-            UserDefaults.standard.set(hudEnabled, forKey: "hudEnabled")
+            preferences.hudEnabled = hudEnabled
             if !hudEnabled { HUDController.shared.hide() }
         }
     }
     /// Insert by typing (no clipboard) by default — safer on managed machines
     /// where clipboard managers / DLP tools may capture pasted content.
-    @Published var injectByTyping: Bool = UserDefaults.standard.object(forKey: "injectByTyping") as? Bool ?? true {
-        didSet { UserDefaults.standard.set(injectByTyping, forKey: "injectByTyping") }
+    @Published var injectByTyping = true {
+        didSet { preferences.injectByTyping = injectByTyping }
     }
     /// Custom vocabulary terms, mirrored for SwiftUI binding.
     @Published var dictionaryTerms: [String] = PersonalDictionary.shared.terms
+
+    init() {
+        outputFormat = preferences.outputFormat
+        captureMode = preferences.captureMode
+        hotkeyConfiguration = preferences.hotkeyConfiguration
+        autoInsert = preferences.autoInsert
+        preserveCodeAndBackticks = preferences.preserveCodeAndBackticks
+        cleanupEnabled = preferences.cleanupEnabled
+        hudEnabled = preferences.hudEnabled
+        injectByTyping = preferences.injectByTyping
+        selectedMicrophoneDeviceID = preferences.selectedMicrophoneDeviceID
+    }
 
     func addDictionaryTerm(_ term: String) {
         PersonalDictionary.shared.add(term)
@@ -170,8 +214,14 @@ final class AppState: ObservableObject {
     private var streamingSetupTask: Task<Void, Never>?
     private var streamingWarmupTask: Task<Void, Never>?
     private var hasLoggedFirstHUDPartial = false
+    private var captureOutputFormat: OutputFormat = .plain
+    private var capturePreserveCodeAndBackticks = false
     /// Longest sensible push-to-talk hold; past this the release event was lost.
     private let maxRecordingSeconds: UInt64 = 30
+
+    private var injectionMethod: TextInjector.Method {
+        injectByTyping ? .type : .clipboard
+    }
 
     private var useStreamingFinalTranscript: Bool {
         ProcessInfo.processInfo.environment["LOCALFLOW_STREAMING_FINAL"] == "1"
@@ -200,6 +250,10 @@ final class AppState: ObservableObject {
         if !allPermissionsGranted, case .idle = status { status = .needsPermissions }
     }
 
+    func refreshMicrophoneDevices() {
+        microphoneDeviceService.refresh()
+    }
+
     private var onboardingWindow: NSWindow?
 
     func showOnboarding() {
@@ -209,7 +263,7 @@ final class AppState: ObservableObject {
                 styleMask: [.titled, .closable],
                 backing: .buffered, defer: false
             )
-            window.title = "Local Flow Setup"
+            window.title = "Grotdown Setup"
             window.contentViewController = NSHostingController(
                 rootView: OnboardingView().environmentObject(self)
             )
@@ -295,6 +349,7 @@ final class AppState: ObservableObject {
         case .recording:
             recordingWatchdog?.cancel()
             _ = capture.stop()
+            microphoneDeviceService.resetLevel()
             clearStreamingSession()
             HUDController.shared.hide()
             status = .paused
@@ -333,10 +388,11 @@ final class AppState: ObservableObject {
 
     private func installHotkeyMonitor() -> Bool {
         let monitor = HotkeyMonitor(
-            key: .leftOption,
-            onKeyDown: { [weak self] in self?.hotkeyPressed() },
-            onKeyUp: { [weak self] in self?.hotkeyReleased() },
-            onCancel: { [weak self] in self?.hotkeyCancelled() }
+            configuration: hotkeyConfiguration,
+            mode: captureMode,
+            onBeginCapture: { [weak self] in self?.hotkeyPressed() },
+            onEndCapture: { [weak self] in self?.hotkeyReleased() },
+            onCancelCapture: { [weak self] in self?.hotkeyCancelled() }
         )
         if monitor.start() {
             hotkey = monitor
@@ -353,11 +409,21 @@ final class AppState: ObservableObject {
         hotkeyActive = false
     }
 
+    private func reconfigureHotkeyIfIdle() {
+        guard hotkeyActive, case .idle = status else { return }
+        stopHotkeyMonitor()
+        if !installHotkeyMonitor() {
+            status = .failed("could not register \(hotkeyConfiguration.displayName)")
+        }
+    }
+
     private func hotkeyPressed() {
         // A press always clears a lingering error state.
         if case .failed = status { status = .idle }
         guard !pauseRequested else { return }
         guard case .idle = status else { return }
+        captureOutputFormat = outputFormat
+        capturePreserveCodeAndBackticks = preserveCodeAndBackticks
         let sessionToken = beginStreamingSession()
         let sessionStartedAt = ProcessInfo.processInfo.systemUptime
         streamingLatencyLogger.info("Streaming session \(sessionToken, privacy: .public) started")
@@ -404,7 +470,9 @@ final class AppState: ObservableObject {
         let setupTask = streamingSetupTask
         var streamedSampleCount = 0
         do {
-            try capture.start(liveSamplesHandler: streamingLoaded ? { chunk in
+            microphoneDeviceService.refresh()
+            let deviceID = microphoneDeviceService.resolvedDeviceID(preferred: selectedMicrophoneDeviceID)
+            try capture.start(deviceID: deviceID, liveSamplesHandler: streamingLoaded ? { chunk in
                 let chunkReceivedAt = ProcessInfo.processInfo.systemUptime
                 let previousSampleCount = streamedSampleCount
                 streamedSampleCount += chunk.count
@@ -441,7 +509,11 @@ final class AppState: ObservableObject {
                         }
                     }
                 }
-            } : nil)
+            } : nil, levelHandler: { [weak self] level in
+                Task { @MainActor [weak self] in
+                    self?.microphoneDeviceService.updateLevel(level)
+                }
+            })
             status = .recording
             HUDController.shared.show(.recording, captionTail: currentHUDTail)
             // Watchdog: if the release event is ever lost, don't record forever.
@@ -452,6 +524,7 @@ final class AppState: ObservableObject {
             }
         } catch {
             invalidateStreamingSession()
+            microphoneDeviceService.resetLevel()
             status = .failed("mic capture failed: \(error.localizedDescription)")
         }
     }
@@ -460,6 +533,7 @@ final class AppState: ObservableObject {
         recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         _ = capture.stop()
+        microphoneDeviceService.resetLevel()
         invalidateStreamingSession()
         status = .idle
         HUDController.shared.hide()
@@ -469,6 +543,7 @@ final class AppState: ObservableObject {
         recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         let samples = capture.stop()
+        microphoneDeviceService.resetLevel()
         // Ignore accidental taps: < 0.3 s of audio.
         guard samples.count > 4800 else {
             invalidateStreamingSession()
@@ -528,7 +603,20 @@ final class AppState: ObservableObject {
                         textToPaste = cleaned
                     }
                 }
-                TextInjector.insert(textToPaste, method: injectByTyping ? .type : .clipboard)
+                let completion = await outputDeliveryCoordinator.complete(
+                    raw: raw,
+                    cleaned: textToPaste,
+                    format: captureOutputFormat,
+                    formattingOptions: FormattingOptions(
+                        preserveCodeAndBackticks: capturePreserveCodeAndBackticks
+                    ),
+                    autoInsert: autoInsert,
+                    method: injectionMethod,
+                    duration: Double(samples.count) / 16_000
+                )
+                historyStore.append(completion.record)
+                pendingDictation = completion.pending
+                lastCleaned = completion.record.finalText
                 status = pauseRequested ? .paused : .idle
                 HUDController.shared.finishAndHide()
             } catch {
@@ -539,6 +627,79 @@ final class AppState: ObservableObject {
                 if case .failed = status { status = pauseRequested ? .paused : .idle }
             }
         }
+    }
+
+    func insertPending() {
+        guard let pendingDictation else { return }
+        let delivery = outputDeliveryCoordinator.insert(pendingDictation, method: injectionMethod)
+        historyStore.updateOutcome(for: pendingDictation.id, to: delivery.insertionOutcome)
+        self.pendingDictation = nil
+    }
+
+    func copyPending() {
+        guard let pendingDictation else { return }
+        let delivery = outputDeliveryCoordinator.copy(pendingDictation)
+        historyStore.updateOutcome(for: pendingDictation.id, to: delivery.insertionOutcome)
+        self.pendingDictation = nil
+    }
+
+    func setPendingFormat(_ format: OutputFormat) {
+        guard let pending = pendingDictation else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            let resolved = await outputDeliveryCoordinator.resolve(
+                pending,
+                format: format,
+                options: FormattingOptions(preserveCodeAndBackticks: preserveCodeAndBackticks)
+            )
+            guard pendingDictation?.id == resolved.id else { return }
+            pendingDictation = resolved
+            guard let existing = historyStore.records.first(where: { $0.id == resolved.id }) else { return }
+            historyStore.replace(
+                DictationRecord(
+                    id: existing.id,
+                    createdAt: existing.createdAt,
+                    duration: existing.duration,
+                    rawText: existing.rawText,
+                    finalText: resolved.resolved.text,
+                    format: resolved.resolved.effectiveFormat,
+                    targetApplication: existing.targetApplication,
+                    insertionOutcome: existing.insertionOutcome
+                )
+            )
+        }
+    }
+
+    func insertHistoryRecord(_ record: DictationRecord) {
+        let delivery = outputDeliveryCoordinator.insert(record.finalText, method: injectionMethod)
+        historyStore.updateOutcome(for: record.id, to: delivery.insertionOutcome)
+    }
+
+    func copyHistoryRecord(_ record: DictationRecord) {
+        let delivery = outputDeliveryCoordinator.copy(record.finalText)
+        historyStore.updateOutcome(for: record.id, to: delivery.insertionOutcome)
+    }
+
+    func saveAsSnippet(_ record: DictationRecord) {
+        snippetStore.append(
+            record.asSnippet(title: LibraryPresentation.snippetTitle(for: record.finalText))
+        )
+    }
+
+    func deleteHistoryRecord(_ record: DictationRecord) {
+        historyStore.delete(id: record.id)
+    }
+
+    func insertSnippet(_ snippet: Snippet) {
+        _ = outputDeliveryCoordinator.insert(snippet.text, method: injectionMethod)
+    }
+
+    func copySnippet(_ snippet: Snippet) {
+        _ = outputDeliveryCoordinator.copy(snippet.text)
+    }
+
+    func deleteSnippet(_ snippet: Snippet) {
+        snippetStore.delete(id: snippet.id)
     }
 
     private func clearStreamingSession(clearHUD: Bool = true) {

@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Build LocalFlow and assemble a signed .app bundle.
 # A real bundle (not a bare executable) is required so TCC attributes the
-# Microphone / Accessibility / Input Monitoring grants to "Local Flow" itself,
+# Microphone / Accessibility grants to "Grotdown" itself,
 # and so NSMicrophoneUsageDescription is honored.
 set -e
 cd "$(dirname "$0")"
@@ -32,7 +32,7 @@ if [[ -n "$METALLIB" ]]; then
   ln -s ../Resources "$APP/Contents/MacOS/Resources"
   echo "copied MLX metallib from $METALLIB"
 else
-  echo "MLX metallib not found; MLX cleanup will be unavailable and the provider chain can fall back to Ollama/raw text"
+  echo "MLX metallib not found; MLX cleanup will be unavailable and Grotdown will use the raw transcript."
 fi
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -43,9 +43,9 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleIdentifier</key>
     <string>dev.brice.localflow</string>
     <key>CFBundleName</key>
-    <string>Local Flow</string>
+    <string>Grotdown</string>
     <key>CFBundleDisplayName</key>
-    <string>Local Flow</string>
+    <string>Grotdown</string>
     <key>CFBundleExecutable</key>
     <string>LocalFlow</string>
     <key>CFBundlePackageType</key>
@@ -61,14 +61,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Local Flow listens while you hold the dictation hotkey. Audio never leaves this Mac.</string>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <!-- The only network call is to the local Ollama server on localhost.
-             Allow local networking; do NOT allow arbitrary cleartext loads. -->
-        <key>NSAllowsLocalNetworking</key>
-        <true/>
-    </dict>
+    <string>Grotdown listens while you use the dictation hotkey. Audio stays on this Mac.</string>
 </dict>
 </plist>
 PLIST

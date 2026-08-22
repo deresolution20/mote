@@ -50,7 +50,7 @@ struct MenuView: View {
 
         Divider()
 
-        Button("Quit Local Flow") {
+        Button("Quit Grotdown") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")

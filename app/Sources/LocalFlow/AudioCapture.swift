@@ -1,4 +1,5 @@
 import AVFoundation
+import AudioToolbox
 import Foundation
 
 /// Captures the default microphone into an in-memory 16 kHz mono Float32 buffer.
@@ -16,7 +17,11 @@ final class AudioCapture {
         AVAudioEngine()
     }
 
-    func start(liveSamplesHandler: (([Float]) -> Void)? = nil) throws {
+    func start(
+        deviceID: UInt32? = nil,
+        liveSamplesHandler: (([Float]) -> Void)? = nil,
+        levelHandler: ((Double) -> Void)? = nil
+    ) throws {
         lock.lock()
         samples.removeAll(keepingCapacity: true)
         lock.unlock()
@@ -24,6 +29,9 @@ final class AudioCapture {
         let engine = Self.makeEngineForCapture()
         self.engine = engine
         let input = engine.inputNode
+        if let deviceID {
+            try configure(inputNode: input, deviceID: deviceID)
+        }
         let inputFormat = input.outputFormat(forBus: 0)
         guard let converter = AVAudioConverter(from: inputFormat, to: targetFormat) else {
             throw NSError(domain: "LocalFlow", code: 1, userInfo: [
@@ -59,6 +67,7 @@ final class AudioCapture {
             self.lock.lock()
             self.samples.append(contentsOf: chunk)
             self.lock.unlock()
+            levelHandler?(Self.rmsLevel(samples: chunk))
             liveSamplesHandler?(chunk)
         }
 
@@ -84,5 +93,39 @@ final class AudioCapture {
         lock.lock()
         defer { lock.unlock() }
         return samples
+    }
+
+    static func rmsLevel(samples: [Float]) -> Double {
+        guard !samples.isEmpty else { return 0 }
+        let meanSquare = samples.reduce(0.0) { partial, sample in
+            partial + Double(sample * sample)
+        } / Double(samples.count)
+        return sqrt(meanSquare)
+    }
+
+    private func configure(inputNode: AVAudioInputNode, deviceID: UInt32) throws {
+        guard let audioUnit = inputNode.audioUnit else {
+            throw NSError(
+                domain: "Grotdown.AudioCapture",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "microphone audio unit is unavailable"]
+            )
+        }
+        var selectedDeviceID = AudioDeviceID(deviceID)
+        let status = AudioUnitSetProperty(
+            audioUnit,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &selectedDeviceID,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+        guard status == noErr else {
+            throw NSError(
+                domain: "Grotdown.AudioCapture",
+                code: Int(status),
+                userInfo: [NSLocalizedDescriptionKey: "could not select microphone device \(deviceID)"]
+            )
+        }
     }
 }

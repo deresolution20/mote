@@ -1,15 +1,8 @@
 import Foundation
-import HuggingFace
-import MLXHuggingFace
-import MLXLLM
-import MLXLMCommon
-import Tokenizers
 
 final class MLXCleanupProvider: CleanupProvider {
     static let model = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
     private static let maxTokens = 128
-
-    private let loader = ContainerLoader()
 
     var id: CleanupProviderID { .mlx }
     var displayName: String { "MLX" }
@@ -25,16 +18,11 @@ final class MLXCleanupProvider: CleanupProvider {
         }
 
         do {
-            let container = try await loader.loadContainer()
-            let parameters = GenerateParameters(maxTokens: Self.maxTokens, temperature: 0)
-            let input = try await container.prepare(input: UserInput(prompt: Self.cleanupPrompt(raw: raw)))
-            let stream = try await container.generate(input: input, parameters: parameters)
-            var rawOutput = ""
-            for await item in stream {
-                if case .chunk(let chunk) = item {
-                    rawOutput += chunk
-                }
-            }
+            let rawOutput = try await MLXTextGenerator.shared.generate(
+                prompt: Self.cleanupPrompt(raw: raw),
+                maxTokens: Self.maxTokens,
+                temperature: 0
+            )
 
             let evaluation = CleanupSafety.evaluate(rawOutput: rawOutput, raw: raw)
             if let accepted = evaluation.acceptedText {
@@ -102,30 +90,4 @@ final class MLXCleanupProvider: CleanupProvider {
         """
     }
 
-}
-
-private actor ContainerLoader {
-    private var containerTask: Task<ModelContainer, Error>?
-
-    func loadContainer() async throws -> ModelContainer {
-        if let existingTask = containerTask {
-            return try await existingTask.value
-        }
-
-        let task = Task {
-            try await LLMModelFactory.shared.loadContainer(
-                from: #hubDownloader(),
-                using: #huggingFaceTokenizerLoader(),
-                configuration: LLMRegistry.qwen2_5_1_5b
-            )
-        }
-        containerTask = task
-
-        do {
-            return try await task.value
-        } catch {
-            containerTask = nil
-            throw error
-        }
-    }
 }

@@ -7,9 +7,9 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Local Flow needs two permissions")
+            Text("Grotdown needs two permissions")
                 .font(.title2.bold())
-            Text("Everything runs on this Mac — no audio or text ever leaves it.")
+            Text("Your voice and your text stay on this Mac. Grotdown has no server.")
                 .foregroundStyle(.secondary)
 
             PermissionRow(
@@ -37,7 +37,7 @@ struct OnboardingView: View {
 
             HStack {
                 Image(systemName: "lightbulb")
-                Text("Push-to-talk: **hold Left ⌥ (Option)**, speak, release. Quick taps and ⌥-shortcuts are ignored.")
+                Text("Use \(state.hotkeyConfiguration.displayName) to dictate. Hold mode records while held; toggle mode starts and stops on each press.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

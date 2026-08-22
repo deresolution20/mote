@@ -2,6 +2,10 @@
 
 Run label: `Task 14 MLX Default Provider`
 
+> Historical pre–MLX-only acceptance evidence. This report preserves the
+> measured Task 14 provider-chain data; Grotdown's current runtime is MLX with
+> raw-transcript terminal fallback and does not include an Ollama fallback.
+
 ## Executive Summary
 
 This run measures the actual production cleanup chain after one warmup inside a single process: MLX first, Ollama fallback second, and raw transcript fallback last. The benchmark records latency, chosen path, attempted providers, and final text for every reference sample.

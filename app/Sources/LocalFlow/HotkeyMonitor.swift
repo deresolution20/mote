@@ -1,102 +1,139 @@
-import AppKit
+import Carbon
 import Foundation
+import LocalFlowCleanup
 
-/// Push-to-talk on a modifier key via global NSEvent flagsChanged monitors.
-/// Modifier-flag events need only Accessibility — NOT Input Monitoring (that's
-/// for keystroke content, which we never read). This matters on MDM-managed
-/// Macs where the Input Monitoring pane is profile-controlled.
+/// Registers one explicit Carbon hotkey. Unlike a global key monitor, this
+/// receives no keystroke content and needs no Input Monitoring permission.
 final class HotkeyMonitor {
-    enum Key {
-        case leftOption
-        case fn
+    private static let signature: OSType = 0x47525444 // "GRTD"
+    private static let identifier: UInt32 = 1
 
-        var label: String {
-            switch self {
-            case .leftOption: return "Left ⌥"
-            case .fn: return "Fn"
-            }
-        }
-    }
+    private let configuration: HotkeyConfiguration
+    private var reducer: HotkeyInteractionReducer
+    private let onBeginCapture: () -> Void
+    private let onEndCapture: () -> Void
+    private let onCancelCapture: () -> Void
 
-    private let key: Key
-    private let onKeyDown: () -> Void
-    private let onKeyUp: () -> Void
-    /// Fired when another modifier joins mid-hold (e.g. ⌥⌘ shortcut) — the
-    /// press was a chord, not push-to-talk, so the recording should be discarded.
-    private let onCancel: () -> Void
-    private var globalMonitor: Any?
-    private var localMonitor: Any?
-    private var keyIsDown = false
-
-    private static let leftOptionKeyCode: UInt16 = 58
+    private var hotkeyRef: EventHotKeyRef?
+    private var handlerRef: EventHandlerRef?
 
     init(
-        key: Key,
-        onKeyDown: @escaping () -> Void,
-        onKeyUp: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        configuration: HotkeyConfiguration,
+        mode: CaptureMode,
+        onBeginCapture: @escaping () -> Void,
+        onEndCapture: @escaping () -> Void,
+        onCancelCapture: @escaping () -> Void
     ) {
-        self.key = key
-        self.onKeyDown = onKeyDown
-        self.onKeyUp = onKeyUp
-        self.onCancel = onCancel
+        self.configuration = configuration
+        reducer = HotkeyInteractionReducer(mode: mode)
+        self.onBeginCapture = onBeginCapture
+        self.onEndCapture = onEndCapture
+        self.onCancelCapture = onCancelCapture
+    }
+
+    deinit {
+        stop()
     }
 
     func start() -> Bool {
-        // Global monitors deliver nothing without Accessibility trust.
-        guard Permissions.accessibility else { return false }
+        guard configuration.isValid, Permissions.accessibility else { return false }
+        guard installEventHandler() else { return false }
 
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            self?.handle(event)
+        let identifier = EventHotKeyID(signature: Self.signature, id: Self.identifier)
+        let status = RegisterEventHotKey(
+            configuration.keyCode,
+            carbonModifiers(for: configuration.modifiers),
+            identifier,
+            GetApplicationEventTarget(),
+            0,
+            &hotkeyRef
+        )
+        guard status == noErr else {
+            removeEventHandler()
+            return false
         }
-        // Global monitors skip events while our own app is frontmost (e.g. the
-        // setup window) — the local monitor covers that case.
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            self?.handle(event)
-            return event
-        }
-        return globalMonitor != nil
+        return true
     }
 
     func stop() {
-        if let globalMonitor { NSEvent.removeMonitor(globalMonitor) }
-        if let localMonitor { NSEvent.removeMonitor(localMonitor) }
-        globalMonitor = nil
-        localMonitor = nil
+        if let hotkeyRef {
+            UnregisterEventHotKey(hotkeyRef)
+        }
+        hotkeyRef = nil
+        removeEventHandler()
     }
 
-    private func handle(_ event: NSEvent) {
-        // A second modifier joining mid-hold means a keyboard shortcut, not dictation.
-        if keyIsDown, chordModifiers(in: event) {
-            keyIsDown = false
-            DispatchQueue.main.async(execute: onCancel)
-            return
-        }
-
-        let down: Bool
-        switch key {
-        case .fn:
-            down = event.modifierFlags.contains(.function)
-        case .leftOption:
-            // Release resilience: while held, ANY flags event without .option
-            // means the key was let go — even if the keycode-58 up event itself
-            // was swallowed (secure input fields, app switches).
-            if keyIsDown, !event.modifierFlags.contains(.option) {
-                keyIsDown = false
-                DispatchQueue.main.async(execute: onKeyUp)
-                return
-            }
-            guard event.keyCode == Self.leftOptionKeyCode else { return }
-            down = event.modifierFlags.contains(.option)
-        }
-        guard down != keyIsDown else { return }
-        keyIsDown = down
-        let action = down ? onKeyDown : onKeyUp
-        DispatchQueue.main.async(execute: action)
+    private func installEventHandler() -> Bool {
+        var eventTypes = [
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)),
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased)),
+        ]
+        let status = InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, event, userData in
+                guard let event, let userData else { return noErr }
+                let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(userData).takeUnretainedValue()
+                return monitor.handle(event)
+            },
+            eventTypes.count,
+            &eventTypes,
+            Unmanaged.passUnretained(self).toOpaque(),
+            &handlerRef
+        )
+        return status == noErr
     }
 
-    private func chordModifiers(in event: NSEvent) -> Bool {
-        let others: NSEvent.ModifierFlags = [.command, .shift, .control]
-        return !event.modifierFlags.intersection(others).isEmpty
+    private func removeEventHandler() {
+        if let handlerRef {
+            RemoveEventHandler(handlerRef)
+        }
+        handlerRef = nil
+    }
+
+    private func handle(_ event: EventRef) -> OSStatus {
+        var receivedIdentifier = EventHotKeyID()
+        let readStatus = GetEventParameter(
+            event,
+            EventParamName(kEventParamDirectObject),
+            EventParamType(typeEventHotKeyID),
+            nil,
+            MemoryLayout<EventHotKeyID>.size,
+            nil,
+            &receivedIdentifier
+        )
+        guard
+            readStatus == noErr,
+            receivedIdentifier.signature == Self.signature,
+            receivedIdentifier.id == Self.identifier
+        else {
+            return noErr
+        }
+
+        let input: HotkeyInteractionReducer.Event = GetEventKind(event) == UInt32(kEventHotKeyPressed)
+            ? .pressed
+            : .released
+        let action = reducer.handle(input)
+        DispatchQueue.main.async { [weak self] in
+            self?.perform(action)
+        }
+        return noErr
+    }
+
+    private func perform(_ action: HotkeyInteractionReducer.Action) {
+        switch action {
+        case .beginCapture: onBeginCapture()
+        case .endCapture: onEndCapture()
+        case .cancelCapture: onCancelCapture()
+        case .ignore: break
+        }
+    }
+
+    private func carbonModifiers(for modifiers: HotkeyModifiers) -> UInt32 {
+        var flags: UInt32 = 0
+        if modifiers.contains(.command) { flags |= UInt32(cmdKey) }
+        if modifiers.contains(.option) { flags |= UInt32(optionKey) }
+        if modifiers.contains(.control) { flags |= UInt32(controlKey) }
+        if modifiers.contains(.shift) { flags |= UInt32(shiftKey) }
+        return flags
     }
 }

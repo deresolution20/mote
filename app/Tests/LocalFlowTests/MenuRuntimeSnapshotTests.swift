@@ -4,13 +4,13 @@ import Testing
 @Suite struct MenuRuntimeSnapshotTests {
     @Test func formatsNoDictationRuntimeConsole() {
         let snapshot = MenuRuntimeSnapshot(
-            statusLabel: "Ready - hold Left Option and speak",
+            statusLabel: "Grotdown ready — ⌥ Space",
             control: .pause,
             lastRawTranscript: "",
             lastCleanedText: ""
         )
 
-        #expect(snapshot.statusLabel == "Ready - hold Left Option and speak")
+        #expect(snapshot.statusLabel == "Grotdown ready — ⌥ Space")
         #expect(snapshot.controlTitle == "Pause Dictation")
         #expect(snapshot.hasLastDictation == false)
         #expect(snapshot.rawPreview == nil)

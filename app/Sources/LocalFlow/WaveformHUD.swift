@@ -27,10 +27,10 @@ final class HUDController {
     /// Guards the delayed hide so a new dictation cancels a pending fade.
     private var hideGeneration = 0
 
-    private static let size = CGSize(width: 300, height: 56)
+    private static let size = CGSize(width: 336, height: 64)
 
     var enabled: Bool {
-        UserDefaults.standard.object(forKey: "hudEnabled") as? Bool ?? true
+        UserDefaults.standard.object(forKey: "grotdown.hudEnabled") as? Bool ?? true
     }
 
     func show(_ phase: HUDPhase, captionTail: String = "") {
@@ -93,7 +93,7 @@ final class HUDController {
         panel.hasShadow = false
         panel.ignoresMouseEvents = true
         panel.hidesOnDeactivate = false
-        panel.contentView = NSHostingView(rootView: WaveformHUDView(model: model))
+        panel.contentView = NSHostingView(rootView: GrotdownHUDView(model: model))
         self.panel = panel
         return panel
     }
@@ -108,33 +108,38 @@ final class HUDController {
 
 // MARK: - Views
 
-struct WaveformHUDView: View {
+struct GrotdownHUDView: View {
     @ObservedObject var model: HUDModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             switch model.phase {
             case .recording:
-                WaveBars(animating: true, tint: .accentColor)
+                recordingIndicator
                 captionText
             case .transcribing:
-                WaveBars(animating: true, tint: .secondary)
+                WaveBars(animating: !reduceMotion, tint: GrotdownTheme.Colors.secondaryText)
                 captionTextOrFallback("Transcribing")
             case .cleaning:
-                Image(systemName: "sparkles").foregroundStyle(Color.accentColor)
+                Image(systemName: "sparkles")
+                    .foregroundStyle(GrotdownTheme.Colors.signalStart)
                 captionTextOrFallback("Cleaning up")
             case .done:
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                Text("Done").font(.caption).foregroundStyle(.secondary)
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(GrotdownTheme.Colors.success)
+                Text("Saved")
+                    .font(GrotdownTheme.Typography.body(12))
+                    .foregroundStyle(GrotdownTheme.Colors.secondaryText)
             }
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
+        .background(GrotdownTheme.Colors.raised, in: Capsule())
+        .overlay(Capsule().strokeBorder(GrotdownTheme.Colors.border))
         .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
         .padding(6)
-        .animation(.easeInOut(duration: 0.2), value: model.phase)
+        .animation(.easeInOut(duration: GrotdownTheme.Motion.base), value: model.phase)
         .animation(
             StreamingHUDLatencyTuning.captionAnimationDuration == 0
                 ? nil
@@ -144,14 +149,25 @@ struct WaveformHUDView: View {
     }
 
     @ViewBuilder
+    private var recordingIndicator: some View {
+        if reduceMotion {
+            Circle()
+                .fill(GrotdownTheme.Colors.signalEnd)
+                .frame(width: 10, height: 10)
+        } else {
+            WaveBars(animating: true, tint: GrotdownTheme.Colors.signalEnd)
+        }
+    }
+
+    @ViewBuilder
     private var captionText: some View {
         if !model.captionTail.isEmpty {
             Text(model.captionTail)
-                .font(.caption)
+                .font(GrotdownTheme.Typography.body(12))
                 .lineLimit(1)
                 .truncationMode(.tail)
-                .foregroundStyle(.primary)
-                .frame(maxWidth: 210, alignment: .leading)
+                .foregroundStyle(GrotdownTheme.Colors.primaryText)
+                .frame(maxWidth: 230, alignment: .leading)
         }
     }
 
