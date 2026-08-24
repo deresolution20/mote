@@ -1,6 +1,6 @@
 # Security & privacy posture
 
-Local Flow is designed to run entirely on-device. This document is a factual
+Grotdown is designed to run entirely on-device. This document is a factual
 summary of what it does and does not do — useful for personal review or for a
 security team evaluating it on a managed machine.
 
@@ -9,9 +9,9 @@ security team evaluating it on a managed machine.
 | Concern | Behavior |
 | --- | --- |
 | **Microphone audio** | Captured to an in-memory buffer only. Never written to disk by the app. Discarded after each utterance. |
-| **Transcripts** | Held in memory (last one shown in the menu). Not logged, not written to disk, not transmitted anywhere. |
-| **Network** | The dictation path makes **one** call: `POST http://localhost:11434` (local Ollama) for text cleanup. A hard-coded base URL prevents pointing it elsewhere. No analytics, no telemetry, no crash reporting, no accounts. |
-| **Persistent storage** | Only user preferences in `UserDefaults`: feature toggles, model keep-alive minutes, and your personal-dictionary terms. No transcript history. |
+| **Transcripts** | The most recent transcript is visible in the menu. History and Snippets are versioned JSON files under the user's Application Support directory and are not transmitted by Grotdown. |
+| **Network** | The active dictation path does not send audio or transcripts to a remote service. No analytics, telemetry, crash-reporting service, accounts, or application-controlled transcript upload are implemented. |
+| **Persistent storage** | Preferences, personal-dictionary terms, History, and Snippets stay local. The History/Snippets directory is owner-only (`0700`); its files are owner-only (`0600`) and excluded from device backup. They are not encrypted at rest. |
 | **Secrets** | None. No API keys, tokens, or credentials in the codebase or at runtime. |
 
 ## Permissions requested
@@ -33,19 +33,28 @@ Two modes (menu-selectable):
   where clipboard-history managers or DLP agents could otherwise capture
   dictated content.
 - **Clipboard + ⌘V (fallback)** — briefly places text on the system clipboard,
-  pastes, then restores the *complete* previous clipboard (all item types).
-  Only use this if a specific app rejects synthetic typing.
+  pastes, then restores the *complete* previous clipboard (all item types) only
+  when Grotdown still owns the pasteboard change. Newer user or application
+  copies are never overwritten.
+
+Automatic insertion is off for new installations. Existing saved preferences
+are preserved. When enabled, Grotdown re-checks the intended focused app and
+editable Accessibility element before inserting; a changed target leaves text
+pending for a manual copy or insert.
 
 ## Setup-time network (outside the dictation path)
 
-First-run setup reaches the network to download models — review these against
+First-run setup may reach the network to download models. It requires explicit
+user approval in the onboarding or Model settings screen; review this against
 any egress policy:
 
-- **ASR models** (Parakeet / WhisperKit) are downloaded from Hugging Face by the
-  respective libraries on first use.
-- **Cleanup model** is pulled by you via `ollama pull gemma3:4b`.
+- **ASR models** are downloaded by FluidAudio's local Parakeet support.
+- **Cleanup model** is `mlx-community/Qwen2.5-1.5B-Instruct-4bit`, loaded by
+  the local MLX/Hugging Face support libraries.
 
-After setup, no model downloads occur and the runtime is fully offline.
+The app does not independently verify a publisher-pinned digest for cached
+model artifacts. Turning approval off prevents future Grotdown-initiated model
+loads/downloads; it does not delete artifacts already cached by those libraries.
 
 ## Build & distribution notes
 
@@ -55,6 +64,11 @@ After setup, no model downloads occur and the runtime is fully offline.
   for redistribution. A managed environment may require notarization or an
   organizational signing identity before allowing it.
 - No App Sandbox (system-wide text insertion is incompatible with sandboxing).
+- `bundle.sh` fails closed if `mlx.metallib` is missing; it will not create a
+  bundle that silently loses MLX cleanup.
+
+Apple Developer ID signing, hardened runtime, notarization, and organizational
+allow-listing remain separate release-process requirements.
 
 ## Reporting
 

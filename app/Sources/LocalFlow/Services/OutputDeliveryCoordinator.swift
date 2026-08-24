@@ -88,9 +88,27 @@ struct OutputDeliveryCoordinator {
         )
 
         let target = autoInsert ? targetInspector.focusedTarget() : nil
-        let delivery = autoInsert
-            ? textDeliverer.deliver(resolved.text, method: method, target: target)
-            : .notInserted
+        let delivery: TextDeliveryResult
+        if autoInsert, let target {
+            // Focus can change while cleanup/formatting finishes. Re-check at
+            // the injection boundary so automatic output is never directed at
+            // a different application than the one we captured.
+            if targetInspector.focusedTarget() == target {
+                delivery = textDeliverer.deliver(
+                    resolved.text,
+                    method: method,
+                    target: target.application
+                )
+            } else {
+                delivery = .notInserted
+            }
+        } else if autoInsert {
+            // Preserve the explicit clipboard fallback when no editable target
+            // exists at capture time.
+            delivery = textDeliverer.deliver(resolved.text, method: method, target: nil)
+        } else {
+            delivery = .notInserted
+        }
         let record = DictationRecord(
             id: id,
             createdAt: .now,
@@ -98,10 +116,14 @@ struct OutputDeliveryCoordinator {
             rawText: raw,
             finalText: resolved.text,
             format: resolved.effectiveFormat,
-            targetApplication: target,
+            targetApplication: target?.application,
             insertionOutcome: delivery.insertionOutcome
         )
-        return DictationCompletion(pending: autoInsert ? nil : pending, record: record, delivery: delivery)
+        return DictationCompletion(
+            pending: !autoInsert || delivery == .notInserted ? pending : nil,
+            record: record,
+            delivery: delivery
+        )
     }
 
     func resolve(
@@ -129,7 +151,7 @@ struct OutputDeliveryCoordinator {
         textDeliverer.deliver(
             text,
             method: method,
-            target: targetInspector.focusedTarget()
+            target: targetInspector.focusedTarget()?.application
         )
     }
 

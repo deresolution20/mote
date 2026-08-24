@@ -34,7 +34,7 @@ import Testing
         let app = TargetApplication.fixture
         let coordinator = OutputDeliveryCoordinator(
             outputResolution: .init(formatter: .init(provider: StaticProvider(output: nil))),
-            targetInspector: StubTargetInspector(target: app),
+            targetInspector: StubTargetInspector(target: .fixture),
             textDeliverer: deliverer
         )
 
@@ -77,12 +77,67 @@ import Testing
         #expect(deliverer.deliveries == [.init(text: "Confirm the panel loads", method: .type, target: nil)])
     }
 
+    @Test func autoInsertKeepsPendingTextWhenFocusedTargetChangesBeforeDelivery() async {
+        let deliverer = RecordingDeliverer()
+        let intended = TargetApplication.fixture
+        let changed = TargetApplication(name: "Notes", bundleIdentifier: "com.apple.Notes")
+        let coordinator = OutputDeliveryCoordinator(
+            outputResolution: .init(formatter: .init(provider: StaticProvider(output: nil))),
+            targetInspector: SequenceTargetInspector(targets: [.fixture, .fixture(changed)]),
+            textDeliverer: deliverer
+        )
+
+        let result = await coordinator.complete(
+            raw: "confirm the panel loads",
+            cleaned: "Confirm the panel loads",
+            format: .plain,
+            formattingOptions: .init(preserveCodeAndBackticks: false),
+            autoInsert: true,
+            method: .type,
+            duration: 0.8
+        )
+
+        #expect(result.delivery == .notInserted)
+        #expect(result.pending?.resolved.text == "Confirm the panel loads")
+        #expect(result.record.targetApplication == intended)
+        #expect(result.record.insertionOutcome == .notInserted)
+        #expect(deliverer.deliveries.isEmpty)
+    }
+
+    @Test func autoInsertKeepsPendingTextWhenFocusedElementChangesWithinTheSameApp() async {
+        let deliverer = RecordingDeliverer()
+        let app = TargetApplication.fixture
+        let coordinator = OutputDeliveryCoordinator(
+            outputResolution: .init(formatter: .init(provider: StaticProvider(output: nil))),
+            targetInspector: SequenceTargetInspector(targets: [
+                .init(application: app, accessibilityElementToken: 1),
+                .init(application: app, accessibilityElementToken: 2),
+            ]),
+            textDeliverer: deliverer
+        )
+
+        let result = await coordinator.complete(
+            raw: "confirm the panel loads",
+            cleaned: "Confirm the panel loads",
+            format: .plain,
+            formattingOptions: .init(preserveCodeAndBackticks: false),
+            autoInsert: true,
+            method: .type,
+            duration: 0.8
+        )
+
+        #expect(result.delivery == .notInserted)
+        #expect(result.pending?.resolved.text == "Confirm the panel loads")
+        #expect(result.record.targetApplication == app)
+        #expect(deliverer.deliveries.isEmpty)
+    }
+
     @Test func pendingInsertionUpdatesTheOriginalRecordInsteadOfAddingAnother() async {
         let deliverer = RecordingDeliverer()
         let app = TargetApplication.fixture
         let coordinator = OutputDeliveryCoordinator(
             outputResolution: .init(formatter: .init(provider: StaticProvider(output: nil))),
-            targetInspector: StubTargetInspector(target: app),
+            targetInspector: StubTargetInspector(target: .fixture),
             textDeliverer: deliverer
         )
         let completed = await coordinator.complete(
@@ -104,7 +159,7 @@ import Testing
         let deliverer = RecordingDeliverer()
         let app = TargetApplication.fixture
         let coordinator = OutputDeliveryCoordinator(
-            targetInspector: StubTargetInspector(target: app),
+            targetInspector: StubTargetInspector(target: .fixture),
             textDeliverer: deliverer
         )
 
@@ -132,9 +187,23 @@ private struct StaticProvider: MarkdownFormattingProviding {
 
 @MainActor
 private struct StubTargetInspector: FocusedTargetInspecting {
-    let target: TargetApplication?
+    let target: FocusedTarget?
 
-    func focusedTarget() -> TargetApplication? { target }
+    func focusedTarget() -> FocusedTarget? { target }
+}
+
+@MainActor
+private final class SequenceTargetInspector: FocusedTargetInspecting {
+    private var targets: [FocusedTarget?]
+
+    init(targets: [FocusedTarget?]) {
+        self.targets = targets
+    }
+
+    func focusedTarget() -> FocusedTarget? {
+        guard !targets.isEmpty else { return nil }
+        return targets.removeFirst()
+    }
 }
 
 @MainActor
@@ -159,4 +228,14 @@ private final class RecordingDeliverer: TextDelivering {
 
 private extension TargetApplication {
     static let fixture = TargetApplication(name: "TextEdit", bundleIdentifier: "com.apple.TextEdit")
+}
+
+private extension FocusedTarget {
+    static var fixture: FocusedTarget {
+        FocusedTarget(application: .fixture, accessibilityElementToken: 1)
+    }
+
+    static func fixture(_ application: TargetApplication) -> FocusedTarget {
+        FocusedTarget(application: application, accessibilityElementToken: 2)
+    }
 }

@@ -61,7 +61,11 @@ struct MenuView: View {
         case .none:
             break
         case .start:
-            Task { await state.startPipeline() }
+            if state.modelDownloadsApproved {
+                Task { await state.startPipeline() }
+            } else {
+                state.showOnboarding()
+            }
         case .pause:
             state.pauseDictation()
         case .resume:

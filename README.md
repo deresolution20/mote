@@ -19,6 +19,9 @@ Grotdown has no server.
   Snippets library for reuse.
 - Local microphone selection, a live input meter, Personal Dictionary, and
   accessible macOS Settings.
+- Manual insertion is the default for a new installation. Automatic insertion
+  can be enabled later; a changed target leaves the result pending rather than
+  typing into a different application.
 
 ## Requirements
 
@@ -37,6 +40,9 @@ open .build/LocalFlow.app
 ```
 
 On first launch, Grotdown guides you through the two required permissions.
+It then requires explicit approval before downloading any local transcription or
+cleanup model. The current MLX cleanup model is
+`mlx-community/Qwen2.5-1.5B-Instruct-4bit`; it is not Gemma or Ollama.
 For a stable Accessibility permission during development, create a local
 code-signing identity named `LocalFlow Dev`; `bundle.sh` uses it when present.
 
@@ -51,7 +57,8 @@ code-signing identity named `LocalFlow Dev`; `bundle.sh` uses it when present.
 
 When auto-insert is enabled, Grotdown types into an editable focused target.
 If macOS cannot identify one, it copies the result instead and records that
-honest outcome in History.
+honest outcome in History. If the focused target changes before insertion, the
+result stays pending for your manual review.
 
 ## Markdown and code blocks
 
@@ -71,8 +78,14 @@ or unmatched commands remain literal speech; see
 
 The dictation path makes no network calls. Audio is processed in memory and
 is not written to disk by the app. History and Snippets are versioned JSON files
-in your local Application Support directory. Cleanup is native Swift MLX only;
-if it cannot safely return a result, Grotdown uses the raw transcript.
+in your local Application Support directory. Their directory is owner-only,
+their files are owner-only and excluded from device backups, and they are not
+encrypted at rest. Cleanup is native Swift MLX only; if it cannot safely return
+a result, Grotdown uses the raw transcript.
+
+Model downloads are a separate, consent-gated first-use action. Turning consent
+off prevents future Grotdown-initiated model loads/downloads; it does not delete
+model artifacts that supporting libraries already cached locally.
 
 ## Development checks
 

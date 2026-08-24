@@ -30,4 +30,13 @@ import Testing
         #expect(state.testingStreamingSessionFailed == false)
         #expect(state.testingCurrentHUDTail == "...current")
     }
+
+    @Test func approvedPermissionsExposeAStartControlForModelDownloadConsent() {
+        let state = AppState()
+        state.micGranted = true
+        state.accessibilityGranted = true
+        state.status = .needsModelDownloadApproval
+
+        #expect(state.menuRuntimeControl == .start)
+    }
 }

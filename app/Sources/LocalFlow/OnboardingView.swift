@@ -7,7 +7,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Grotdown needs two permissions")
+            Text("Set up Grotdown")
                 .font(.title2.bold())
             Text("Your voice and your text stay on this Mac. Grotdown has no server.")
                 .foregroundStyle(.secondary)
@@ -35,6 +35,21 @@ struct OnboardingView: View {
 
             Divider()
 
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Local model download", systemImage: "arrow.down.circle")
+                    .font(.headline)
+                Text("Before first use, Grotdown downloads its transcription and text-cleanup models to this Mac. Your voice and transcripts are never uploaded.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Text(state.modelDownloadsApproved
+                    ? "Local model downloads are approved."
+                    : "Approval is required before any model download starts.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
             HStack {
                 Image(systemName: "lightbulb")
                 Text("Use \(state.hotkeyConfiguration.displayName) to dictate. Hold mode records while held; toggle mode starts and stops on each press.")
@@ -49,8 +64,14 @@ struct OnboardingView: View {
 
                 Spacer()
                 if state.allPermissionsGranted {
-                    Button("Start Dictating") {
-                        Task { await state.startPipeline() }
+                    Button(state.modelDownloadsApproved ? "Start Dictating" : "Allow download and start") {
+                        Task {
+                            if state.modelDownloadsApproved {
+                                await state.startPipeline()
+                            } else {
+                                await state.approveModelDownloadsAndStartPipeline()
+                            }
+                        }
                         NSApp.keyWindow?.close()
                     }
                     .buttonStyle(.borderedProminent)
