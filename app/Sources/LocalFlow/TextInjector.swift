@@ -1,6 +1,12 @@
 import AppKit
 import CoreGraphics
 
+enum PasteboardRestorationPolicy {
+    static func shouldRestore(ownedChangeCount: Int, currentChangeCount: Int) -> Bool {
+        ownedChangeCount == currentChangeCount
+    }
+}
+
 /// Inserts transcribed text at the cursor of the frontmost app. Requires
 /// Accessibility permission for synthesized events to be delivered.
 enum TextInjector {
@@ -60,6 +66,7 @@ enum TextInjector {
 
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+        let ownedChangeCount = pasteboard.changeCount
 
         let source = CGEventSource(stateID: .combinedSessionState)
         let vKey: CGKeyCode = 9 // 'v'
@@ -71,8 +78,13 @@ enum TextInjector {
         keyUp?.post(tap: .cgSessionEventTap)
 
         // Restore the FULL previous clipboard (all types, not just plain text)
-        // once the paste has been consumed.
+        // once the paste has been consumed, but never overwrite clipboard
+        // content copied by the user or another application in the meantime.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard PasteboardRestorationPolicy.shouldRestore(
+                ownedChangeCount: ownedChangeCount,
+                currentChangeCount: pasteboard.changeCount
+            ) else { return }
             restorePasteboard(pasteboard, from: snapshot)
         }
     }

@@ -42,9 +42,13 @@ final class HistoryStore: ObservableObject {
     }
 
     private func load() {
-        guard fileManager.fileExists(atPath: fileURL.path) else { return }
-
         do {
+            try LocalStoreProtection.prepareDirectory(
+                at: fileURL.deletingLastPathComponent(),
+                fileManager: fileManager
+            )
+            guard fileManager.fileExists(atPath: fileURL.path) else { return }
+            try LocalStoreProtection.protectFile(at: fileURL, fileManager: fileManager)
             let document = try JSONDecoder.grotdown.decode(VersionedDocument.self, from: Data(contentsOf: fileURL))
             guard document.schemaVersion == 1 else {
                 throw StoreError.unsupportedSchema(document.schemaVersion)
@@ -59,13 +63,14 @@ final class HistoryStore: ObservableObject {
         guard loadError == nil else { return }
 
         do {
-            try fileManager.createDirectory(
+            try LocalStoreProtection.prepareDirectory(
                 at: fileURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
+                fileManager: fileManager
             )
             let document = VersionedDocument(schemaVersion: 1, values: records)
             let data = try JSONEncoder.grotdown.encode(document)
             try data.write(to: fileURL, options: .atomic)
+            try LocalStoreProtection.protectFile(at: fileURL, fileManager: fileManager)
         } catch {
             loadError = "Could not save dictation history: \(error.localizedDescription)"
         }

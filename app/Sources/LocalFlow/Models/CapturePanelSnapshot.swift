@@ -8,6 +8,7 @@ struct CapturePanelSnapshot: Equatable {
         case processing
         case paused
         case needsPermissions
+        case needsModelDownloadApproval
         case failed
     }
 
@@ -31,7 +32,7 @@ struct CapturePanelSnapshot: Equatable {
         hotkeyConfiguration: HotkeyConfiguration = .default
     ) -> Self {
         let pendingPreview = pending?.resolved.text
-        let isManualReady = pending != nil && !autoInsert
+        let isManualReady = pending != nil
         return Self(
             guidance: guidance(for: state, hotkeyConfiguration: hotkeyConfiguration),
             preview: pendingPreview,
@@ -56,6 +57,7 @@ struct CapturePanelSnapshot: Equatable {
         case .processing: "Finishing your dictation"
         case .paused: "Dictation is paused"
         case .needsPermissions: "Microphone and Accessibility are required"
+        case .needsModelDownloadApproval: "Approve local model download to begin"
         case .failed: "Dictation needs attention"
         }
     }

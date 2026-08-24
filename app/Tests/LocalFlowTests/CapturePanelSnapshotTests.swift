@@ -18,6 +18,30 @@ import Testing
         #expect(snapshot.preview == "# Incident update")
     }
 
+    @Test func pendingSafetyFallbackShowsManualActionsEvenWhenAutoInsertIsOn() {
+        let snapshot = CapturePanelSnapshot.make(
+            state: .idle,
+            pending: .fixture(format: .plain, text: "Review the change before inserting it."),
+            autoInsert: true,
+            recentRecords: []
+        )
+
+        #expect(snapshot.showsFormatPicker)
+        #expect(snapshot.primaryAction == .insert)
+        #expect(snapshot.secondaryAction == .copy)
+    }
+
+    @Test func modelDownloadApprovalGuidesTheUserToOnboarding() {
+        let snapshot = CapturePanelSnapshot.make(
+            state: .needsModelDownloadApproval,
+            pending: nil,
+            autoInsert: false,
+            recentRecords: []
+        )
+
+        #expect(snapshot.guidance == "Approve local model download to begin")
+    }
+
     @Test func idleSnapshotGuidesTheConfiguredHotkeyAndBoundsRecentTitles() {
         let snapshot = CapturePanelSnapshot.make(
             state: .idle,

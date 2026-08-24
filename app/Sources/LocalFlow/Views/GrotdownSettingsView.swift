@@ -7,6 +7,7 @@ struct GrotdownSettingsSnapshot: Equatable {
     let outputFormat: OutputFormat
     let hotkeyConfiguration: HotkeyConfiguration
     let captureMode: CaptureMode
+    let modelDownloadsApproved: Bool
 
     var outputFormatLabel: String {
         outputFormat == .markdown ? "Markdown (GFM)" : "Plain text"
@@ -20,6 +21,12 @@ struct GrotdownSettingsSnapshot: Equatable {
         "Parakeet transcription with MLX only local cleanup."
     }
 
+    var modelDownloadDescription: String {
+        modelDownloadsApproved
+            ? "Local model downloads are approved."
+            : "Approval required before downloading local models."
+    }
+
     var hotkeyLabel: String {
         hotkeyConfiguration.displayName
     }
@@ -31,12 +38,14 @@ struct GrotdownSettingsSnapshot: Equatable {
     static func fixture(
         outputFormat: OutputFormat = .plain,
         hotkeyConfiguration: HotkeyConfiguration = .default,
-        captureMode: CaptureMode = .holdToTalk
+        captureMode: CaptureMode = .holdToTalk,
+        modelDownloadsApproved: Bool = false
     ) -> Self {
         Self(
             outputFormat: outputFormat,
             hotkeyConfiguration: hotkeyConfiguration,
-            captureMode: captureMode
+            captureMode: captureMode,
+            modelDownloadsApproved: modelDownloadsApproved
         )
     }
 }
@@ -81,6 +90,9 @@ private struct GeneralSettingsPane: View {
         SettingsPane {
             Section("Privacy") {
                 Text("Your voice and your text stay on this Mac. Grotdown has no server.")
+                    .foregroundStyle(.secondary)
+                Text("History and snippets are stored locally with owner-only permissions and are excluded from device backups. They are not encrypted at rest.")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -156,6 +168,15 @@ private struct ModelSettingsPane: View {
                         .foregroundStyle(.secondary)
                 }
                 Text("Speech recognition runs on-device. Streaming captions remain display-only until they are explicitly promoted by a benchmark.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Local model downloads") {
+                Toggle("Allow local model downloads", isOn: $state.modelDownloadsApproved)
+                Text(state.modelDownloadsApproved
+                    ? "Future downloads are allowed. Turning this off prevents future model downloads but does not delete models already on this Mac."
+                    : "Approve before Grotdown downloads the local transcription and cleanup models. No voice or transcript is sent to a server.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

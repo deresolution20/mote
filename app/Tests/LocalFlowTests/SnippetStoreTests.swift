@@ -37,6 +37,17 @@ import Testing
         restored.delete(id: second.id)
         #expect(restored.snippets == [first])
     }
+
+    @Test func persistedSnippetsUseOwnerOnlyPermissions() throws {
+        let url = try temporarySnippetFileURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let store = SnippetStore(fileURL: url)
+        store.append(Snippet(title: "Private", text: "A private response", format: .plain))
+
+        #expect(try snippetPosixPermissions(of: url.deletingLastPathComponent()) == 0o700)
+        #expect(try snippetPosixPermissions(of: url) == 0o600)
+        #expect(try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true)
+    }
 }
 
 private func temporarySnippetFileURL() throws -> URL {
@@ -44,4 +55,9 @@ private func temporarySnippetFileURL() throws -> URL {
         .appendingPathComponent("LocalFlowTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     return directory.appendingPathComponent("snippets.json")
+}
+
+private func snippetPosixPermissions(of url: URL) throws -> Int {
+    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+    return (attributes[.posixPermissions] as? NSNumber)?.intValue ?? -1
 }

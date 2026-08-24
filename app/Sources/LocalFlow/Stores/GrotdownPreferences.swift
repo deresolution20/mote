@@ -7,6 +7,7 @@ final class GrotdownPreferences: ObservableObject {
     @Published var captureMode: CaptureMode { didSet { save(captureMode.rawValue, for: .captureMode) } }
     @Published var hotkeyConfiguration: HotkeyConfiguration { didSet { saveHotkeyConfiguration() } }
     @Published var autoInsert: Bool { didSet { save(autoInsert, for: .autoInsert) } }
+    @Published var modelDownloadsApproved: Bool { didSet { save(modelDownloadsApproved, for: .modelDownloadsApproved) } }
     @Published var cleanupEnabled: Bool { didSet { save(cleanupEnabled, for: .cleanupEnabled) } }
     @Published var hudEnabled: Bool { didSet { save(hudEnabled, for: .hudEnabled) } }
     @Published var injectByTyping: Bool { didSet { save(injectByTyping, for: .injectByTyping) } }
@@ -20,7 +21,8 @@ final class GrotdownPreferences: ObservableObject {
         outputFormat = OutputFormat(rawValue: defaults.string(forKey: Key.outputFormat.rawValue) ?? "") ?? .plain
         captureMode = CaptureMode(rawValue: defaults.string(forKey: Key.captureMode.rawValue) ?? "") ?? .holdToTalk
         hotkeyConfiguration = Self.hotkeyConfiguration(from: defaults) ?? .default
-        autoInsert = Self.bool(defaults, key: .autoInsert, fallback: true)
+        autoInsert = Self.bool(defaults, key: .autoInsert, fallback: false)
+        modelDownloadsApproved = Self.bool(defaults, key: .modelDownloadsApproved, fallback: false)
         cleanupEnabled = Self.bool(defaults, key: .cleanupEnabled, fallback: true)
         hudEnabled = Self.bool(defaults, key: .hudEnabled, fallback: true)
         injectByTyping = Self.bool(defaults, key: .injectByTyping, fallback: true)
@@ -33,6 +35,7 @@ final class GrotdownPreferences: ObservableObject {
         case captureMode = "grotdown.captureMode"
         case hotkeyConfiguration = "grotdown.hotkeyConfiguration"
         case autoInsert = "grotdown.autoInsert"
+        case modelDownloadsApproved = "grotdown.modelDownloadsApproved"
         case cleanupEnabled = "grotdown.cleanupEnabled"
         case hudEnabled = "grotdown.hudEnabled"
         case injectByTyping = "grotdown.injectByTyping"

@@ -3,12 +3,20 @@ import ApplicationServices
 
 @MainActor
 protocol FocusedTargetInspecting {
-    func focusedTarget() -> TargetApplication?
+    func focusedTarget() -> FocusedTarget?
+}
+
+/// The focused editable element at a specific point in time. The element token
+/// is deliberately process-local and used only to reject a focus change before
+/// injection; persisted history retains the human-readable application only.
+struct FocusedTarget: Equatable {
+    let application: TargetApplication
+    let accessibilityElementToken: UInt
 }
 
 @MainActor
 struct FocusedTargetInspector: FocusedTargetInspecting {
-    func focusedTarget() -> TargetApplication? {
+    func focusedTarget() -> FocusedTarget? {
         guard Permissions.accessibility else { return nil }
 
         let systemWide = AXUIElementCreateSystemWide()
@@ -39,9 +47,12 @@ struct FocusedTargetInspector: FocusedTargetInspecting {
         }
 
         let frontmost = NSWorkspace.shared.frontmostApplication
-        return TargetApplication(
-            name: frontmost?.localizedName ?? "Unknown application",
-            bundleIdentifier: frontmost?.bundleIdentifier
+        return FocusedTarget(
+            application: TargetApplication(
+                name: frontmost?.localizedName ?? "Unknown application",
+                bundleIdentifier: frontmost?.bundleIdentifier
+            ),
+            accessibilityElementToken: CFHash(focusedElement)
         )
     }
 

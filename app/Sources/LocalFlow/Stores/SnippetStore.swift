@@ -36,9 +36,13 @@ final class SnippetStore: ObservableObject {
     }
 
     private func load() {
-        guard fileManager.fileExists(atPath: fileURL.path) else { return }
-
         do {
+            try LocalStoreProtection.prepareDirectory(
+                at: fileURL.deletingLastPathComponent(),
+                fileManager: fileManager
+            )
+            guard fileManager.fileExists(atPath: fileURL.path) else { return }
+            try LocalStoreProtection.protectFile(at: fileURL, fileManager: fileManager)
             let document = try JSONDecoder.grotdown.decode(VersionedSnippetDocument.self, from: Data(contentsOf: fileURL))
             guard document.schemaVersion == 1 else {
                 throw SnippetStoreError.unsupportedSchema(document.schemaVersion)
@@ -53,13 +57,14 @@ final class SnippetStore: ObservableObject {
         guard loadError == nil else { return }
 
         do {
-            try fileManager.createDirectory(
+            try LocalStoreProtection.prepareDirectory(
                 at: fileURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
+                fileManager: fileManager
             )
             let document = VersionedSnippetDocument(schemaVersion: 1, values: snippets)
             let data = try JSONEncoder.grotdown.encode(document)
             try data.write(to: fileURL, options: .atomic)
+            try LocalStoreProtection.protectFile(at: fileURL, fileManager: fileManager)
         } catch {
             loadError = "Could not save snippets: \(error.localizedDescription)"
         }

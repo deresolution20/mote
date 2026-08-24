@@ -43,6 +43,17 @@ import Testing
         #expect(object?["schemaVersion"] as? Int == 1)
     }
 
+    @Test func persistedHistoryUsesOwnerOnlyPermissions() throws {
+        let url = try temporaryFileURL(named: "history.json")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let store = HistoryStore(fileURL: url)
+        store.append(.fixture(finalText: "Private meeting notes"))
+
+        #expect(try posixPermissions(of: url.deletingLastPathComponent()) == 0o700)
+        #expect(try posixPermissions(of: url) == 0o600)
+        #expect(try url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true)
+    }
+
     @Test func corruptedHistoryIsReportedWithoutOverwritingTheSource() throws {
         let url = try temporaryFileURL(named: "history.json")
         defer { try? FileManager.default.removeItem(at: url) }
@@ -63,6 +74,11 @@ private func temporaryFileURL(named name: String) throws -> URL {
         .appendingPathComponent("LocalFlowTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     return directory.appendingPathComponent(name)
+}
+
+private func posixPermissions(of url: URL) throws -> Int {
+    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+    return (attributes[.posixPermissions] as? NSNumber)?.intValue ?? -1
 }
 
 private extension DictationRecord {

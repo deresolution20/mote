@@ -81,6 +81,7 @@ final class AppState: ObservableObject {
 
     enum Status {
         case needsPermissions
+        case needsModelDownloadApproval
         case loadingModel
         case idle
         case recording
@@ -92,6 +93,7 @@ final class AppState: ObservableObject {
         var symbolName: String {
             switch self {
             case .needsPermissions: return "mic.badge.xmark"
+            case .needsModelDownloadApproval: return "arrow.down.circle"
             case .loadingModel: return "hourglass"
             case .idle: return "mic"
             case .recording: return "mic.fill"
@@ -105,6 +107,7 @@ final class AppState: ObservableObject {
         var label: String {
             switch self {
             case .needsPermissions: return "Permissions needed — open Settings"
+            case .needsModelDownloadApproval: return "Approve local model download to start"
             case .loadingModel: return "Loading speech model…"
             case .idle: return "Ready — use your configured hotkey"
             case .recording: return "Recording…"
@@ -146,8 +149,18 @@ final class AppState: ObservableObject {
             reconfigureHotkeyIfIdle()
         }
     }
-    @Published var autoInsert = true {
+    @Published var autoInsert = false {
         didSet { preferences.autoInsert = autoInsert }
+    }
+    /// Explicit consent is required before any local model artifact is fetched.
+    @Published var modelDownloadsApproved = false {
+        didSet {
+            preferences.modelDownloadsApproved = modelDownloadsApproved
+            if !modelDownloadsApproved {
+                streamingWarmupTask?.cancel()
+                streamingWarmupTask = nil
+            }
+        }
     }
     @Published var preserveCodeAndBackticks = false {
         didSet { preferences.preserveCodeAndBackticks = preserveCodeAndBackticks }
@@ -158,7 +171,7 @@ final class AppState: ObservableObject {
     @Published var cleanupEnabled = true {
         didSet {
             preferences.cleanupEnabled = cleanupEnabled
-            if cleanupEnabled { Cleaner.warmUp() }
+            if cleanupEnabled, modelDownloadsApproved { Cleaner.warmUp() }
         }
     }
     @Published var hudEnabled = true {
@@ -180,6 +193,7 @@ final class AppState: ObservableObject {
         captureMode = preferences.captureMode
         hotkeyConfiguration = preferences.hotkeyConfiguration
         autoInsert = preferences.autoInsert
+        modelDownloadsApproved = preferences.modelDownloadsApproved
         preserveCodeAndBackticks = preferences.preserveCodeAndBackticks
         cleanupEnabled = preferences.cleanupEnabled
         hudEnabled = preferences.hudEnabled
@@ -234,12 +248,15 @@ final class AppState: ObservableObject {
     var menuRuntimeControl: MenuRuntimeControl {
         if case .paused = status { return .resume }
         if pauseRequested { return .resume }
-        if allPermissionsGranted, case .needsPermissions = status { return .start }
+        if allPermissionsGranted {
+            if case .needsPermissions = status { return .start }
+            if case .needsModelDownloadApproval = status { return .start }
+        }
         guard hotkeyActive else { return .none }
         switch status {
         case .idle, .recording, .transcribing, .cleaning:
             return .pause
-        case .needsPermissions, .loadingModel, .paused, .failed:
+        case .needsPermissions, .needsModelDownloadApproval, .loadingModel, .paused, .failed:
             return .none
         }
     }
@@ -281,6 +298,11 @@ final class AppState: ObservableObject {
             showOnboarding()
             return
         }
+        guard modelDownloadsApproved else {
+            status = .needsModelDownloadApproval
+            showOnboarding()
+            return
+        }
         guard !hotkeyActive else { return }
         pauseRequested = false
         if !engineLoaded {
@@ -288,6 +310,10 @@ final class AppState: ObservableObject {
             if cleanupEnabled { Cleaner.warmUp() }
             do {
                 try await transcriber.load()
+                guard modelDownloadsApproved else {
+                    status = .needsModelDownloadApproval
+                    return
+                }
                 engineLoaded = true
             } catch {
                 status = .failed("model load failed: \(error.localizedDescription)")
@@ -310,10 +336,12 @@ final class AppState: ObservableObject {
     /// attempt, never runs two attempts concurrently, and sessions fall back to
     /// TDT-only until it succeeds.
     private func ensureStreamingWarmedUp() {
+        guard modelDownloadsApproved else { return }
         guard !streamingLoaded, streamingWarmupTask == nil else { return }
         let streamingTranscriber = self.streamingTranscriber
         streamingWarmupTask = Task { [weak self] in
             defer { self?.streamingWarmupTask = nil }
+            guard self?.modelDownloadsApproved == true else { return }
             do {
                 try await streamingTranscriber.load()
             } catch {
@@ -323,6 +351,7 @@ final class AppState: ObservableObject {
                 return
             }
             do {
+                guard self?.modelDownloadsApproved == true else { return }
                 let warmupStartedAt = ProcessInfo.processInfo.systemUptime
                 try await streamingTranscriber.warmUp()
                 let warmupMilliseconds = Int(
@@ -358,7 +387,7 @@ final class AppState: ObservableObject {
             status = .paused
         case .transcribing, .cleaning:
             break
-        case .needsPermissions, .loadingModel, .paused, .failed:
+        case .needsPermissions, .needsModelDownloadApproval, .loadingModel, .paused, .failed:
             if engineLoaded { status = .paused }
         }
     }
@@ -366,6 +395,11 @@ final class AppState: ObservableObject {
     func resumeDictation() async {
         guard allPermissionsGranted else {
             status = .needsPermissions
+            showOnboarding()
+            return
+        }
+        guard modelDownloadsApproved else {
+            status = .needsModelDownloadApproval
             showOnboarding()
             return
         }
@@ -384,6 +418,11 @@ final class AppState: ObservableObject {
         } else {
             await startPipeline()
         }
+    }
+
+    func approveModelDownloadsAndStartPipeline() async {
+        modelDownloadsApproved = true
+        await startPipeline()
     }
 
     private func installHotkeyMonitor() -> Bool {
@@ -591,7 +630,7 @@ final class AppState: ObservableObject {
                     return
                 }
                 var textToPaste = raw
-                if cleanupEnabled {
+                if cleanupEnabled, modelDownloadsApproved {
                     status = .cleaning
                     HUDController.shared.show(
                         .cleaning,

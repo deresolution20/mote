@@ -5,6 +5,7 @@
 # and so NSMicrophoneUsageDescription is honored.
 set -e
 cd "$(dirname "$0")"
+source "$(dirname "$0")/Scripts/metal_library.sh"
 
 swift build -c release
 
@@ -14,26 +15,19 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp .build/release/LocalFlow "$APP/Contents/MacOS/LocalFlow"
 
-METALLIB=""
-for candidate in \
-  ".build/arm64-apple-macosx/release/mlx.metallib" \
-  ".build/release/mlx.metallib" \
-  "../bench/.build/arm64-apple-macosx/debug/mlx.metallib" \
-  "../bench/.build/debug/mlx.metallib"
-do
-  if [[ -f "$candidate" ]]; then
-    METALLIB="$candidate"
-    break
-  fi
-done
-
-if [[ -n "$METALLIB" ]]; then
-  cp "$METALLIB" "$APP/Contents/Resources/mlx.metallib"
-  ln -s ../Resources "$APP/Contents/MacOS/Resources"
-  echo "copied MLX metallib from $METALLIB"
-else
-  echo "MLX metallib not found; MLX cleanup will be unavailable and Grotdown will use the raw transcript."
+METALLIB="$(find_mlx_metallib ".build" "$PWD" || true)"
+if [[ -z "$METALLIB" ]]; then
+  echo "error: MLX metallib not found; refusing to build a bundle with unavailable cleanup." >&2
+  exit 1
 fi
+
+cp "$METALLIB" "$APP/Contents/Resources/mlx.metallib"
+if [[ ! -f "$APP/Contents/Resources/mlx.metallib" ]]; then
+  echo "error: failed to copy MLX metallib into the app bundle." >&2
+  exit 1
+fi
+ln -s ../Resources "$APP/Contents/MacOS/Resources"
+echo "copied MLX metallib from $METALLIB"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>

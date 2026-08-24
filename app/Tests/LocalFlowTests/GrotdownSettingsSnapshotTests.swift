@@ -26,4 +26,12 @@ import Testing
 
         #expect(snapshot.captureModeLabel == "Tap to toggle")
     }
+
+    @Test func settingsExplainTheModelDownloadConsentBoundary() {
+        let unapproved = GrotdownSettingsSnapshot.fixture(modelDownloadsApproved: false)
+        let approved = GrotdownSettingsSnapshot.fixture(modelDownloadsApproved: true)
+
+        #expect(unapproved.modelDownloadDescription == "Approval required before downloading local models.")
+        #expect(approved.modelDownloadDescription == "Local model downloads are approved.")
+    }
 }

@@ -19,7 +19,7 @@ struct CapturePanelView: View {
             header
             captureStatus(snapshot)
 
-            if let pending = state.pendingDictation, !state.autoInsert {
+            if let pending = state.pendingDictation {
                 pendingResult(pending)
             } else {
                 outputPreference
@@ -150,7 +150,9 @@ struct CapturePanelView: View {
 
     private var footer: some View {
         HStack {
-            if case .paused = state.status {
+            if case .needsModelDownloadApproval = state.status {
+                Button("Review download", action: state.showOnboarding)
+            } else if case .paused = state.status {
                 Button("Resume") { Task { await state.resumeDictation() } }
             } else {
                 Button("Pause", action: state.pauseDictation)
@@ -193,6 +195,7 @@ struct CapturePanelView: View {
     private var panelState: CapturePanelSnapshot.State {
         switch state.status {
         case .needsPermissions: .needsPermissions
+        case .needsModelDownloadApproval: .needsModelDownloadApproval
         case .loadingModel, .transcribing, .cleaning: .processing
         case .idle: .idle
         case .recording: .recording
