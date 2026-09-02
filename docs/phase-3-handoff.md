@@ -1,5 +1,8 @@
 # Grotdown Fresh Session Handoff
 
+> Historical note: the public product is now named **Mote**. The remaining
+> Grotdown references below preserve the project state recorded in July 2026.
+
 Snapshot for a fresh Codex session. Current date: 2026-07-09.
 
 ## Repo State

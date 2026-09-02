@@ -1,6 +1,6 @@
-# Grotdown formatting commands
+# Mote formatting commands
 
-Choose **Markdown (GFM)** when you want Grotdown to safely infer simple
+Choose **Markdown (GFM)** when you want Mote to safely infer simple
 Markdown structure. The formatter runs locally and falls back to Plain text if
 the result is unavailable or fails its safety checks.
 
@@ -12,7 +12,7 @@ end code block
 ```
 
 Replace `yaml` with `json`, `bash`, `swift`, `javascript`, `typescript`, or
-`python` when appropriate. Grotdown preserves the words between the matched
+`python` when appropriate. Mote preserves the words between the matched
 commands as one fenced block. It does not require narration of punctuation,
 backticks, or every Markdown token.
 

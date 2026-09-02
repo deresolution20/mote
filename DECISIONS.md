@@ -1,5 +1,22 @@
 # Local Flow — decision log
 
+## 2026-09-01 — Mote name and Developer ID release path
+
+Local development keeps the stable `LocalFlow Dev` identity for preserving
+Accessibility grants across rebuilds. Distribution builds use an explicit
+`--release` path that requires a `Developer ID Application` certificate,
+enables the hardened runtime, timestamps the signature, and verifies it with
+strict `codesign` checks. `release.sh` packages the app as a zip and optionally
+submits it through an Apple notarytool Keychain profile, staples the ticket,
+and runs Gatekeeper validation. Credentials remain outside the repository.
+The public product and release artifact are named **Mote**. The stable
+v1 bundle identifier is `dev.brice.mote`; macOS will therefore request
+Microphone and Accessibility permission again after the pre-v1 development
+build. A one-time migration copies known preferences from the former bundle
+domain and copies History/Snippet files into `Application Support/Mote` only
+when Mote has no corresponding data. Existing Mote data wins, and legacy files
+remain intact as rollback evidence.
+
 ## 2026-07-09 — menu runtime console accepted and smoke-tested
 
 The menu-bar dropdown now acts as a compact runtime console instead of a second
