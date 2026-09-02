@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "LocalFlow",
+    name: "Mote",
     platforms: [
         .macOS("26.0")
     ],
@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "LocalFlowCleanup",
+            name: "MoteCleanup",
             dependencies: [
                 .product(name: "MLXLLM", package: "mlx-swift-lm"),
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
@@ -22,33 +22,33 @@ let package = Package(
                 .product(name: "HuggingFace", package: "swift-huggingface"),
                 .product(name: "Tokenizers", package: "swift-transformers"),
             ],
-            path: "Sources/LocalFlowCleanup"
+            path: "Sources/MoteCleanup"
         ),
         .executableTarget(
-            name: "LocalFlow",
+            name: "Mote",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
-                "LocalFlowCleanup",
+                "MoteCleanup",
             ],
-            path: "Sources/LocalFlow"
+            path: "Sources/Mote"
         ),
         .executableTarget(
-            name: "local-flow-cleanup-acceptance",
-            dependencies: ["LocalFlowCleanup"],
-            path: "Sources/LocalFlowCleanupAcceptance"
+            name: "mote-cleanup-acceptance",
+            dependencies: ["MoteCleanup"],
+            path: "Sources/MoteCleanupAcceptance"
         ),
         .executableTarget(
-            name: "local-flow-streaming-benchmark",
+            name: "mote-streaming-benchmark",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
-                "LocalFlowCleanup",
+                "MoteCleanup",
             ],
-            path: "Sources/LocalFlowStreamingBenchmark"
+            path: "Sources/MoteStreamingBenchmark"
         ),
         .testTarget(
-            name: "LocalFlowTests",
-            dependencies: ["LocalFlowCleanup", "LocalFlow"],
-            path: "Tests/LocalFlowTests"
+            name: "MoteTests",
+            dependencies: ["MoteCleanup", "Mote"],
+            path: "Tests/MoteTests"
         ),
     ]
 )
