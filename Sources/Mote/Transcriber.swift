@@ -2,7 +2,7 @@ import FluidAudio
 import Foundation
 
 /// Parakeet TDT v3 via FluidAudio — the Phase-0 benchmark winner
-/// (13.6% WER, 72 ms median on Brice's voice; see bench/RESULTS.md).
+/// (13.6% WER, 72 ms median on Brice's voice; see Tools/Bench/RESULTS.md).
 final class Transcriber {
     private var manager: AsrManager?
 

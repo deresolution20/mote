@@ -4,10 +4,10 @@
 # Microphone / Accessibility grants to "Mote" itself,
 # and so NSMicrophoneUsageDescription is honored.
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
-source "$SCRIPT_DIR/Scripts/metal_library.sh"
-source "$SCRIPT_DIR/Scripts/signing.sh"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+source "$ROOT/scripts/lib/metal_library.sh"
+source "$ROOT/scripts/lib/signing.sh"
 
 MODE="development"
 if [[ "${1:-}" == "--release" ]]; then
@@ -72,7 +72,7 @@ PLIST
 
 if [[ "$MODE" == "release" ]]; then
   echo "signing release with Developer ID Application identity"
-  sign_app_bundle "$APP" release "$SCRIPT_DIR/Mote.entitlements"
+  sign_app_bundle "$APP" release "$ROOT/Resources/Mote.entitlements"
 else
   IDENTITY="$(resolve_signing_identity development)"
   if [[ "$IDENTITY" == "-" ]]; then
@@ -80,7 +80,7 @@ else
   else
     echo "signing development with $IDENTITY"
   fi
-  sign_app_bundle "$APP" development "$SCRIPT_DIR/Mote.entitlements"
+  sign_app_bundle "$APP" development "$ROOT/Resources/Mote.entitlements"
 fi
 
 codesign -dvv "$APP" 2>&1 | grep -E "Identifier=|Authority=|TeamIdentifier=" || true

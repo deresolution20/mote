@@ -64,7 +64,7 @@ Before publishing: scanned for secrets (clean); rewrote all commit history to
 author `deresolution20 <deresolution20@users.noreply.github.com>` (work email
 kept off the public record, Brice's choice); purged `GOAL.md` (internal agent
 scaffolding) from the entire history and gitignored it. Added a showpiece
-README + MIT LICENSE. `bench/samples/*.wav` remain gitignored.
+README + MIT LICENSE. `Tools/Bench/samples/*.wav` remain gitignored.
 
 ## 2026-07-04 — Phase 3 started: waveform HUD shipped + polish
 
@@ -101,7 +101,7 @@ Brice verified live: "um so like i think we should uh ship it friday" →
 "I think we should ship it Friday." and "are you there" → "Are you there?"
 pasted at the cursor, fully offline. Formal acceptance over his 24 recorded
 utterances: 21 cleaned, 3 guarded raw fallbacks, **zero meaning changes**
-(`bench/ACCEPTANCE.md`).
+(`Tools/Bench/ACCEPTANCE.md`).
 
 Final stack: Left ⌥ push-to-talk (NSEvent, Accessibility-only) →
 AVAudioEngine 16 kHz → **Parakeet v3** (~0.07 s) → **gemma3:4b** cleanup
@@ -115,7 +115,7 @@ streaming cleanup, ~1.5–2B model, MLX hop, skip-cleanup-on-short-utterances.
 ## 2026-07-03 — speak2 is reference-only (no license)
 
 speak2 has **no license** in any tag (v1.0.0–v1.8.1), no README grant, and GitHub
-detects none — the plan.md claim that it is MIT is refuted. Unlicensed code is
+detects none — the original PRD (`docs/history/original-prd.md`) claim that it is MIT is refuted. Unlicensed code is
 all-rights-reserved, so it cannot be a code foundation for something that may
 become a consulting-business product.
 
@@ -152,21 +152,21 @@ Verified against local Ollama (warm model):
 
 - With a plain instruction-only prompt, gemma3:4b **drops hedges as filler** —
   "um so like i think we should uh ship it friday" → "Ship it Friday."
-  (loses "I think we should": a meaning change, exactly plan.md §9 risk 2).
+  (loses "I think we should": a meaning change, exactly original PRD §9 risk 2).
 - Adding two few-shot examples + an explicit "hedges like i think, maybe,
   probably are meaning and must stay" rule fixed it on a held-out utterance
   ("we should **probably** loop in the security team on Monday." — hedge kept).
 - Warm generation latency: ~140–530 ms per short utterance (t=0.1). Cold model
   load adds ~2.1 s — the app must keep the model resident (Ollama `keep_alive`).
 
-The canonical prompt lives in `bench/Sources/bench/OllamaCleanup.swift` and is
+The canonical prompt lives in `Tools/Bench/Sources/bench/OllamaCleanup.swift` and is
 the starting point for Phase-2 tuning over the full 20-utterance set.
 
 ## 2026-07-03 — CLT quirk: XCTest absent, Swift Testing needs manual paths
 
 CommandLineTools has no XCTest at all. Swift Testing (`import Testing`) works,
 but CLT ships `Testing.framework` outside SwiftPM's default search paths —
-`bench/test.sh` wires in the framework + `lib_TestingInterop.dylib` rpaths.
+`Tools/Bench/test.sh` wires in the framework + `lib_TestingInterop.dylib` rpaths.
 Use `./test.sh`, not bare `swift test`.
 
 ## 2026-07-03 — smoke test: all 4 engines work end-to-end (CLT-only)
@@ -204,7 +204,7 @@ decision comes from Brice's recordings):
 
 ## 2026-07-03 — **FINAL ASR choice: FluidAudio Parakeet v3** (real-voice confirmed)
 
-Benchmark over **Brice's own 24 recorded utterances** (`bench/RESULTS.md`):
+Benchmark over **Brice's own 24 recorded utterances** (`Tools/Bench/RESULTS.md`):
 
 | Engine | Load | Warmup | Median latency | p90 | Mean WER | Content WER |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -231,7 +231,7 @@ Corrections & notes:
 ## 2026-07-03 — (superseded) provisional pick from synthetic data
 
 Full 20-utterance **synthetic** benchmark (5 rotating `say` voices reading the
-filler-heavy set — see `bench/SYNTH_RESULTS.md`):
+filler-heavy set — see `Tools/Bench/SYNTH_RESULTS.md`):
 
 | Engine | Warmup | Median latency | Mean WER | Mean content WER |
 | --- | --- | --- | --- | --- |
@@ -252,19 +252,19 @@ real-voice accuracy falls below WhisperKit turbo's.
 
 ## 2026-07-03 — cleanup hop measured: gemma3:4b ≈ 0.65 s, 1/20 meaning change
 
-`bench cleanup` over the 20 reference transcripts (see `bench/SYNTH_CLEANUP.md`):
+`bench cleanup` over the 20 reference transcripts (see `Tools/Bench/SYNTH_CLEANUP.md`):
 
 - **gemma3:4b: median 0.648 s, p90 0.670 s** (warm). 19/20 outputs
   meaning-preserving; sample 03 was a full rewrite ("can you send me the link
   to that doc" → "I think you can find that document here"). Phase 2 must get
   this to 0/20 — prompt hardening (e.g. "if unsure, return input verbatim"),
   smaller/other models, or an output-similarity guard.
-- **gemma4:26b: median 6.8 s** — disqualified for the live loop, as plan.md
+- **gemma4:26b: median 6.8 s** — disqualified for the live loop, as the original PRD
   predicted. Quirk: it returns EMPTY responses with the few-shot system prompt
   (works with a short one) — don't use it even for the quality-ceiling
   comparison without reworking the prompt format.
 - **Provisional end-to-end budget:** ASR 0.07 s + cleanup 0.65 s ≈ **0.72 s**
-  vs the 0.5 s target — the LLM hop is the bottleneck (plan.md §8 called it).
+  vs the 0.5 s target — the LLM hop is the bottleneck (original PRD §8 called it).
   Phase-2 levers: shorter prompt/fewer shots, streaming, ~1.5–2B model, MLX,
   skip cleanup on very short utterances.
 

@@ -13,8 +13,8 @@ find_mlx_metallib() {
 
   if [[ -n "$project_root" ]]; then
     candidates+=(
-      "$project_root/../bench/.build/arm64-apple-macosx/debug/mlx.metallib"
-      "$project_root/../bench/.build/debug/mlx.metallib"
+      "$project_root/Tools/Bench/.build/arm64-apple-macosx/debug/mlx.metallib"
+      "$project_root/Tools/Bench/.build/debug/mlx.metallib"
     )
   fi
 

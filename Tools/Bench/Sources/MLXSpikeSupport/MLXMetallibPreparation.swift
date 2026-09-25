@@ -98,13 +98,13 @@ public enum MLXMetallibPreparationError: Error, CustomStringConvertible, Equatab
         case .missingMetalCompiler(let url):
             return "Metal compiler was not found at \(url.path). Re-run `xcodebuild -downloadComponent MetalToolchain`."
         case .missingMLXCheckout(let url):
-            return "MLX Swift checkout was not found at \(url.path). Run `swift package resolve` from `bench/` first."
+            return "MLX Swift checkout was not found at \(url.path). Run `swift package resolve` from `Tools/Bench/` first."
         case .missingKernelDirectory(let url):
             return "MLX Metal kernel directory was not found at \(url.path). The mlx-swift package layout may have changed."
         case .noMetalSources(let url):
             return "No `.metal` sources were found under \(url.path). The metallib cannot be built."
         case .missingRuntimeMetallib(let url):
-            return "Runtime metallib was not found at \(url.path). Run `swift run mlx-metallib-prepare` from `bench/`, then retry."
+            return "Runtime metallib was not found at \(url.path). Run `swift run mlx-metallib-prepare` from `Tools/Bench/`, then retry."
         case .failedToCreateOutputDirectory(let url, let detail):
             return "Could not create metallib output directory \(url.path): \(detail)"
         case .metalCompilerFailed(let exitStatus, let output):

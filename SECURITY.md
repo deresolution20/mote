@@ -92,14 +92,14 @@ loads/downloads; it does not delete artifacts already cached by those libraries.
 - Local development builds use the Swift toolchain and may be signed with the
   self-signed `LocalFlow Dev` identity or ad-hoc signing. They are not
   notarized and are not distribution artifacts.
-- `app/bundle.sh --release` requires a **Developer ID Application** identity,
+- `scripts/bundle.sh --release` requires a **Developer ID Application** identity,
   enables the hardened runtime, timestamps the signature, and runs strict
   `codesign` verification. It refuses to fall back to a development or ad-hoc
   identity.
-- Development and release signatures embed `app/Mote.entitlements`, whose only
+- Development and release signatures embed `Resources/Mote.entitlements`, whose only
   capability is microphone audio input. Without it, the hardened runtime causes
   macOS to deny the permission request before showing the user a prompt.
-- `app/release.sh` creates a zip suitable for notarization. Passing
+- `scripts/release.sh` creates a zip suitable for notarization. Passing
   `--notarize` submits it with `xcrun notarytool`, staples and validates the
   ticket, and runs `spctl`; it requires a user-created `NOTARY_PROFILE` in the
   local Keychain. Credentials are never stored in this repository.

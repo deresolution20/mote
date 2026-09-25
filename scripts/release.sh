@@ -1,11 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/.build/Mote.app"
 ARCHIVE="${ARCHIVE_PATH:-$ROOT/.build/Mote-notarization.zip}"
 NOTARIZE=0
-source "$ROOT/Scripts/notarization.sh"
+source "$ROOT/scripts/lib/notarization.sh"
 
 usage() {
   cat <<'USAGE'
@@ -54,7 +54,7 @@ if (( NOTARIZE )) && [[ -z "${NOTARY_PROFILE:-}" ]]; then
   exit 2
 fi
 
-"$ROOT/bundle.sh" --release
+"$ROOT/scripts/bundle.sh" --release
 
 package_app_archive "$APP" "$ARCHIVE"
 echo "Packaged $ARCHIVE"

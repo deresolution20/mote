@@ -1,16 +1,16 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-source "$ROOT/Scripts/metal_library.sh"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT/scripts/lib/metal_library.sh"
 
-if [[ ! -f "$ROOT/Scripts/signing.sh" ]]; then
+if [[ ! -f "$ROOT/scripts/lib/signing.sh" ]]; then
   echo "signing helper is missing" >&2
   exit 1
 fi
-source "$ROOT/Scripts/signing.sh"
+source "$ROOT/scripts/lib/signing.sh"
 
-EXPECTED_ENTITLEMENTS="$ROOT/Mote.entitlements"
+EXPECTED_ENTITLEMENTS="$ROOT/Resources/Mote.entitlements"
 if [[ ! -f "$EXPECTED_ENTITLEMENTS" ]]; then
   echo "Mote entitlements file is missing" >&2
   exit 1
@@ -88,18 +88,18 @@ if ! rg -Fq -- "--entitlements $EXPECTED_ENTITLEMENTS" "$SIGNING_LOG"; then
   exit 1
 fi
 
-if [[ ! -x "$ROOT/release.sh" ]]; then
+if [[ ! -x "$ROOT/scripts/release.sh" ]]; then
   echo "release packaging script is missing or not executable" >&2
   exit 1
 fi
-HELP="$("$ROOT/release.sh" --help)"
+HELP="$("$ROOT/scripts/release.sh" --help)"
 if [[ "$HELP" != *"--notarize"* || "$HELP" != *"NOTARY_PROFILE"* ]]; then
   echo "release packaging help does not document notarization credentials" >&2
   exit 1
 fi
 
 NOTARY_OUTPUT="$TEST_ROOT/notary-output.txt"
-if "$ROOT/release.sh" --notarize >"$NOTARY_OUTPUT" 2>&1; then
+if "$ROOT/scripts/release.sh" --notarize >"$NOTARY_OUTPUT" 2>&1; then
   echo "notarization mode ran without a Keychain profile" >&2
   exit 1
 fi
@@ -108,13 +108,13 @@ if ! rg -q "NOTARY_PROFILE" "$NOTARY_OUTPUT"; then
   exit 1
 fi
 
-if [[ ! -f "$ROOT/Scripts/notarization.sh" ]]; then
+if [[ ! -f "$ROOT/scripts/lib/notarization.sh" ]]; then
   echo "notarization helper is missing" >&2
   exit 1
 fi
 
 (
-  source "$ROOT/Scripts/notarization.sh"
+  source "$ROOT/scripts/lib/notarization.sh"
 
   FAKE_APP="$TEST_ROOT/Fake.app"
   FAKE_ARCHIVE="$TEST_ROOT/Fake.zip"
@@ -139,7 +139,7 @@ fi
 )
 
 set +e
-BUNDLE_USAGE_OUTPUT="$(cd "$ROOT/.." && ./app/bundle.sh --invalid 2>&1)"
+BUNDLE_USAGE_OUTPUT="$(cd "$ROOT" && ./scripts/bundle.sh --invalid 2>&1)"
 BUNDLE_EXIT=$?
 set -e
 if [[ "$BUNDLE_EXIT" -ne 2 || "$BUNDLE_USAGE_OUTPUT" != *"usage:"* ]]; then

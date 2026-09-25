@@ -32,7 +32,7 @@ swift run bench run
 swift run bench cleanup
 ```
 
-Samples land in `bench/samples/` (WAVs are gitignored; `manifest.json` is not).
+Samples land in `Tools/Bench/samples/` (WAVs are gitignored; `manifest.json` is not).
 
 ## Tests
 

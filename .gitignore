@@ -9,7 +9,7 @@ reference/
 .swiftpm/
 
 # Benchmark audio samples (Brice's voice — keep local)
-bench/samples/*.wav
+Tools/Bench/samples/*.wav
 
 # Model files (downloaded at setup time)
 /Models/

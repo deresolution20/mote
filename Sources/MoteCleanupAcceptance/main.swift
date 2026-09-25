@@ -144,7 +144,7 @@ private struct Options {
           local-flow-cleanup-acceptance [--manifest PATH] [--output PATH] [--limit N]
 
         Defaults:
-          --manifest bench/samples/manifest.json, or ../bench/samples/manifest.json when run from app/
+          --manifest Tools/Bench/samples/manifest.json, or samples/manifest.json when run from Tools/Bench/
         """
     }
 
@@ -290,8 +290,8 @@ private struct BenchmarkSummary: Encodable {
 private func defaultManifestPath() -> URL {
     let fileManager = FileManager.default
     let candidates = [
-        URL(fileURLWithPath: "bench/samples/manifest.json"),
-        URL(fileURLWithPath: "../bench/samples/manifest.json"),
+        URL(fileURLWithPath: "Tools/Bench/samples/manifest.json"),
+        URL(fileURLWithPath: "samples/manifest.json"),
     ]
     if let existing = candidates.first(where: { fileManager.fileExists(atPath: $0.path) }) {
         return existing
@@ -307,8 +307,8 @@ private func loadManifest(from url: URL) throws -> Manifest {
     } else {
         candidates = [
             url,
-            URL(fileURLWithPath: "bench/samples/manifest.json"),
-            URL(fileURLWithPath: "../bench/samples/manifest.json"),
+            URL(fileURLWithPath: "Tools/Bench/samples/manifest.json"),
+            URL(fileURLWithPath: "samples/manifest.json"),
         ]
     }
     guard let resolved = candidates.first(where: { fileManager.fileExists(atPath: $0.path) }) else {

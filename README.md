@@ -112,8 +112,8 @@ description, including storage and clipboard trade-offs.
 
 ```bash
 git clone https://github.com/deresolution20/mote.git
-cd mote/app
-./bundle.sh
+cd mote
+./scripts/bundle.sh
 open .build/Mote.app
 ```
 
@@ -172,10 +172,13 @@ flowchart LR
 
 | Path | Responsibility |
 | --- | --- |
-| `app/Sources/Mote/` | SwiftUI application, capture lifecycle, permissions, persistence, and delivery |
-| `app/Sources/MoteCleanup/` | MLX generation, cleanup acceptance, Markdown safety, and spoken formatting commands |
-| `app/Tests/MoteTests/` | Unit and integration coverage for product behavior and safety boundaries |
-| `bench/` | Swift benchmark harnesses for local inference and pipeline evaluation |
+| `Sources/Mote/` | SwiftUI application, capture lifecycle, permissions, persistence, and delivery |
+| `Sources/MoteCleanup/` | MLX generation, cleanup acceptance, Markdown safety, and spoken formatting commands |
+| `Tests/MoteTests/` | Unit and integration coverage for product behavior and safety boundaries |
+| `Tools/Bench/` | Swift benchmark harnesses for local inference and pipeline evaluation |
+| `scripts/` | Bundle, sign, notarize, and release scripts plus their shell checks |
+| `Resources/` | App entitlements and other bundle resources |
+| `docs/` | Decisions, formatting guide, plans and specs, reports, and project history |
 | `docs/reports/mlx-cleanup-benchmark/` | Reproducible benchmark evidence and historical model comparisons |
 
 ## Development
@@ -183,13 +186,12 @@ flowchart LR
 Run the application checks from the repository root:
 
 ```bash
-cd app
 swift test
 swift build --product Mote
-./test-product-identity.sh
-./test-bundle-security.sh
+./scripts/test-product-identity.sh
+./scripts/test-bundle-security.sh
 
-cd ../bench
+cd Tools/Bench
 swift test
 ```
 
@@ -214,15 +216,14 @@ Store notarization credentials in the local Keychain; never add them to the
 repository.
 
 ```bash
-cd app
 security find-identity -v -p codesigning | grep 'Developer ID Application:'
-./bundle.sh --release
+./scripts/bundle.sh --release
 
 xcrun notarytool store-credentials Mote-notary \
   --apple-id "YOUR_APPLE_ID" \
   --team-id "YOUR_TEAM_ID"
 
-NOTARY_PROFILE=Mote-notary ./release.sh --notarize
+NOTARY_PROFILE=Mote-notary ./scripts/release.sh --notarize
 ```
 
 Use `SIGNING_IDENTITY="Developer ID Application: Name (TEAMID)"` when more than
