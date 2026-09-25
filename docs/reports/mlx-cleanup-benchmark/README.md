@@ -77,7 +77,7 @@ Mote cleanup path.
 Task 4 adds the repeatable native Swift MLX setup step:
 
 ```bash
-cd bench
+cd Tools/Bench
 swift run mlx-metallib-prepare
 ```
 
@@ -99,8 +99,8 @@ Task 5 measures repeated native Swift MLX cleanup calls after one model load and
 one warmup generation:
 
 ```bash
-cd bench
-swift run mlx-cleanup-steady-benchmark --output ../docs/reports/mlx-cleanup-benchmark/runs/2026-07-06-task-5-swift-steady-state-cleanup/swift-steady-benchmark.json
+cd Tools/Bench
+swift run mlx-cleanup-steady-benchmark --output ../../docs/reports/mlx-cleanup-benchmark/runs/2026-07-06-task-5-swift-steady-state-cleanup/swift-steady-benchmark.json
 ```
 
 Generate Markdown, PDF, DOCX, chart, and PDF QA render artifacts from the Swift

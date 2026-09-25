@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Architecture research and adversarial review of universal text insertion for Mote on macOS.">
+  <title>Mote — Universal Text Insertion on macOS</title>
+  <style>
+    :root {
+      --ink: #14231f;
+      --muted: #5f6c67;
+      --paper: #f7f4ed;
+      --white: #fffdf9;
+      --line: #d8ded9;
+      --green: #0e6b51;
+      --green-2: #24936f;
+      --green-pale: #e5f2ec;
+      --amber: #9b6200;
+      --amber-pale: #fff0ce;
+      --red: #a64338;
+      --red-pale: #fbe8e4;
+      --blue: #215e87;
+      --blue-pale: #e7f1f8;
+      --shadow: 0 24px 70px rgba(15, 37, 30, .10);
+      --radius: 18px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 88% 4%, rgba(36, 147, 111, .12), transparent 25rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.68;
+      text-rendering: optimizeLegibility;
+    }
+
+    a { color: var(--green); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: #084c3a; }
+    code {
+      padding: .12em .34em;
+      border: 1px solid #d8e2dc;
+      border-radius: 5px;
+      background: #edf2ee;
+      font: .9em ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 86px 28px 64px;
+      background: #102c25;
+      color: #f8fbf9;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .24;
+      background-image:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 90%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -140px;
+      top: -160px;
+      width: 540px;
+      height: 540px;
+      border: 1px solid rgba(119, 222, 181, .36);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 62px rgba(119, 222, 181, .05),
+        0 0 0 124px rgba(119, 222, 181, .035);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 24px;
+      color: #a9d8c5;
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #62d3a5;
+      box-shadow: 0 0 0 6px rgba(98,211,165,.12);
+    }
+    h1 {
+      max-width: 880px;
+      margin: 0 0 24px;
+      font-size: clamp(2.65rem, 6.4vw, 5.45rem);
+      line-height: .99;
+      letter-spacing: -.055em;
+      font-weight: 790;
+    }
+    .hero-lede {
+      max-width: 790px;
+      margin: 0;
+      color: #c9d9d3;
+      font-size: clamp(1.07rem, 2vw, 1.36rem);
+      line-height: 1.55;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 26px;
+      margin-top: 36px;
+      color: #9bb6ad;
+      font-size: .88rem;
+    }
+    .hero-meta strong { color: #f8fbf9; font-weight: 650; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 54px;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 48px 28px 100px;
+    }
+    nav {
+      position: sticky;
+      top: 22px;
+      align-self: start;
+      max-height: calc(100vh - 44px);
+      overflow: auto;
+      padding: 18px 0;
+      font-size: .84rem;
+    }
+    nav .nav-title {
+      display: block;
+      margin-bottom: 12px;
+      color: #87928e;
+      font-size: .7rem;
+      font-weight: 760;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    nav a {
+      display: block;
+      padding: 6px 12px;
+      border-left: 2px solid transparent;
+      color: #52615c;
+      text-decoration: none;
+    }
+    nav a:hover {
+      border-color: var(--green-2);
+      color: var(--green);
+    }
+    main { min-width: 0; }
+    section {
+      scroll-margin-top: 26px;
+      margin-bottom: 68px;
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(1.75rem, 3vw, 2.55rem);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+    h3 {
+      margin: 32px 0 10px;
+      font-size: 1.22rem;
+      line-height: 1.28;
+      letter-spacing: -.015em;
+    }
+    h4 { margin: 26px 0 8px; font-size: 1rem; }
+    p { margin: 0 0 17px; }
+    .section-intro {
+      max-width: 800px;
+      color: var(--muted);
+      font-size: 1.06rem;
+    }
+
+    .verdict {
+      margin-top: -82px;
+      padding: 30px;
+      border: 1px solid #d6e4dc;
+      border-radius: 22px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+    .verdict-label {
+      margin-bottom: 7px;
+      color: var(--green);
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .verdict h2 { max-width: 850px; margin-bottom: 13px; }
+    .verdict p { max-width: 890px; margin-bottom: 0; color: var(--muted); font-size: 1.05rem; }
+    .verdict strong { color: var(--ink); }
+
+    .callout {
+      margin: 24px 0;
+      padding: 20px 22px;
+      border-left: 4px solid var(--green);
+      border-radius: 0 12px 12px 0;
+      background: var(--green-pale);
+    }
+    .callout.warning { border-color: var(--amber); background: var(--amber-pale); }
+    .callout.danger { border-color: var(--red); background: var(--red-pale); }
+    .callout p:last-child { margin-bottom: 0; }
+    .claim {
+      margin: 25px 0;
+      padding: 24px 26px;
+      border-radius: 14px;
+      background: #173a31;
+      color: #eef8f4;
+      font-size: 1.12rem;
+      font-weight: 590;
+    }
+
+    .metric-grid,
+    .cards,
+    .modes,
+    .debate-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .metric-grid { grid-template-columns: repeat(3, 1fr); margin-top: 24px; }
+    .cards { grid-template-columns: repeat(2, 1fr); margin-top: 24px; }
+    .modes { grid-template-columns: repeat(3, 1fr); margin: 24px 0; }
+    .debate-grid { grid-template-columns: repeat(2, 1fr); margin-top: 24px; }
+    .metric, .card, .mode, .debate {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 249, .76);
+    }
+    .metric { padding: 22px; }
+    .metric .num {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--green);
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1;
+    }
+    .metric .desc { color: var(--muted); font-size: .88rem; line-height: 1.45; }
+    .card, .debate { padding: 24px; }
+    .card h3, .debate h3 { margin-top: 0; }
+    .card p:last-child, .debate p:last-child { margin-bottom: 0; }
+    .mode { overflow: hidden; }
+    .mode-head { padding: 18px 20px 13px; background: #ecf4f0; }
+    .mode.recommended { border-color: #8bbda9; box-shadow: 0 10px 32px rgba(18,83,63,.09); }
+    .mode.recommended .mode-head { background: #d9eee5; }
+    .mode-name { font-weight: 780; }
+    .mode-tag {
+      float: right;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--green);
+      color: white;
+      font-size: .65rem;
+      font-weight: 780;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .mode-body { padding: 18px 20px 21px; color: var(--muted); font-size: .91rem; }
+
+    .architecture {
+      display: grid;
+      gap: 11px;
+      margin: 26px 0 32px;
+    }
+    .layer {
+      display: grid;
+      grid-template-columns: 155px 1fr;
+      gap: 22px;
+      align-items: center;
+      padding: 18px 21px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--white);
+    }
+    .layer-name { color: var(--green); font-weight: 780; }
+    .layer-copy { color: var(--muted); font-size: .92rem; }
+    .arrow {
+      height: 14px;
+      position: relative;
+    }
+    .arrow::before {
+      content: "↓";
+      position: absolute;
+      left: 71px;
+      top: -11px;
+      color: #91a39b;
+      font-weight: 700;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 14px;
+      margin: 13px 0;
+      align-items: start;
+    }
+    .route-number {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-weight: 800;
+    }
+    .route p { margin: 3px 0 0; }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 22px 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--white);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .89rem;
+      line-height: 1.45;
+    }
+    th, td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #edf2ee;
+      color: #384b44;
+      font-size: .74rem;
+      font-weight: 780;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .score {
+      display: inline-block;
+      min-width: 44px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-align: center;
+      font-weight: 750;
+    }
+    .score.high { background: var(--green-pale); color: var(--green); }
+    .score.med { background: var(--amber-pale); color: var(--amber); }
+    .score.low { background: var(--red-pale); color: var(--red); }
+
+    .debate .position {
+      display: inline-block;
+      margin-bottom: 13px;
+      color: var(--green);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .debate.winner {
+      grid-column: 1 / -1;
+      border-color: #7aab98;
+      background: #e7f3ed;
+    }
+    .debate .blind {
+      margin-top: 14px;
+      color: var(--red);
+      font-size: .76rem;
+      font-weight: 760;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .roadmap {
+      position: relative;
+      margin: 28px 0;
+      padding-left: 30px;
+    }
+    .roadmap::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 7px;
+      bottom: 14px;
+      width: 2px;
+      background: #bbccc4;
+    }
+    .phase {
+      position: relative;
+      margin-bottom: 23px;
+      padding: 0 0 0 14px;
+    }
+    .phase::before {
+      content: "";
+      position: absolute;
+      left: -28px;
+      top: 7px;
+      width: 11px;
+      height: 11px;
+      border: 3px solid var(--paper);
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 1px var(--green);
+    }
+    .phase strong { display: block; margin-bottom: 3px; }
+    .phase p { color: var(--muted); }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 20px;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .checklist li {
+      position: relative;
+      padding: 10px 12px 10px 37px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.52);
+    }
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 13px;
+      color: var(--green);
+      font-weight: 850;
+    }
+
+    .footnotes {
+      font-size: .86rem;
+      color: var(--muted);
+    }
+    .footnotes ol { padding-left: 22px; }
+    .footnotes li { margin-bottom: 11px; padding-left: 4px; }
+    sup a { font-weight: 750; text-decoration: none; }
+    .fine-print {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: #73817c;
+      font-size: .8rem;
+    }
+
+    footer {
+      padding: 30px 28px 42px;
+      background: #102c25;
+      color: #aac0b7;
+      text-align: center;
+      font-size: .82rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; gap: 0; }
+      nav { position: static; display: none; }
+      .metric-grid, .modes { grid-template-columns: 1fr; }
+      .cards, .debate-grid { grid-template-columns: 1fr; }
+      .debate.winner { grid-column: auto; }
+    }
+    @media (max-width: 620px) {
+      .hero { padding: 66px 20px 58px; }
+      .layout { padding: 38px 18px 76px; }
+      .verdict { padding: 24px 20px; }
+      .layer { grid-template-columns: 1fr; gap: 4px; }
+      .arrow::before { left: 18px; }
+      .checklist { grid-template-columns: 1fr; }
+      th, td { padding: 12px; }
+    }
+    @media print {
+      body { background: white; color: #111; font-size: 10.5pt; }
+      .hero { padding: 40px 0 34px; background: white; color: #111; border-bottom: 3px solid #174f3f; }
+      .hero::before, .hero::after, nav { display: none; }
+      .hero-lede, .hero-meta { color: #444; }
+      .hero-meta strong { color: #111; }
+      .layout { display: block; max-width: none; padding: 34px 0; }
+      .verdict { margin-top: 0; box-shadow: none; }
+      section { break-inside: auto; margin-bottom: 38px; }
+      .card, .mode, .debate, .metric, .layer, .table-wrap, .callout { break-inside: avoid; }
+      a { color: #174f3f; }
+      footer { background: white; color: #555; border-top: 1px solid #bbb; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Mote architecture research</div>
+      <h1>Making dictation insertion dependable across macOS</h1>
+      <p class="hero-lede">A source-backed, adversarial review of Accessibility, synthetic input, clipboard paste, InputMethodKit, and the limits behind the phrase “works in any app.”</p>
+      <div class="hero-meta">
+        <span><strong>Prepared</strong> September 3, 2026</span>
+        <span><strong>Scope</strong> macOS · Developer ID distribution</span>
+        <span><strong>Decision type</strong> v1 architecture</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Report sections">
+      <span class="nav-title">Contents</span>
+      <a href="#decision">Decision</a>
+      <a href="#standard">Success standard</a>
+      <a href="#current">Current system</a>
+      <a href="#limits">Hard limits</a>
+      <a href="#options">Options compared</a>
+      <a href="#debate">Internal debate</a>
+      <a href="#architecture">Target architecture</a>
+      <a href="#findings">Current weaknesses</a>
+      <a href="#ime-spike">Input-method spike</a>
+      <a href="#verification">Verification program</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#sources">Sources</a>
+    </nav>
+
+    <main>
+      <section class="verdict" id="decision">
+        <div class="verdict-label">Executive decision</div>
+        <h2>Keep the foundation. Replace the single-path strategy.</h2>
+        <p><strong>Mote should use a capability-driven, verified hybrid.</strong> Accessibility and Unicode events remain valuable privacy-forward layers. Clipboard paste becomes a protected compatibility fallback. InputMethodKit gets a time-boxed prototype—not a rewrite. The system must protect focus, reject dangerous destinations, verify what it can, and never lose the transcript.</p>
+      </section>
+
+      <section id="standard">
+        <h2>The standard is dependable delivery—not one API</h2>
+        <p class="section-intro">A successful demo in one editor is not a product guarantee. Mote needs a measurable contract that treats wrong-target insertion as worse than a safe refusal.</p>
+        <div class="metric-grid">
+          <div class="metric">
+            <span class="num">≥99%</span>
+            <span class="desc">First-attempt, verified insertion across the published matrix of supported editable controls.</span>
+          </div>
+          <div class="metric">
+            <span class="num">0</span>
+            <span class="desc">Wrong-target insertions across randomized focus, window, tab, and modal transitions.</span>
+          </div>
+          <div class="metric">
+            <span class="num">100%</span>
+            <span class="desc">Transcript recovery after blocked, cancelled, unobservable, or failed delivery.</span>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>Recommended product language</strong>
+          <p>“Dictate into virtually any standard editable text field on your Mac.” If “any app” appears in short marketing copy, nearby support material should explicitly name secure fields, protected surfaces, remote desktops, custom canvases, and app-controlled paste restrictions.</p>
+        </div>
+      </section>
+
+      <section id="current">
+        <h2>What Mote does today</h2>
+        <p class="section-intro">The recent Electron and Chromium fixes are not random app patches. They are documented framework capability switches. The brittleness comes from what Mote assumes after discovering the target.</p>
+        <div class="architecture" aria-label="Current Mote delivery flow">
+          <div class="layer">
+            <span class="layer-name">Hot-key down</span>
+            <span class="layer-copy">Capture the frontmost process and focused Accessibility element before asynchronous transcription.</span>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="layer">
+            <span class="layer-name">Target probe</span>
+            <span class="layer-copy">System-wide focus → application focus → <code>AXManualAccessibility</code> → <code>AXEnhancedUserInterface</code>.</span>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="layer">
+            <span class="layer-name">Transcription</span>
+            <span class="layer-copy">Speech is processed locally while the original destination is retained.</span>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="layer">
+            <span class="layer-name">Revalidation</span>
+            <span class="layer-copy">Require the original element, or currently allow a replacement target when the same app remains frontmost.</span>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="layer">
+            <span class="layer-name">Global adapter</span>
+            <span class="layer-copy">Either Unicode CGEvents or clipboard replacement plus synthetic Command-V, based on a user-wide setting.</span>
+          </div>
+        </div>
+        <p>Capturing the destination at key-down is a sound design. The pasteboard ownership guard is also good: Mote restores the previous clipboard only if its change count still proves ownership. Carbon hot-key registration avoids global keylogging and therefore avoids an unnecessary Input Monitoring permission.</p>
+        <p>The weak points are downstream: four role names define “editable,” a disappearance of the Accessibility element can be accepted as long as the same app remains frontmost, Core Graphics accepting an event is treated as the editor accepting text, and the user must choose one delivery mechanism globally.</p>
+      </section>
+
+      <section id="limits">
+        <h2>The hard platform truth</h2>
+        <p class="section-intro">macOS exposes multiple text-input paths because applications do not share one universal insertion contract.</p>
+        <div class="cards">
+          <article class="card">
+            <h3>Secure and protected fields</h3>
+            <p><code>NSSecureTextField</code> exists specifically for secret entry and macOS exposes a secure Accessibility subrole.<sup><a href="#s2">2</a>, <a href="#s6">6</a></sup> Terminal’s Secure Keyboard Entry can intentionally break applications that require access to keystrokes.<sup><a href="#s9">9</a></sup></p>
+          </article>
+          <article class="card">
+            <h3>Custom rendering</h3>
+            <p>Standard controls inherit accessibility behavior; custom controls only expose useful semantics when their developers implement it.<sup><a href="#s4">4</a></sup> Games, canvases, and proprietary editors can have a visible caret without an editable AX node.</p>
+          </article>
+          <article class="card">
+            <h3>Terminals and policy</h3>
+            <p>macOS can warn about or block suspicious terminal pastes.<sup><a href="#s10">10</a></sup> Remote sessions, virtual machines, and enterprise products may block clipboard transfer entirely, a limitation also documented by Wispr.<sup><a href="#s21">21</a>, <a href="#s22">22</a></sup></p>
+          </article>
+          <article class="card">
+            <h3>Distribution constraints</h3>
+            <p>Mac App Store distribution requires App Sandbox, which restricts broad control of other apps. Developer ID distribution allows Mote’s assistive design, but it does not grant a universal text API.<sup><a href="#s7">7</a>, <a href="#s8">8</a></sup></p>
+          </article>
+        </div>
+        <div class="claim">No public macOS API can guarantee insertion into every visible caret. The honest engineering target is broad coverage, provable safety, and deterministic recovery.</div>
+      </section>
+
+      <section id="options">
+        <h2>Options compared</h2>
+        <p class="section-intro">Each mechanism wins on one axis and fails on another. Scores are architectural judgments grounded in the cited platform contracts and real implementations.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Approach</th>
+                <th>Coverage</th>
+                <th>Privacy</th>
+                <th>Verifiable</th>
+                <th>Install UX</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>CGEvent Unicode</strong><br>Current direct typing</td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score low">Low</span></td>
+                <td><span class="score high">High</span></td>
+                <td>Keep as a privacy-forward adapter; never assume event-post success equals text insertion.</td>
+              </tr>
+              <tr>
+                <td><strong>Clipboard + ⌘V</strong><br>Current alternative</td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score low">Low</span></td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score high">High</span></td>
+                <td>Use as a protected fallback or compatibility-first mode; disclose system exposure.</td>
+              </tr>
+              <tr>
+                <td><strong>AX selected-text write</strong></td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score high">High</span></td>
+                <td>Make first choice when the attribute is settable and the expected delta can be read back.</td>
+              </tr>
+              <tr>
+                <td><strong>InputMethodKit</strong><br>Installed input source</td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score low">Low</span></td>
+                <td>Time-box a prototype; do not make it the v1 architecture or mandatory install path.</td>
+              </tr>
+              <tr>
+                <td><strong>Services / Apple Events</strong></td>
+                <td><span class="score low">Low</span></td>
+                <td><span class="score med">Med</span></td>
+                <td><span class="score high">High</span></td>
+                <td><span class="score low">Low</span></td>
+                <td>Useful for opt-in integrations, not universal dictation.</td>
+              </tr>
+              <tr>
+                <td><strong>Capability hybrid</strong></td>
+                <td><span class="score high">Highest</span></td>
+                <td><span class="score high">Selectable</span></td>
+                <td><span class="score high">Best</span></td>
+                <td><span class="score high">High</span></td>
+                <td><strong>Recommended.</strong> Route by capability, content, verification, and local reliability history.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Why direct CGEvent typing is not universal</h3>
+        <p>Apple says an application framework may ignore the Unicode string attached to a synthetic keyboard event and instead translate the virtual key and keyboard state itself.<sup><a href="#s5">5</a></sup> Event posting therefore proves transport to the event system—not insertion into the editor. Tools such as Espanso expose injection delays and automatically change backends for longer strings because real applications can drop or mishandle event streams.<sup><a href="#s23">23</a></sup></p>
+        <p>Mote’s fixed 16-unit UTF-16 slicing is another correctness risk. Supplementary Unicode characters use surrogate pairs, while user-perceived characters can comprise multiple scalars, such as combining accents and family emoji.<sup><a href="#s15">15</a>, <a href="#s16">16</a></sup> Chunks must end at extended-grapheme boundaries and be paced adaptively.</p>
+
+        <h3>Why clipboard paste is broad—but not neutral</h3>
+        <p>Paste lets the target perform its own native insertion and efficiently handles long, multiline text. Wispr’s support documentation confirms that Flow temporarily replaces and restores the clipboard; TypeWhisper and Dictum use comparable fallbacks.<sup><a href="#s21">21</a>, <a href="#s24">24</a>, <a href="#s25">25</a></sup></p>
+        <p>But the general pasteboard is shared and participates in Universal Clipboard by default.<sup><a href="#s17">17</a></sup> The change count can protect a later user clipboard change, but it cannot prove that the target consumed the paste.<sup><a href="#s18">18</a></sup> macOS 26 Clipboard History may retain copied material after Mote restores the front item, so restoration does not mean erasure.<sup><a href="#s19">19</a></sup> New pasteboard-access policy can also make programmatic reads user-visible.<sup><a href="#s20">20</a></sup></p>
+
+        <h3>Why direct Accessibility writes deserve a place</h3>
+        <p>Editable Accessibility objects may expose a settable selected-text attribute.<sup><a href="#s1">1</a>, <a href="#s3">3</a></sup> Mote can snapshot the selection, set the replacement, and read back the expected delta. TypeWhisper demonstrates this verified-first pattern before falling back to paste.<sup><a href="#s24">24</a></sup> The limitation is coverage: many rich, web, and custom editors do not expose a reliable setter.</p>
+
+        <h3>Why InputMethodKit should remain an experiment</h3>
+        <p>InputMethodKit is Apple’s semantic architecture for input sources. An <code>IMKServer</code> manages client connections, an <code>IMKInputController</code> exists per input session, and the client conforms to <code>IMKTextInput</code>.<sup><a href="#s26">26</a>–<a href="#s28">28</a></sup> It is conceptually cleaner than paste or raw events.</p>
+        <p>It is not an invisible insertion endpoint. Users must install, enable, and select an input source. Apple’s installation guidance points to the Input Sources pane, and mature open-source IME Squirrel warns that first installation can require logout/login.<sup><a href="#s13">13</a>, <a href="#s14">14</a></sup> It can disrupt users with multiple keyboard layouts or language IMEs and still cannot control secure, custom, or remote surfaces.</p>
+      </section>
+
+      <section id="debate">
+        <h2>The internal argument</h2>
+        <p class="section-intro">Three plausible “simple” answers were argued to their strongest form. Each contains one essential truth—and one fatal blind spot.</p>
+        <div class="debate-grid">
+          <article class="debate">
+            <span class="position">Privacy advocate</span>
+            <h3>Keep direct typing as default</h3>
+            <p>Dictation can contain customer data, health information, credentials, or unreleased work. Avoiding the general pasteboard is a real privacy benefit, and direct events preserve a one-install experience.</p>
+            <div class="blind">Blind spot</div>
+            <p>Apple does not guarantee the Unicode payload is honored. A private path that silently loses text is not dependable.</p>
+          </article>
+          <article class="debate">
+            <span class="position">Compatibility advocate</span>
+            <h3>Make clipboard paste the default</h3>
+            <p>Editors already know how to paste. It handles long text efficiently, and established dictation and expansion tools use it in production.</p>
+            <div class="blind">Blind spot</div>
+            <p>The pasteboard is a system trust boundary: history, syncing, DLP, clipboard managers, remote sessions, and consumption races all matter.</p>
+          </article>
+          <article class="debate">
+            <span class="position">Platform purist</span>
+            <h3>Rewrite around InputMethodKit</h3>
+            <p>A real input method speaks the semantic text protocol and avoids both clipboard exposure and low-level event translation.</p>
+            <div class="blind">Blind spot</div>
+            <p>Installation, activation, keyboard-layout coexistence, and session semantics directly conflict with Mote’s frictionless product goal.</p>
+          </article>
+          <article class="debate winner">
+            <span class="position">Adjudication</span>
+            <h3>Universal injection is the wrong abstraction</h3>
+            <p>Mote is a reliable transcript-delivery system operating across surfaces with different capabilities. Its contract should be: <strong>deliver privately and automatically when success can be established; otherwise stop safely, preserve the transcript, explain the reason in one sentence, and offer one-action recovery.</strong></p>
+          </article>
+        </div>
+      </section>
+
+      <section id="architecture">
+        <h2>Recommended target architecture</h2>
+        <p class="section-intro">The moat is a generic delivery engine that knows what it can prove—not a growing list of bundle-ID exceptions.</p>
+
+        <div class="modes">
+          <article class="mode recommended">
+            <div class="mode-head"><span class="mode-name">Automatic</span><span class="mode-tag">Recommended</span></div>
+            <div class="mode-body">Select the least invasive method with demonstrated reliability for this surface and content. Prefer verified paths.</div>
+          </article>
+          <article class="mode">
+            <div class="mode-head"><span class="mode-name">Privacy-first</span></div>
+            <div class="mode-body">Never put a transcript on the general pasteboard. Retain it when AX or direct events cannot safely deliver.</div>
+          </article>
+          <article class="mode">
+            <div class="mode-head"><span class="mode-name">Compatibility</span></div>
+            <div class="mode-body">Use protected clipboard paste earlier, with explicit disclosure of Clipboard History and system visibility.</div>
+          </article>
+        </div>
+
+        <h3>1. Destination guardian</h3>
+        <p>At hot-key down, capture PID, bundle and app versions, window identity, the focused Accessibility element and role/subrole, readable selection state, and a monotonic focus-generation value. Use <code>AXObserver</code> focus/window events plus workspace activation notifications through capture and transcription.</p>
+        <p>If the app, window, or focus generation changes, cancel automatic insertion and preserve the transcript. A dynamic editor may rebind once only inside the same process and window, to a compatible focused descendant, when no focus-change event occurred. This replaces today’s unsafe “same app is still frontmost” escape hatch.</p>
+
+        <h3>2. Capability probe</h3>
+        <p>Probe system-wide focus, application focus, then the framework accessibility switches. Electron documents <code>AXManualAccessibility</code>; Chromium observes <code>AXEnhancedUserInterface</code> before constructing its full accessibility tree.<sup><a href="#s11">11</a>, <a href="#s12">12</a></sup> Warm this tree at app activation or dictation start, not only after a release-time failure, and measure the performance cost.</p>
+        <p>Replace the four-role allowlist with a capability record: secure subrole, selected text readable/settable, value readable/settable, selection range availability, and observed adapter reliability. A role is evidence, not authority.</p>
+
+        <h3>3. Policy engine</h3>
+        <div class="route">
+          <span class="route-number">1</span>
+          <p><strong>Refuse.</strong> Stop at secure fields, protected surfaces, read-only controls, or ambiguous destinations. Keep the transcript.</p>
+        </div>
+        <div class="route">
+          <span class="route-number">2</span>
+          <p><strong>Write semantically.</strong> If AX selected text is settable and observable, replace it and verify the expected delta.</p>
+        </div>
+        <div class="route">
+          <span class="route-number">3</span>
+          <p><strong>Type privately.</strong> Use grapheme-safe, paced CGEvents when this surface/content profile has demonstrated reliability.</p>
+        </div>
+        <div class="route">
+          <span class="route-number">4</span>
+          <p><strong>Paste compatibly.</strong> Use a host-only, ownership-guarded clipboard transaction when it is the safer compatibility choice.</p>
+        </div>
+        <div class="route">
+          <span class="route-number">5</span>
+          <p><strong>Recover.</strong> If delivery is blocked or unobservable, do not blindly retry and risk duplication. Offer Paste last transcript, Copy, and Try again here.</p>
+        </div>
+
+        <h3>4. Verified adapters</h3>
+        <div class="cards">
+          <article class="card">
+            <h3>Accessibility adapter</h3>
+            <p>Require a nonsecure settable selection, snapshot observable state, write selected text, and poll briefly for the expected change. An AX success code alone is not success.</p>
+          </article>
+          <article class="card">
+            <h3>Direct-event adapter</h3>
+            <p>Chunk at grapheme boundaries, pace adaptively, separate short and long text policy, manage modifiers, and label unobservable delivery honestly.</p>
+          </article>
+          <article class="card">
+            <h3>Clipboard adapter</h3>
+            <p>Snapshot every item/type; use <code>.currentHostOnly</code>; verify when possible; restore only while Mote owns the pasteboard; disclose Clipboard History.</p>
+          </article>
+          <article class="card">
+            <h3>Recovery adapter</h3>
+            <p>Retain the last transcript and give specific failure reasons. Never automatically send a second copy after an unverified attempt.</p>
+          </article>
+        </div>
+
+        <h3>5. Local compatibility memory</h3>
+        <p>After verified attempts, record only coarse capabilities keyed by bundle ID, app version, OS version, and surface class—never transcript or field content. Expire records after app or OS updates and expose a reset. This avoids repeating known-bad paths without turning the code into a bundle-ID switchboard.</p>
+        <div class="callout warning">
+          <strong>Terminal policy needs special care.</strong>
+          <p>Preserve literal text, disable smart formatting, never synthesize Return, and do not turn a paste warning into command execution. Codex CLI and Claude Code must be tested both locally and through SSH/tmux.</p>
+        </div>
+      </section>
+
+      <section id="findings">
+        <h2>Weaknesses in the current branch</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Finding</th><th>Risk</th><th>Correction</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Four-role editability allowlist</td>
+                <td>Rejects real editors with group/custom roles and confuses semantic metadata with delivery ability.</td>
+                <td>Probe attributes and verified capabilities; treat role as a signal.</td>
+              </tr>
+              <tr>
+                <td>Same-app fallback after target disappears</td>
+                <td>Can insert into another field, tab, window, or conversation in the same process.</td>
+                <td>Track window identity and focus generation; allow bounded same-window rebind only.</td>
+              </tr>
+              <tr>
+                <td><code>CFHash</code> as element identity</td>
+                <td>Weak lifecycle signal with collision and stale-element ambiguity.</td>
+                <td>Pair PID/window/AX identity with observer generation and final revalidation.</td>
+              </tr>
+              <tr>
+                <td>CGEvent post treated as insertion</td>
+                <td>Silent loss or app-specific key interpretation.</td>
+                <td>Read back state where possible; otherwise report unverified.</td>
+              </tr>
+              <tr>
+                <td>Fixed 16-unit UTF-16 chunks</td>
+                <td>Can split surrogate pairs and extended grapheme clusters.</td>
+                <td>Chunk Swift <code>Character</code> sequences within event limits.</td>
+              </tr>
+              <tr>
+                <td>Zero-delay event burst</td>
+                <td>Targets can drop or coalesce input.</td>
+                <td>Adaptive pacing and length-based adapter policy.</td>
+              </tr>
+              <tr>
+                <td>Clipboard <code>clearContents()</code></td>
+                <td>Transcript may propagate over Universal Clipboard.</td>
+                <td>Use <code>prepareForNewContents(.currentHostOnly)</code>.</td>
+              </tr>
+              <tr>
+                <td>Fixed 500 ms clipboard restore</td>
+                <td>Can race a slow target before it consumes the paste.</td>
+                <td>Restore after verification or a conservative adaptive timeout.</td>
+              </tr>
+              <tr>
+                <td>Clipboard restoration treated as neutral</td>
+                <td>History, DLP, and clipboard managers may retain or inspect text.</td>
+                <td>Privacy-first mode plus explicit compatibility-mode disclosure.</td>
+              </tr>
+              <tr>
+                <td>Secure subrole not explicitly refused</td>
+                <td>Speech could be sent to a password or protected field.</td>
+                <td>Reject secure fields before every adapter.</td>
+              </tr>
+              <tr>
+                <td>Global “typing vs clipboard” preference</td>
+                <td>One bad mechanism is forced onto every application.</td>
+                <td>Automatic, Privacy-first, and Compatibility modes.</td>
+              </tr>
+              <tr>
+                <td>Accessibility gates the whole hot key</td>
+                <td>No dictation-to-history/copy recovery when insertion permission is missing.</td>
+                <td>Decouple capture permission from delivery permission.</td>
+              </tr>
+              <tr>
+                <td>Framework trees enabled only after failure</td>
+                <td>Intermittent first-use behavior and release-time latency.</td>
+                <td>Warm capabilities at activation or key-down; monitor cost.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="ime-spike">
+        <h2>InputMethodKit: a spike with kill criteria</h2>
+        <p>Build a signed minimal input-source helper to answer the unknowns. It should not block v1.</p>
+        <ul class="checklist">
+          <li>Install, enable, select, upgrade, disable, and uninstall cleanly.</li>
+          <li>Measure whether logout/login is required on every supported macOS release.</li>
+          <li>Commit asynchronous transcription to the original client session.</li>
+          <li>Return to the user’s normal input source without disruption.</li>
+          <li>Coexist with CJK/RTL IMEs and multiple keyboard layouts.</li>
+          <li>Refuse secure fields and cancel on focus changes.</li>
+          <li>Test AppKit, SwiftUI, browsers, Electron, Office, and terminals.</li>
+          <li>Compare measured private coverage with the hybrid engine.</li>
+        </ul>
+        <div class="callout danger">
+          <strong>Kill it</strong>
+          <p>if normal installation requires logout/login, Mote must remain the active keyboard source, switching is visible or disruptive, or the verified coverage gain is not material. If it survives, offer it as an advanced optional mode—not a mandatory installer path.</p>
+        </div>
+      </section>
+
+      <section id="verification">
+        <h2>Verification program</h2>
+        <p class="section-intro">Universal-feeling software is built from a maintained matrix, adversarial race testing, and honest telemetry—not a handful of successful manual trials.</p>
+
+        <h3>Application matrix</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Required surfaces</th><th>Critical cases</th></tr></thead>
+            <tbody>
+              <tr><td>Native</td><td>TextEdit, Notes, Mail, SwiftUI fields/editors</td><td>Search, combo, rich text, selection replacement</td></tr>
+              <tr><td>WebKit</td><td>Safari inputs, textarea, contenteditable, Docs-class editors</td><td>DOM rerender, tab switch, rich editor</td></tr>
+              <tr><td>Chromium</td><td>Chrome, Zendesk, Google Docs/Sheets comments</td><td>AX tree cold/warm, multiple tabs/windows</td></tr>
+              <tr><td>Electron</td><td>Claude Desktop, Slack, VS Code, Discord, Notion</td><td>AXManualAccessibility lifecycle, editor replacement</td></tr>
+              <tr><td>AI tools</td><td>Codex desktop/CLI, Claude desktop/Claude Code</td><td>Native editor, shell input, long prompts</td></tr>
+              <tr><td>Terminals</td><td>Terminal, iTerm2, Warp, Ghostty</td><td>Local, SSH, tmux, Secure Keyboard Entry, paste protection</td></tr>
+              <tr><td>Office</td><td>Word, Outlook, Teams</td><td>Rich composition, modal editors</td></tr>
+              <tr><td>Negative controls</td><td>Password managers, login forms, secure fields, canvases</td><td>Must refuse safely and retain transcript</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Content and race matrix</h3>
+        <p>Use ASCII, emoji and ZWJ families, combining accents, CJK, Arabic/Hebrew RTL, smart punctuation, shell metacharacters, code indentation, tabs, multiline text, and 10,000-character samples under US and non-US layouts.</p>
+        <p>During transcription, switch app, window, tab, field, selection, modal sheet, and macOS Space. Revoke Accessibility. Change the clipboard between write and restore. Run Clipboard History, third-party clipboard managers, DLP, Universal Clipboard, multiple displays, Stage Manager, and high CPU load.</p>
+
+        <h3>Release gates</h3>
+        <ul class="checklist">
+          <li>Zero wrong-target insertions in 10,000 randomized focus transitions.</li>
+          <li>Zero transcript loss under forced adapter failure.</li>
+          <li>Byte-for-byte restoration of multi-item, multi-type clipboard state.</li>
+          <li>No clipboard overwrite after ownership changes.</li>
+          <li>No insertion into secure fields.</li>
+          <li>At least 99% first-attempt verified success on the published matrix.</li>
+          <li>Crash-free permission denial, AX timeout, stale element, and target termination.</li>
+          <li>p95 delivery below 250 ms after final transcript readiness.</li>
+        </ul>
+      </section>
+
+      <section id="roadmap">
+        <h2>Phased path to a trustworthy v1</h2>
+        <div class="roadmap">
+          <div class="phase">
+            <strong>Phase 0 · Stop overpromising</strong>
+            <p>Correct product language, add specific failure states and persistent last-transcript recovery, and explicitly reject secure fields.</p>
+          </div>
+          <div class="phase">
+            <strong>Phase 1 · Make current delivery safe and observable</strong>
+            <p>Add focus generation, window identity, early tree warm-up, grapheme-safe chunks, adaptive pacing, host-only paste, and distinct delivery outcomes.</p>
+          </div>
+          <div class="phase">
+            <strong>Phase 2 · Route and verify</strong>
+            <p>Add verified AX selected-text insertion, paste verification, three product modes, and privacy-preserving local compatibility memory.</p>
+          </div>
+          <div class="phase">
+            <strong>Phase 3 · Evaluate native input-source mode</strong>
+            <p>Run the time-boxed InputMethodKit prototype and retain it only when measured gain justifies installation friction.</p>
+          </div>
+          <div class="phase">
+            <strong>Phase 4 · Integrate selectively</strong>
+            <p>Consider browser extensions or host plugins only for durable, high-value gaps identified by the compatibility matrix.</p>
+          </div>
+        </div>
+        <div class="claim">The durable advantage is a delivery engine that knows what it can prove, learns coarse compatibility locally, refuses dangerous targets, and never loses the user’s words.</div>
+      </section>
+
+      <section id="sources" class="footnotes">
+        <h2>Sources</h2>
+        <p>Primary platform documentation was preferred. Implementation examples establish real-world practice, not universal guarantees.</p>
+        <ol>
+          <li id="s1">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/applicationservices/kaxselectedtextattribute">AX selected-text attribute</a>.</li>
+          <li id="s2">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nsaccessibility-swift.struct/subrole/securetextfield">Accessibility secure text field subrole</a>.</li>
+          <li id="s3">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/applicationservices/1460434-axuielementsetattributevalue">AXUIElementSetAttributeValue</a>.</li>
+          <li id="s4">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/accessibility/integrating-accessibility-into-your-app">Integrating accessibility into your app</a> and <a href="https://developer.apple.com/documentation/appkit/nsaccessibilityprotocol">NSAccessibilityProtocol</a>.</li>
+          <li id="s5">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/coregraphics/cgevent/keyboardsetunicodestring%28stringlength%3Aunicodestring%3A%29">CGEvent.keyboardSetUnicodeString</a>.</li>
+          <li id="s6">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nssecuretextfield">NSSecureTextField</a>.</li>
+          <li id="s7">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/security/protecting-user-data-with-app-sandbox">Protecting user data with App Sandbox</a>.</li>
+          <li id="s8">Apple Developer, <a href="https://developer.apple.com/macos/distribution/">Distributing software on macOS</a>.</li>
+          <li id="s9">Apple Support, <a href="https://support.apple.com/guide/terminal/use-secure-keyboard-entry-trml109/mac">Use Secure Keyboard Entry in Terminal on Mac</a>.</li>
+          <li id="s10">Apple Support, <a href="https://support.apple.com/en-gb/127377">About terminal paste protection on Mac</a>.</li>
+          <li id="s11">Electron Documentation, <a href="https://www.electronjs.org/docs/latest/tutorial/accessibility">Accessibility</a> and <a href="https://www.electronjs.org/docs/latest/api/app">app.setAccessibilitySupportEnabled</a>.</li>
+          <li id="s12">Chromium Project, <a href="https://www.chromium.org/developers/design-documents/accessibility/">Accessibility technical documentation</a> and <a href="https://chromium.googlesource.com/chromium/src/%2B/HEAD/content/browser/accessibility/">browser accessibility source overview</a>.</li>
+          <li id="s13">Apple Technical Q&amp;A QA1810, <a href="https://developer.apple.com/library/archive/qa/qa1810/_index.html">How to install input methods</a>, January 28, 2014.</li>
+          <li id="s14">Rime, <a href="https://github.com/rime/squirrel">Squirrel macOS input method</a>.</li>
+          <li id="s15">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/swift/string">Swift String</a> and <a href="https://developer.apple.com/documentation/swift/string/utf16view">UTF16View</a>.</li>
+          <li id="s16">Unicode Consortium, <a href="https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/">Unicode Standard 16.0, Chapter 3</a>.</li>
+          <li id="s17">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nspasteboard">NSPasteboard</a> and <a href="https://developer.apple.com/documentation/appkit/nspasteboard/contentsoptions/currenthostonly">currentHostOnly</a>.</li>
+          <li id="s18">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nspasteboard/changecount">NSPasteboard.changeCount</a>.</li>
+          <li id="s19">Apple Support, <a href="https://support.apple.com/en-euro/guide/mac-help/mchl40d5b86b/26/mac/26">Use Clipboard History on Mac</a>.</li>
+          <li id="s20">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nspasteboard/accessbehavior-swift.enum/default">NSPasteboard.AccessBehavior.default</a>.</li>
+          <li id="s21">Wispr Flow Help Center, <a href="https://docs.wisprflow.ai/articles/3152211871-setup-guide">Setup guide</a> and <a href="https://docs.wisprflow.ai/articles/7971211038-fix-text-not-pasting-after-dictation">Fix text not pasting after dictation</a>.</li>
+          <li id="s22">Wispr Flow Help Center, <a href="https://docs.wisprflow.ai/articles/6478598909-using-flow-with-linux-wsl-and-terminal-applications">Using Flow with terminals, Linux and WSL</a>.</li>
+          <li id="s23">Espanso, <a href="https://github.com/espanso/espanso/blob/dev/schemas/config.schema.json">configuration schema</a> and <a href="https://github.com/espanso/espanso/issues/2051">clipboard preservation issue</a>.</li>
+          <li id="s24">TypeWhisper, <a href="https://github.com/TypeWhisper/typewhisper-mac/blob/main/TypeWhisper/Services/TextInsertionService.swift">TextInsertionService.swift</a>.</li>
+          <li id="s25">Dictum, <a href="https://github.com/Nikoro/dictum">open-source macOS dictation app</a>.</li>
+          <li id="s26">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/inputmethodkit">InputMethodKit</a>.</li>
+          <li id="s27">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/inputmethodkit/imkserver">IMKServer</a> and <a href="https://developer.apple.com/documentation/inputmethodkit/imkinputcontroller">IMKInputController</a>.</li>
+          <li id="s28">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/inputmethodkit/imkinputcontroller/client%28%29">IMKInputController client</a> and <a href="https://developer.apple.com/documentation/inputmethodkit/imkinputcontroller/replacementrange%28%29">replacementRange</a>.</li>
+          <li id="s29">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/appkit/nsservicesmenurequestor">NSServicesMenuRequestor</a>.</li>
+          <li id="s30">Apple Cocoa Services Guide, <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/SysServices/Articles/using.html">Using Services</a>.</li>
+          <li id="s31">Apple Developer Documentation, <a href="https://developer.apple.com/documentation/bundleresources/information-property-list/nsappleeventsusagedescription">NSAppleEventsUsageDescription</a>.</li>
+          <li id="s32">Apple Support, <a href="https://support.apple.com/en-euro/guide/mac-help/mchl108e1718/mac">Allow apps to automate and control other apps</a>.</li>
+        </ol>
+        <p class="fine-print">Research and source review completed September 3, 2026. Behavior should be revalidated before each major macOS release. Architecture conclusions are reasoned inferences from documented APIs, known protection boundaries, audited Mote code, and production/open-source implementation evidence.</p>
+      </section>
+    </main>
+  </div>
+
+  <footer>Mote · Universal text insertion architecture research · September 2026</footer>
+</body>
+</html>
