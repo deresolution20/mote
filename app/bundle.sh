@@ -1,39 +1,43 @@
 #!/bin/zsh
-# Build LocalFlow and assemble a signed .app bundle.
+# Build Mote and assemble a signed .app bundle.
 # A real bundle (not a bare executable) is required so TCC attributes the
-# Microphone / Accessibility / Input Monitoring grants to "Local Flow" itself,
+# Microphone / Accessibility grants to "Mote" itself,
 # and so NSMicrophoneUsageDescription is honored.
-set -e
-cd "$(dirname "$0")"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+source "$SCRIPT_DIR/Scripts/metal_library.sh"
+source "$SCRIPT_DIR/Scripts/signing.sh"
+
+MODE="development"
+if [[ "${1:-}" == "--release" ]]; then
+  MODE="release"
+elif [[ -n "${1:-}" ]]; then
+  echo "usage: $0 [--release]" >&2
+  exit 2
+fi
 
 swift build -c release
 
-APP=".build/LocalFlow.app"
+APP=".build/Mote.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/LocalFlow "$APP/Contents/MacOS/LocalFlow"
+cp .build/release/Mote "$APP/Contents/MacOS/Mote"
 
-METALLIB=""
-for candidate in \
-  ".build/arm64-apple-macosx/release/mlx.metallib" \
-  ".build/release/mlx.metallib" \
-  "../bench/.build/arm64-apple-macosx/debug/mlx.metallib" \
-  "../bench/.build/debug/mlx.metallib"
-do
-  if [[ -f "$candidate" ]]; then
-    METALLIB="$candidate"
-    break
-  fi
-done
-
-if [[ -n "$METALLIB" ]]; then
-  cp "$METALLIB" "$APP/Contents/Resources/mlx.metallib"
-  ln -s ../Resources "$APP/Contents/MacOS/Resources"
-  echo "copied MLX metallib from $METALLIB"
-else
-  echo "MLX metallib not found; MLX cleanup will be unavailable and the provider chain can fall back to Ollama/raw text"
+METALLIB="$(find_mlx_metallib ".build" "$PWD" || true)"
+if [[ -z "$METALLIB" ]]; then
+  echo "error: MLX metallib not found; refusing to build a bundle with unavailable cleanup." >&2
+  exit 1
 fi
+
+cp "$METALLIB" "$APP/Contents/Resources/mlx.metallib"
+if [[ ! -f "$APP/Contents/Resources/mlx.metallib" ]]; then
+  echo "error: failed to copy MLX metallib into the app bundle." >&2
+  exit 1
+fi
+ln -s ../Resources "$APP/Contents/MacOS/Resources"
+echo "copied MLX metallib from $METALLIB"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -41,17 +45,17 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>dev.brice.localflow</string>
+    <string>dev.brice.mote</string>
     <key>CFBundleName</key>
-    <string>Local Flow</string>
+    <string>Mote</string>
     <key>CFBundleDisplayName</key>
-    <string>Local Flow</string>
+    <string>Mote</string>
     <key>CFBundleExecutable</key>
-    <string>LocalFlow</string>
+    <string>Mote</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
+    <string>1.0.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
@@ -61,30 +65,25 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Local Flow listens while you hold the dictation hotkey. Audio never leaves this Mac.</string>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <!-- The only network call is to the local Ollama server on localhost.
-             Allow local networking; do NOT allow arbitrary cleartext loads. -->
-        <key>NSAllowsLocalNetworking</key>
-        <true/>
-    </dict>
+    <string>Mote listens while you use the dictation hotkey. Audio stays on this Mac.</string>
 </dict>
 </plist>
 PLIST
 
-# Prefer the stable "LocalFlow Dev" self-signed identity if it exists — it keeps
-# the Accessibility grant valid across rebuilds. Ad-hoc otherwise (TCC then
-# requires remove/re-add in Accessibility after every rebuild).
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "LocalFlow Dev"; then
-  echo "signing with LocalFlow Dev identity"
-  codesign --force --sign "LocalFlow Dev" --identifier "dev.brice.localflow" "$APP"
+if [[ "$MODE" == "release" ]]; then
+  echo "signing release with Developer ID Application identity"
+  sign_app_bundle "$APP" release
 else
-  echo "signing ad-hoc (create a 'LocalFlow Dev' cert in Keychain Access to stop TCC re-grants)"
-  codesign --force --sign - "$APP"
+  IDENTITY="$(resolve_signing_identity development)"
+  if [[ "$IDENTITY" == "-" ]]; then
+    echo "signing ad-hoc (set up 'LocalFlow Dev' to preserve TCC grants across rebuilds)"
+  else
+    echo "signing development with $IDENTITY"
+  fi
+  sign_app_bundle "$APP" development
 fi
 
-codesign -dvv "$APP" 2>&1 | grep -E "Identifier=|Authority=" || true
+codesign -dvv "$APP" 2>&1 | grep -E "Identifier=|Authority=|TeamIdentifier=" || true
 
 echo "Built $PWD/$APP"
 echo "Run:   open $PWD/$APP"
