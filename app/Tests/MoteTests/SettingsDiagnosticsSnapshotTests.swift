@@ -7,13 +7,13 @@ import Testing
             status: "Mote ready — ⌥ Space",
             cleanupDisplayName: "MLX",
             cleanupModel: "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
-            usesDirectTyping: true,
+            insertionMode: "Automatic",
             lastRawTranscript: "um so ship it friday",
             lastCleanedText: "Ship it Friday."
         )
 
         #expect(snapshot.cleanupModelLabel == "MLX: mlx-community/Qwen2.5-1.5B-Instruct-4bit")
-        #expect(snapshot.insertionModeLabel == "Direct typing")
+        #expect(snapshot.insertionModeLabel == "Automatic")
         #expect(snapshot.rawTranscriptDisplay == "um so ship it friday")
         #expect(snapshot.cleanedTextDisplay == "Ship it Friday.")
     }
@@ -23,12 +23,12 @@ import Testing
             status: "Permissions needed",
             cleanupDisplayName: "MLX",
             cleanupModel: "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
-            usesDirectTyping: false,
+            insertionMode: "Compatibility",
             lastRawTranscript: "",
             lastCleanedText: ""
         )
 
-        #expect(snapshot.insertionModeLabel == "Clipboard paste")
+        #expect(snapshot.insertionModeLabel == "Compatibility")
         #expect(snapshot.rawTranscriptDisplay == "No dictation yet.")
         #expect(snapshot.cleanedTextDisplay == "No cleaned text yet.")
     }

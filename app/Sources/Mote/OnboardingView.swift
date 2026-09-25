@@ -2,7 +2,6 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject var state: AppState
-    @Environment(\.openSettings) private var openSettings
     @State private var timer = Timer.publish(every: 1.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -58,8 +57,8 @@ struct OnboardingView: View {
             }
 
             HStack {
-                Button("Open Settings…") {
-                    openSettings()
+                SettingsLink {
+                    Text("Open Settings…")
                 }
 
                 Spacer()

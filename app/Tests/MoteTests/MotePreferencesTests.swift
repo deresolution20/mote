@@ -35,8 +35,34 @@ import Testing
         #expect(!preferences.modelDownloadsApproved)
         #expect(preferences.cleanupEnabled)
         #expect(preferences.hudEnabled)
-        #expect(preferences.injectByTyping)
+        #expect(preferences.deliveryMode == .automatic)
         #expect(!preferences.preserveCodeAndBackticks)
+    }
+
+    @Test func legacyDirectTypingPreferenceMigratesToPrivacyFirst() {
+        let suiteName = "MotePreferencesTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        defaults.set(true, forKey: "mote.injectByTyping")
+
+        let preferences = MotePreferences(defaults: defaults, legacyDefaults: nil)
+
+        #expect(preferences.deliveryMode == .privacyFirst)
+        #expect(defaults.string(forKey: "mote.deliveryMode") == DeliveryMode.privacyFirst.rawValue)
+    }
+
+    @Test func legacyClipboardPreferenceMigratesToCompatibility() {
+        let suiteName = "MotePreferencesTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        defaults.set(false, forKey: "mote.injectByTyping")
+
+        let preferences = MotePreferences(defaults: defaults, legacyDefaults: nil)
+
+        #expect(preferences.deliveryMode == .compatibility)
+        #expect(defaults.string(forKey: "mote.deliveryMode") == DeliveryMode.compatibility.rawValue)
     }
 
     @Test func preferencesRoundTripHotkeyAndCaptureMode() {

@@ -10,6 +10,16 @@ if [[ ! -f "$ROOT/Scripts/signing.sh" ]]; then
 fi
 source "$ROOT/Scripts/signing.sh"
 
+EXPECTED_ENTITLEMENTS="$ROOT/Mote.entitlements"
+if [[ ! -f "$EXPECTED_ENTITLEMENTS" ]]; then
+  echo "Mote entitlements file is missing" >&2
+  exit 1
+fi
+if [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.device.audio-input' "$EXPECTED_ENTITLEMENTS" 2>/dev/null || true)" != "true" ]]; then
+  echo "Mote entitlements do not enable microphone audio input" >&2
+  exit 1
+fi
+
 TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/mote-metallib-test.XXXXXX")"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
@@ -53,9 +63,13 @@ fi
 
 SIGNING_LOG="$TEST_ROOT/signing.log"
 codesign() { print -r -- "$*" >> "$SIGNING_LOG"; }
-SIGNING_IDENTITY="Developer ID Application: Mote Release (ABCDE12345)" sign_app_bundle "$TEST_ROOT/Mote.app" release
+SIGNING_IDENTITY="Developer ID Application: Mote Release (ABCDE12345)" sign_app_bundle "$TEST_ROOT/Mote.app" release "$EXPECTED_ENTITLEMENTS"
 if ! rg -q -- '--options runtime .*--timestamp' "$SIGNING_LOG"; then
   echo "release signing did not enable the hardened runtime and timestamp" >&2
+  exit 1
+fi
+if ! rg -Fq -- "--entitlements $EXPECTED_ENTITLEMENTS" "$SIGNING_LOG"; then
+  echo "release signing did not embed the Mote entitlements" >&2
   exit 1
 fi
 if ! rg -q -- '--verify --deep --strict' "$SIGNING_LOG"; then
@@ -64,9 +78,13 @@ if ! rg -q -- '--verify --deep --strict' "$SIGNING_LOG"; then
 fi
 
 : > "$SIGNING_LOG"
-SIGNING_IDENTITY="LocalFlow Dev" sign_app_bundle "$TEST_ROOT/Mote.app" development
+SIGNING_IDENTITY="LocalFlow Dev" sign_app_bundle "$TEST_ROOT/Mote.app" development "$EXPECTED_ENTITLEMENTS"
 if rg -q -- '--options runtime|--timestamp' "$SIGNING_LOG"; then
   echo "development signing unexpectedly enabled release-only flags" >&2
+  exit 1
+fi
+if ! rg -Fq -- "--entitlements $EXPECTED_ENTITLEMENTS" "$SIGNING_LOG"; then
+  echo "development signing did not embed the Mote entitlements" >&2
   exit 1
 fi
 

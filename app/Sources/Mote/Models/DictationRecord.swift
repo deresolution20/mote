@@ -3,6 +3,14 @@ import MoteCleanup
 
 enum InsertionOutcome: String, Codable, Sendable {
     case pending
+    case insertedVerified
+    case insertedUnverified
+    case blockedFocusChanged
+    case blockedSecureField
+    case blockedNoTarget
+    case blockedDeliveryUnavailable
+
+    // Retained so history written by older Mote builds remains decodable.
     case typedAttempted
     case copiedNoFocusedTarget
     case copiedByUser

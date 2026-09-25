@@ -1,146 +1,254 @@
+<div align="center">
+
 # Mote
 
-Mote is a menu-bar dictation app for support engineering. It transcribes
-speech and cleans text entirely on your Apple Silicon Mac, then types or copies
-the result where you need it. Your voice and your text stay on this Mac;
-Mote has no server.
+### Voice in. Clean text out. Nothing leaves your Mac.
 
-## What you get
+Mote is a private, on-device dictation app for macOS. Press a key, speak
+naturally, and turn your voice into clean text you can review, copy, or insert —
+without sending audio or transcripts to a cloud service.
 
-- A rebindable global hotkey — **Option-Space** by default — with hold-to-talk
-  and tap-to-toggle capture modes.
-- On-device Parakeet transcription and MLX-only cleanup, with the raw
-  transcript as the terminal safety fallback.
-- A guarded **Plain text** or **Markdown (GFM)** output choice. Markdown falls
-  back to Plain whenever local formatting is unavailable or unsafe.
-- Explicit spoken code blocks: say `start code block yaml`, dictate the code,
-  then say `end code block`.
-- A compact capture panel, non-activating recording HUD, and local History and
-  Snippets library for reuse.
-- Local microphone selection, a live input meter, Personal Dictionary, and
-  accessible macOS Settings.
-- Manual insertion is the default for a new installation. Automatic insertion
-  can be enabled later; a changed target leaves the result pending rather than
-  typing into a different application.
+<p>
+  <a href="#build-and-launch"><img alt="macOS 26 or later" src="https://img.shields.io/badge/macOS-26%2B-111827?logo=apple&logoColor=white"></a>
+  <a href="#technical-design"><img alt="Swift 6.3" src="https://img.shields.io/badge/Swift-6.3-F05138?logo=swift&logoColor=white"></a>
+  <a href="#privacy-by-design"><img alt="Processing runs on device" src="https://img.shields.io/badge/processing-on--device-0F766E"></a>
+  <a href="#security-and-distribution"><img alt="Developer ID signed and notarized" src="https://img.shields.io/badge/release-Developer_ID_%2B_notarized-1D4ED8?logo=apple&logoColor=white"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-7C3AED"></a>
+</p>
 
-## Requirements
+<p>
+  <a href="#how-it-works"><strong>How it works</strong></a> ·
+  <a href="#build-and-launch"><strong>Build Mote</strong></a> ·
+  <a href="SECURITY.md"><strong>Security posture</strong></a>
+</p>
 
-- macOS 26 or later
-- Apple Silicon Mac
-- Xcode Command Line Tools / Swift 6.3 or later
-- Microphone and Accessibility permission
+<img src="docs/assets/mote-output-settings.jpg" alt="Mote Output settings showing plain text and Markdown output, local cleanup controls, and spoken code block commands" width="704">
+
+</div>
+
+## Dictation that respects the work
+
+Voice tools are useful because they remove friction. They should not replace
+that friction with an account, a subscription, or uncertainty about where your
+words went.
+
+Mote keeps the full dictation path on your Apple Silicon Mac. Speech recognition
+runs through FluidAudio and Parakeet; a small local model cleans punctuation,
+fillers, and false starts through MLX. Deterministic safeguards reject unsafe
+rewrites and preserve the raw transcript as the final fallback.
+
+| Local by design | Cleanup with guardrails | Verified delivery |
+| --- | --- | --- |
+| Audio is processed in memory. Dictation, cleanup, and formatting run on-device. | Local cleanup is accepted only when safety and plausibility checks pass. | Manual review is the default. Optional auto-insert verifies the target and preserves uncertain results for recovery. |
+
+## How it works
+
+1. **Press your hotkey.** Hold **Option-Space** by default, or choose another
+   shortcut and switch between hold-to-talk and tap-to-toggle capture.
+2. **Speak naturally.** Mote shows lightweight streaming feedback while
+   Parakeet produces the final local transcript.
+3. **Use the result.** Review the text, choose Plain text or Markdown, then copy
+   or insert it. Automatic insertion is available as an opt-in.
+
+No account or API key is required. The first launch asks for Microphone and
+Accessibility access and requires explicit approval before downloading the
+local transcription and cleanup models.
+
+## Built for real writing workflows
+
+- **Native macOS experience** — a compact menu-bar panel, non-activating
+  recording HUD, configurable hotkey, and selectable microphone with a live
+  input meter.
+- **Conservative local cleanup** — removes fillers and false starts, repairs
+  punctuation and capitalization, and falls back to the original transcript
+  whenever a candidate is unavailable or unsafe.
+- **Plain text or guarded Markdown** — format dictated structure as GitHub-
+  Flavored Markdown without allowing the formatter to invent links, prose, or
+  unsupported structure.
+- **Voice-first code blocks** — say `start code block yaml`, dictate the body,
+  and finish with `end code block`; malformed commands remain literal text.
+- **Capability-driven text delivery** — verified Accessibility replacement is
+  preferred. Privacy-first Unicode events and host-only, ownership-guarded paste
+  are available without maintaining brittle per-app patches.
+- **Fail-closed recovery** — focus changes and secure fields stop automatic
+  insertion. An uncertain attempt is never retried automatically; its transcript
+  remains available with an explicit duplication warning.
+- **Local working memory** — search History, promote useful results to
+  Snippets, and teach the Personal Dictionary names and technical terms.
+
+## Privacy by design
+
+Mote is intentionally small in both permissions and data movement.
+
+| Data or capability | Mote's behavior |
+| --- | --- |
+| Microphone audio | Held in memory for the current utterance and never written to disk by Mote. |
+| Audio and transcripts | Never sent to a remote service by the active dictation path. |
+| History and Snippets | Stored as local JSON with owner-only permissions and excluded from device backups; not encrypted at rest. |
+| Permissions | Microphone and Accessibility only. No Input Monitoring, Screen Recording, or Full Disk Access. |
+| Accounts and telemetry | No account, API keys, analytics, crash-reporting service, or application-controlled transcript upload. |
+
+Model installation is the one setup-time network activity: after you approve
+it, supporting libraries download the local ASR and cleanup model artifacts.
+See [Security & privacy posture](SECURITY.md) for the complete, auditable
+description, including storage and clipboard trade-offs.
 
 ## Build and launch
 
+> [!NOTE]
+> A Developer ID-signed and Apple-notarized Mote 1.0 build has passed the
+> release pipeline. Until a public archive is attached to
+> [GitHub Releases](https://github.com/deresolution20/mote/releases), Mote is
+> installed from source.
+
+### Requirements
+
+- macOS 26 or later
+- Apple Silicon Mac
+- Xcode Command Line Tools with Swift 6.3 or later
+- Microphone and Accessibility permission
+
+### Build from source
+
 ```bash
-git clone https://github.com/deresolution20/local-flow.git
-cd local-flow/app
+git clone https://github.com/deresolution20/mote.git
+cd mote/app
 ./bundle.sh
 open .build/Mote.app
 ```
 
-On first launch, Mote guides you through the two required permissions.
-It then requires explicit approval before downloading any local transcription or
-cleanup model. The current MLX cleanup model is
-`mlx-community/Qwen2.5-1.5B-Instruct-4bit`; it is not Gemma or Ollama.
-For a stable Accessibility permission during development, create a local
-code-signing identity named `LocalFlow Dev`; `bundle.sh` uses it when present.
+On first launch, grant the two requested permissions and review the local model
+download. Mote uses Parakeet for speech recognition and
+`mlx-community/Qwen2.5-1.5B-Instruct-4bit` for cleanup. Model downloads can be
+disabled later without deleting artifacts already cached by their supporting
+libraries.
 
-Mote 1.0 uses the durable bundle identifier `dev.brice.mote`. Earlier
-development builds used a different identifier, so macOS will request
-Microphone and Accessibility permission again. On first launch, Mote copies
-known preferences from the former bundle domain and copies History and Snippets
-from `Application Support/Grotdown` into `Application Support/Mote` when no
-Mote data exists. The former files remain intact as rollback evidence.
+## Technical design
 
-### Developer ID release build
+Mote is a native SwiftUI menu-bar application built as a Swift Package. The UI,
+audio capture, persistence, cleanup acceptance layer, and output delivery are
+separate components so the probabilistic parts of the pipeline remain bounded
+by deterministic checks. Mote 1.0 uses the durable bundle identifier
+`dev.brice.mote`.
 
-The normal `bundle.sh` path is for local development and may use the
-`LocalFlow Dev` self-signed identity or ad-hoc signing. A distributable build
-must use a Developer ID Application certificate:
-
-```bash
-cd app
-security find-identity -v -p codesigning | grep 'Developer ID Application:'
-./bundle.sh --release
+```mermaid
+flowchart LR
+    A["Global hotkey"] --> B["16 kHz in-memory audio"]
+    B --> C["Parakeet ASR<br/>FluidAudio"]
+    C --> D["Personal Dictionary"]
+    D --> E{"Local cleanup?"}
+    E -->|Enabled| F["Qwen 2.5 1.5B<br/>MLX"]
+    E -->|Disabled| H["Raw transcript"]
+    F --> G{"Safety checks"}
+    G -->|Accepted| I["Cleaned text"]
+    G -->|Rejected or unavailable| H
+    I --> J["Plain text or guarded GFM"]
+    H --> J
+    J --> K["Review, copy, or safe insert"]
 ```
 
-Release mode fails if no Developer ID Application identity is available,
-enables the hardened runtime, adds a secure timestamp, and runs strict
-signature verification. If more than one certificate is installed, select one
-explicitly with `SIGNING_IDENTITY="Developer ID Application: Name (TEAMID)"`.
+### Safety engineering, not just model inference
 
-To package the app for notarization, use the release wrapper. Store Apple
-credentials in a local Keychain profile; do not put them in the repository:
+- **Raw-first:** Mote retains the ASR transcript and can always resolve to it.
+- **Bounded cleanup:** the prompt permits filler removal, false-start repair,
+  punctuation, and capitalization — not answering, rewriting, or acting on the
+  dictated text.
+- **Acceptance checks:** cleanup candidates are screened for semantic drift,
+  hallucination, forbidden Markdown, and other unsafe transformations.
+- **Guarded formatting:** Markdown must preserve the source words; failed or
+  malformed formatting resolves to Plain text.
+- **Focus lease:** auto-insert captures process, window, element, and capability
+  identity, observes focus changes through transcription, and fails closed if
+  observation is unavailable.
+- **Secure-target rejection:** secure text fields are never automatic
+  destinations.
+- **Verified-first insertion:** Mote prefers a settable Accessibility selection,
+  verifies caret movement without reading field contents, and uses one selected
+  fallback only when no mutation was attempted.
+- **No blind retry:** uncertain delivery leaves the transcript pending because a
+  second automatic attempt could duplicate sensitive text.
 
-```bash
-xcrun notarytool store-credentials Mote-notary \
-  --apple-id "YOUR_APPLE_ID" \
-  --team-id "YOUR_TEAM_ID"
-NOTARY_PROFILE=Mote-notary ./release.sh --notarize
-```
+### Project map
 
-Without `--notarize`, `release.sh` only creates the signed zip. With it, the
-script submits the archive, staples the ticket, validates the staple, and runs
-Gatekeeper assessment. Use `--archive PATH` to choose a different zip path.
+| Path | Responsibility |
+| --- | --- |
+| `app/Sources/Mote/` | SwiftUI application, capture lifecycle, permissions, persistence, and delivery |
+| `app/Sources/MoteCleanup/` | MLX generation, cleanup acceptance, Markdown safety, and spoken formatting commands |
+| `app/Tests/MoteTests/` | Unit and integration coverage for product behavior and safety boundaries |
+| `bench/` | Swift benchmark harnesses for local inference and pipeline evaluation |
+| `docs/reports/mlx-cleanup-benchmark/` | Reproducible benchmark evidence and historical model comparisons |
 
-## Use Mote
+## Development
 
-1. Focus a text field in any app.
-2. Press **Option-Space** (or your configured hotkey) to dictate.
-3. Use the capture panel to select Plain text or Markdown, or make that choice
-   your default in Settings.
-4. Open the local library from the menu-bar panel to search History, save a
-   dictation as a Snippet, and copy, insert, or delete saved text.
-
-When auto-insert is enabled, Mote types into an editable focused target.
-If macOS cannot identify one, it copies the result instead and records that
-honest outcome in History. If the focused target changes before insertion, the
-result stays pending for your manual review.
-
-## Markdown and code blocks
-
-Markdown uses a conservative, local formatter that never invents content. For
-code, speak only the boundary commands:
-
-```text
-start code block yaml
-end code block
-```
-
-The body between those commands is preserved in a fenced code block. Malformed
-or unmatched commands remain literal speech; see
-[the formatting-command guide](docs/mote-formatting-commands.md).
-
-## Privacy and runtime
-
-The dictation path makes no network calls. Audio is processed in memory and
-is not written to disk by the app. History and Snippets are versioned JSON files
-in your local Application Support directory. Their directory is owner-only,
-their files are owner-only and excluded from device backups, and they are not
-encrypted at rest. Cleanup is native Swift MLX only; if it cannot safely return
-a result, Mote uses the raw transcript.
-
-Model downloads are a separate, consent-gated first-use action. Turning consent
-off prevents future Mote-initiated model loads/downloads; it does not delete
-model artifacts that supporting libraries already cached locally.
-
-## Development checks
+Run the application checks from the repository root:
 
 ```bash
 cd app
 swift test
 swift build --product Mote
-./bundle.sh
+./test-product-identity.sh
+./test-bundle-security.sh
 
-cd ..
-python3 -m unittest discover -s docs/reports/mlx-cleanup-benchmark -p 'test_*.py'
+cd ../bench
+swift test
 ```
 
 Historical MLX-versus-Ollama reports remain under
 [`docs/reports/mlx-cleanup-benchmark/`](docs/reports/mlx-cleanup-benchmark/).
-They are benchmark evidence, not a description of Mote's current runtime.
+They document the path to the current MLX-only runtime; they are not a
+description of Mote's present architecture.
+
+## Security and distribution
+
+Release builds fail closed when the MLX Metal library or a Developer ID
+Application identity is unavailable. They enable the hardened runtime, add a
+secure timestamp, verify the complete signature, submit to Apple's notary
+service, staple the ticket, and run Gatekeeper assessment. The signature embeds
+one capability entitlement — microphone audio input — so macOS can present the
+standard permission prompt under the hardened runtime.
+
+<details>
+<summary><strong>Maintainer: build and notarize a release</strong></summary>
+
+Store notarization credentials in the local Keychain; never add them to the
+repository.
+
+```bash
+cd app
+security find-identity -v -p codesigning | grep 'Developer ID Application:'
+./bundle.sh --release
+
+xcrun notarytool store-credentials Mote-notary \
+  --apple-id "YOUR_APPLE_ID" \
+  --team-id "YOUR_TEAM_ID"
+
+NOTARY_PROFILE=Mote-notary ./release.sh --notarize
+```
+
+Use `SIGNING_IDENTITY="Developer ID Application: Name (TEAMID)"` when more than
+one distribution certificate is installed. Use `--archive PATH` to choose a
+different output path.
+
+</details>
+
+## Open-source foundation
+
+Mote builds on excellent local-first tooling:
+
+- [FluidAudio](https://github.com/FluidInference/FluidAudio) for on-device
+  speech recognition
+- [MLX Swift LM](https://github.com/ml-explore/mlx-swift-lm) for Apple Silicon
+  language-model inference
+- [Swift Hugging Face](https://github.com/huggingface/swift-huggingface) and
+  [Swift Transformers](https://github.com/huggingface/swift-transformers) for
+  model and tokenizer support
 
 ## License
 
-[MIT](LICENSE) © 2026 Brice Neal
+Mote is available under the [MIT License](LICENSE).
+
+<div align="center">
+
+Built with care by [Brice Neal](https://github.com/deresolution20).
+
+</div>

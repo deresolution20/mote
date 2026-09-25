@@ -46,12 +46,18 @@ resolve_signing_identity() {
 sign_app_bundle() {
   local app_path="$1"
   local mode="${2:-development}"
+  local entitlements_path="${3:-}"
   local bundle_identifier="${BUNDLE_IDENTIFIER:-dev.brice.mote}"
   local identity
   local -a sign_args
 
   identity="$(resolve_signing_identity "$mode")" || return 1
-  sign_args=(--force --sign "$identity" --identifier "$bundle_identifier")
+  sign_args=(
+    --force
+    --sign "$identity"
+    --identifier "$bundle_identifier"
+    --entitlements "$entitlements_path"
+  )
 
   if [[ "$mode" == "release" ]]; then
     sign_args+=(--options runtime --timestamp)

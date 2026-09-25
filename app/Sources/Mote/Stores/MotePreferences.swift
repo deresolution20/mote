@@ -10,7 +10,7 @@ final class MotePreferences: ObservableObject {
     @Published var modelDownloadsApproved: Bool { didSet { save(modelDownloadsApproved, for: .modelDownloadsApproved) } }
     @Published var cleanupEnabled: Bool { didSet { save(cleanupEnabled, for: .cleanupEnabled) } }
     @Published var hudEnabled: Bool { didSet { save(hudEnabled, for: .hudEnabled) } }
-    @Published var injectByTyping: Bool { didSet { save(injectByTyping, for: .injectByTyping) } }
+    @Published var deliveryMode: DeliveryMode { didSet { save(deliveryMode.rawValue, for: .deliveryMode) } }
     @Published var preserveCodeAndBackticks: Bool { didSet { save(preserveCodeAndBackticks, for: .preserveCodeAndBackticks) } }
     @Published var selectedMicrophoneDeviceID: UInt32? { didSet { saveSelectedMicrophoneDeviceID() } }
 
@@ -29,9 +29,12 @@ final class MotePreferences: ObservableObject {
         modelDownloadsApproved = Self.bool(defaults, key: .modelDownloadsApproved, fallback: false)
         cleanupEnabled = Self.bool(defaults, key: .cleanupEnabled, fallback: true)
         hudEnabled = Self.bool(defaults, key: .hudEnabled, fallback: true)
-        injectByTyping = Self.bool(defaults, key: .injectByTyping, fallback: true)
+        deliveryMode = Self.deliveryMode(from: defaults)
         preserveCodeAndBackticks = Self.bool(defaults, key: .preserveCodeAndBackticks, fallback: false)
         selectedMicrophoneDeviceID = Self.selectedMicrophoneDeviceID(from: defaults)
+        if defaults.object(forKey: Key.deliveryMode.rawValue) == nil {
+            defaults.set(deliveryMode.rawValue, forKey: Key.deliveryMode.rawValue)
+        }
     }
 
     private enum Key: String {
@@ -43,6 +46,7 @@ final class MotePreferences: ObservableObject {
         case cleanupEnabled = "mote.cleanupEnabled"
         case hudEnabled = "mote.hudEnabled"
         case injectByTyping = "mote.injectByTyping"
+        case deliveryMode = "mote.deliveryMode"
         case preserveCodeAndBackticks = "mote.preserveCodeAndBackticks"
         case selectedMicrophoneDeviceID = "mote.selectedMicrophoneDeviceID"
     }
@@ -50,6 +54,17 @@ final class MotePreferences: ObservableObject {
     private static func bool(_ defaults: UserDefaults, key: Key, fallback: Bool) -> Bool {
         guard defaults.object(forKey: key.rawValue) != nil else { return fallback }
         return defaults.bool(forKey: key.rawValue)
+    }
+
+    private static func deliveryMode(from defaults: UserDefaults) -> DeliveryMode {
+        if let rawValue = defaults.string(forKey: Key.deliveryMode.rawValue),
+           let mode = DeliveryMode(rawValue: rawValue) {
+            return mode
+        }
+        guard defaults.object(forKey: Key.injectByTyping.rawValue) != nil else {
+            return .automatic
+        }
+        return defaults.bool(forKey: Key.injectByTyping.rawValue) ? .privacyFirst : .compatibility
     }
 
     private func save(_ value: Any, for key: Key) {

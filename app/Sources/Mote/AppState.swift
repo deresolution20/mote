@@ -180,10 +180,8 @@ final class AppState: ObservableObject {
             if !hudEnabled { HUDController.shared.hide() }
         }
     }
-    /// Insert by typing (no clipboard) by default — safer on managed machines
-    /// where clipboard managers / DLP tools may capture pasted content.
-    @Published var injectByTyping = true {
-        didSet { preferences.injectByTyping = injectByTyping }
+    @Published var deliveryMode: DeliveryMode = .automatic {
+        didSet { preferences.deliveryMode = deliveryMode }
     }
     /// Custom vocabulary terms, mirrored for SwiftUI binding.
     @Published var dictionaryTerms: [String] = PersonalDictionary.shared.terms
@@ -197,7 +195,7 @@ final class AppState: ObservableObject {
         preserveCodeAndBackticks = preferences.preserveCodeAndBackticks
         cleanupEnabled = preferences.cleanupEnabled
         hudEnabled = preferences.hudEnabled
-        injectByTyping = preferences.injectByTyping
+        deliveryMode = preferences.deliveryMode
         selectedMicrophoneDeviceID = preferences.selectedMicrophoneDeviceID
     }
 
@@ -230,12 +228,9 @@ final class AppState: ObservableObject {
     private var hasLoggedFirstHUDPartial = false
     private var captureOutputFormat: OutputFormat = .plain
     private var capturePreserveCodeAndBackticks = false
+    private var targetCapture: TargetCapture?
     /// Longest sensible push-to-talk hold; past this the release event was lost.
     private let maxRecordingSeconds: UInt64 = 30
-
-    private var injectionMethod: TextInjector.Method {
-        injectByTyping ? .type : .clipboard
-    }
 
     private var useStreamingFinalTranscript: Bool {
         ProcessInfo.processInfo.environment["LOCALFLOW_STREAMING_FINAL"] == "1"
@@ -378,6 +373,7 @@ final class AppState: ObservableObject {
         case .recording:
             recordingWatchdog?.cancel()
             _ = capture.stop()
+            targetCapture = nil
             microphoneDeviceService.resetLevel()
             clearStreamingSession()
             HUDController.shared.hide()
@@ -463,6 +459,7 @@ final class AppState: ObservableObject {
         guard case .idle = status else { return }
         captureOutputFormat = outputFormat
         capturePreserveCodeAndBackticks = preserveCodeAndBackticks
+        targetCapture = autoInsert ? outputDeliveryCoordinator.beginTargetCapture() : nil
         let sessionToken = beginStreamingSession()
         let sessionStartedAt = ProcessInfo.processInfo.systemUptime
         streamingLatencyLogger.info("Streaming session \(sessionToken, privacy: .public) started")
@@ -562,6 +559,7 @@ final class AppState: ObservableObject {
                 if case .recording = self.status { self.hotkeyReleased() }
             }
         } catch {
+            targetCapture = nil
             invalidateStreamingSession()
             microphoneDeviceService.resetLevel()
             status = .failed("mic capture failed: \(error.localizedDescription)")
@@ -570,6 +568,7 @@ final class AppState: ObservableObject {
 
     private func hotkeyCancelled() {
         recordingWatchdog?.cancel()
+        targetCapture = nil
         guard case .recording = status else { return }
         _ = capture.stop()
         microphoneDeviceService.resetLevel()
@@ -582,6 +581,8 @@ final class AppState: ObservableObject {
         recordingWatchdog?.cancel()
         guard case .recording = status else { return }
         let samples = capture.stop()
+        let deliveryCapture = targetCapture
+        targetCapture = nil
         microphoneDeviceService.resetLevel()
         // Ignore accidental taps: < 0.3 s of audio.
         guard samples.count > 4800 else {
@@ -650,7 +651,8 @@ final class AppState: ObservableObject {
                         preserveCodeAndBackticks: capturePreserveCodeAndBackticks
                     ),
                     autoInsert: autoInsert,
-                    method: injectionMethod,
+                    targetCapture: deliveryCapture,
+                    deliveryMode: deliveryMode,
                     duration: Double(samples.count) / 16_000
                 )
                 historyStore.append(completion.record)
@@ -669,10 +671,17 @@ final class AppState: ObservableObject {
     }
 
     func insertPending() {
-        guard let pendingDictation else { return }
-        let delivery = outputDeliveryCoordinator.insert(pendingDictation, method: injectionMethod)
-        historyStore.updateOutcome(for: pendingDictation.id, to: delivery.insertionOutcome)
-        self.pendingDictation = nil
+        guard let pending = pendingDictation else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            let delivery = await outputDeliveryCoordinator.insert(
+                pending,
+                deliveryMode: deliveryMode
+            )
+            guard pendingDictation?.id == pending.id else { return }
+            historyStore.updateOutcome(for: pending.id, to: delivery.insertionOutcome)
+            pendingDictation = delivery.pendingReason.map(pending.replacingDeliveryReason)
+        }
     }
 
     func copyPending() {
@@ -710,8 +719,14 @@ final class AppState: ObservableObject {
     }
 
     func insertHistoryRecord(_ record: DictationRecord) {
-        let delivery = outputDeliveryCoordinator.insert(record.finalText, method: injectionMethod)
-        historyStore.updateOutcome(for: record.id, to: delivery.insertionOutcome)
+        Task { [weak self] in
+            guard let self else { return }
+            let delivery = await outputDeliveryCoordinator.insert(
+                record.finalText,
+                deliveryMode: deliveryMode
+            )
+            historyStore.updateOutcome(for: record.id, to: delivery.insertionOutcome)
+        }
     }
 
     func copyHistoryRecord(_ record: DictationRecord) {
@@ -730,7 +745,13 @@ final class AppState: ObservableObject {
     }
 
     func insertSnippet(_ snippet: Snippet) {
-        _ = outputDeliveryCoordinator.insert(snippet.text, method: injectionMethod)
+        Task { [weak self] in
+            guard let self else { return }
+            _ = await outputDeliveryCoordinator.insert(
+                snippet.text,
+                deliveryMode: deliveryMode
+            )
+        }
     }
 
     func copySnippet(_ snippet: Snippet) {

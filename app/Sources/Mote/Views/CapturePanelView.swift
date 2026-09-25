@@ -10,7 +10,6 @@ struct CapturePanelView: View {
         let snapshot = CapturePanelSnapshot.make(
             state: panelState,
             pending: state.pendingDictation,
-            autoInsert: state.autoInsert,
             recentRecords: state.historyStore.records,
             hotkeyConfiguration: state.hotkeyConfiguration
         )
@@ -20,7 +19,7 @@ struct CapturePanelView: View {
             captureStatus(snapshot)
 
             if let pending = state.pendingDictation {
-                pendingResult(pending)
+                pendingResult(pending, snapshot: snapshot)
             } else {
                 outputPreference
             }
@@ -77,11 +76,19 @@ struct CapturePanelView: View {
         .background(MoteTheme.Colors.raised, in: RoundedRectangle(cornerRadius: MoteTheme.Metrics.controlCornerRadius, style: .continuous))
     }
 
-    private func pendingResult(_ pending: PendingDictation) -> some View {
+    private func pendingResult(
+        _ pending: PendingDictation,
+        snapshot: CapturePanelSnapshot
+    ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Ready to insert")
+            Text(snapshot.pendingTitle ?? "Ready to insert")
                 .font(MoteTheme.Typography.body(13).weight(.semibold))
                 .foregroundStyle(MoteTheme.Colors.primaryText)
+            if let detail = snapshot.pendingDetail {
+                Text(detail)
+                    .font(MoteTheme.Typography.body(11))
+                    .foregroundStyle(MoteTheme.Colors.mutedText)
+            }
             Text(pending.resolved.text)
                 .font(MoteTheme.Typography.body(13))
                 .foregroundStyle(MoteTheme.Colors.secondaryText)
@@ -95,7 +102,7 @@ struct CapturePanelView: View {
             HStack {
                 Button("Copy", action: state.copyPending)
                     .buttonStyle(.bordered)
-                Button("Insert", action: state.insertPending)
+                Button(snapshot.primaryActionTitle ?? "Insert", action: state.insertPending)
                     .buttonStyle(.borderedProminent)
                     .tint(MoteTheme.Colors.signalEnd)
             }

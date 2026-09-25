@@ -126,6 +126,12 @@ private extension InsertionOutcome {
     var label: String {
         switch self {
         case .pending: "Pending"
+        case .insertedVerified: "Inserted — verified"
+        case .insertedUnverified: "Inserted — not verified"
+        case .blockedFocusChanged: "Not inserted — focus changed"
+        case .blockedSecureField: "Not inserted — secure field"
+        case .blockedNoTarget: "Not inserted — no text field"
+        case .blockedDeliveryUnavailable: "Not inserted — delivery unavailable"
         case .typedAttempted: "Inserted"
         case .copiedNoFocusedTarget: "Copied — no text field"
         case .copiedByUser: "Copied"

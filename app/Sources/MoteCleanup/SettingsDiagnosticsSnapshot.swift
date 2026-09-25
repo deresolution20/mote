@@ -11,13 +11,13 @@ public struct SettingsDiagnosticsSnapshot: Equatable {
         status: String,
         cleanupDisplayName: String,
         cleanupModel: String,
-        usesDirectTyping: Bool,
+        insertionMode: String,
         lastRawTranscript: String,
         lastCleanedText: String
     ) {
         self.status = status
         cleanupModelLabel = "\(cleanupDisplayName): \(cleanupModel)"
-        insertionModeLabel = usesDirectTyping ? "Direct typing" : "Clipboard paste"
+        insertionModeLabel = insertionMode
         rawTranscriptDisplay = lastRawTranscript.isEmpty ? "No dictation yet." : lastRawTranscript
         cleanedTextDisplay = lastCleanedText.isEmpty ? "No cleaned text yet." : lastCleanedText
     }

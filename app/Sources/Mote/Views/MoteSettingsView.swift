@@ -124,11 +124,15 @@ private struct GeneralSettingsPane: View {
             Section("Behavior") {
                 Toggle("Show waveform overlay", isOn: $state.hudEnabled)
                 Toggle("Insert automatically", isOn: $state.autoInsert)
-                Picker("Insert text by", selection: $state.injectByTyping) {
-                    Text("Direct typing").tag(true)
-                    Text("Clipboard paste").tag(false)
+                Picker("Text delivery", selection: $state.deliveryMode) {
+                    ForEach(DeliveryMode.allCases, id: \.self) { mode in
+                        Text(mode.title).tag(mode)
+                    }
                 }
                 .pickerStyle(.segmented)
+                Text(state.deliveryMode.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Personal Dictionary") {
@@ -150,7 +154,7 @@ private struct GeneralSettingsPane: View {
             status: state.status.label,
             cleanupDisplayName: Cleaner.displayName,
             cleanupModel: Cleaner.model,
-            usesDirectTyping: state.injectByTyping,
+            insertionMode: state.deliveryMode.title,
             lastRawTranscript: state.lastTranscript,
             lastCleanedText: state.lastCleaned
         )

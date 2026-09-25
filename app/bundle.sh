@@ -72,7 +72,7 @@ PLIST
 
 if [[ "$MODE" == "release" ]]; then
   echo "signing release with Developer ID Application identity"
-  sign_app_bundle "$APP" release
+  sign_app_bundle "$APP" release "$SCRIPT_DIR/Mote.entitlements"
 else
   IDENTITY="$(resolve_signing_identity development)"
   if [[ "$IDENTITY" == "-" ]]; then
@@ -80,7 +80,7 @@ else
   else
     echo "signing development with $IDENTITY"
   fi
-  sign_app_bundle "$APP" development
+  sign_app_bundle "$APP" development "$SCRIPT_DIR/Mote.entitlements"
 fi
 
 codesign -dvv "$APP" 2>&1 | grep -E "Identifier=|Authority=|TeamIdentifier=" || true
